@@ -1,2 +1,2 @@
-.objdump
-.elf
+*.objdump
+*.elf
