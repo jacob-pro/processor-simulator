@@ -7,3 +7,5 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+elf = {git = "https://github.com/cole14/rust-elf/"}
+binutils = {version = "0.1.1"}
