@@ -1,2 +1,2 @@
-arm-linux-gnueabi-gcc -ffreestanding -nostdlib -mthumb -march=armv6 basic.c -lgcc --entry=start -o basic.elf && arm-linux-gnueabi-objdump -D basic.elf > output.objdump
+arm-linux-gnueabi-gcc -march=armv6-m -mfloat-abi=hard -ffreestanding -nostdlib basic.c --entry=start -o basic.elf && arm-linux-gnueabi-objdump -d basic.elf > output.objdump
 

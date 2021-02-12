@@ -1,6 +1,21 @@
 use std::path::PathBuf;
-use binutils::utils::disassemble_buffer;
-use binutils::opcodes::DisassembleInfo;
+use capstone::prelude::*;
+
+fn example(code: &[u8]) -> CsResult<()> {
+    let cs = Capstone::new()
+        .arm()
+        .mode(arch::arm::ArchMode::Thumb)
+        .endian(capstone::Endian::Little)
+        .detail(true)
+        .build()?;
+
+    let insns = cs.disasm_all(code, 0x100b8)?;
+    println!("Found {} instructions", insns.len());
+    for i in insns.iter() {
+        println!("{}", i);
+    }
+    Ok(())
+}
 
 fn main() {
     println!("Hello, world!");
@@ -16,20 +31,9 @@ fn main() {
         None => panic!("Failed to look up .text section"),
     };
 
-    println!("{:?}", text_scn.data);
+    println!("{:02X?}", text_scn.data);
 
-    let mut info = disassemble_buffer("armv6", &text_scn.data, 0)
-        .unwrap_or(DisassembleInfo::empty());
-
-    loop {
-        match info.disassemble()
-            .ok_or(2807)
-            .map(|i| Some(i.unwrap()))
-            .unwrap_or(None)
-        {
-            Some(instruction) => println!("{}", instruction),
-            None => break,
-        }
+    if let Err(err) = example(&text_scn.data) {
+        println!("Error: {}", err);
     }
-
 }

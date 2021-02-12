@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 elf = {git = "https://github.com/cole14/rust-elf/"}
-binutils = {version = "0.1.1"}
+capstone = "0.7.0"
