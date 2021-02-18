@@ -1,2 +1,2 @@
-*.objdump
 *.elf
+compile_commands.json

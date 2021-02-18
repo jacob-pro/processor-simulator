@@ -1,3 +1,5 @@
+#include "libc.h"
+
 void start() {
 
     int a[] = {1, 2, 3, 4, 5};

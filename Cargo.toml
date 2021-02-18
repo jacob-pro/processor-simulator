@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 elf = {git = "https://github.com/cole14/rust-elf/"}
 capstone = "0.7.0"
+clap = "2.33.3"
