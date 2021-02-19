@@ -6,14 +6,14 @@ use crate::instructions::{decode_instruction, Instruction};
 use capstone::arch::ArchOperand;
 
 pub struct Simulator {
-    memory: Memory,
-    registers: RegisterFile,
+    pub memory: Memory,
+    pub registers: RegisterFile,
     disassembler: Capstone,
 }
 
 impl Simulator {
 
-    pub fn new(memory: Memory, pc: u32) -> Self {
+    pub fn new(memory: Memory, entry: u32) -> Self {
         let cs = Capstone::new()
             .arm()
             .mode(arch::arm::ArchMode::Thumb)
@@ -22,7 +22,7 @@ impl Simulator {
             .build()
             .unwrap();
         let mut registers=  RegisterFile::default();
-        registers.pc = pc;
+        registers.pc = entry;
         registers.sp = std::u32::MAX;
         Self {
             memory,
@@ -37,7 +37,7 @@ impl Simulator {
             cycle_counter = cycle_counter + 1;
             let instr_bytes = self.fetch();
             let instr_decoded = self.decode(instr_bytes.as_slice());
-            if instr_decoded.execute() {
+            if instr_decoded.execute(self) {
                 break
             }
         }
@@ -63,7 +63,7 @@ impl Simulator {
         code[0..instr_len as usize].to_vec()
     }
 
-    fn decode(&self, instr: &[u8]) -> impl Instruction {
+    fn decode(&self, instr: &[u8]) -> Box<dyn Instruction> {
         let list = self.disassembler.disasm_all(instr, 0x0)
             .expect("Invalid instruction");
         let instr = list.iter().next().unwrap();
@@ -78,7 +78,6 @@ impl Simulator {
             panic!("Unexpected ArchOperand");
         }).collect();
 
-        println!("{} {}", opcode, instr.op_str().unwrap_or(""));
         decode_instruction(opcode, operands, &self.disassembler)
     }
 

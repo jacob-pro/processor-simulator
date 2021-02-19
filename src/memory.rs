@@ -20,12 +20,26 @@ impl Memory {
                 return &self.text[base_address as usize..(base_address + length) as usize]
             }
         } else if base_address > self.stack_start() {
-            if base_address.checked_add(length).is_some() {
+            if base_address.checked_add(length - 1).is_some() {
                 let mapped = base_address - self.stack_start();
                 return &self.stack[mapped as usize..(mapped + length) as usize]
             }
         }
         panic!("Invalid memory address range {} + {}", base_address, length)
+    }
+
+    pub fn write_bytes(&mut self, base_address: u32, bytes: &[u8]) {
+        if (base_address as usize) < self.text.len() {
+            panic!("Text section is read only")
+        }
+        if base_address > self.stack_start() {
+            if base_address.checked_add(bytes.len() as u32 - 1).is_some() {
+                let mapped = base_address - self.stack_start();
+                self.stack[mapped as usize..(mapped as usize + bytes.len())].copy_from_slice(bytes);
+                return;
+            }
+        }
+        panic!("Invalid memory address range {} + {}", base_address, bytes.len())
     }
 
 }
