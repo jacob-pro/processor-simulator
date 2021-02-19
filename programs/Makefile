@@ -1,9 +1,11 @@
-COMMAND = arm-linux-gnueabi-gcc -march=armv6-m -mfloat-abi=hard -ffreestanding -nostdlib --entry=start
+COMPILE = arm-linux-gnueabi-gcc -march=armv6-m -mfloat-abi=hard -ffreestanding -nostdlib --entry=start
+DUMP = arm-linux-gnueabi-objdump -d
 
 all : basic
 
 basic : basic.c libc.c
-	${COMMAND} basic.c libc.c -o basic.elf
+	${COMPILE} basic.c libc.c -o basic.elf
+	${DUMP} basic.elf > basic.dump
 
 clean :
 	rm -f *.elf

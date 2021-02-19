@@ -1,22 +1,13 @@
+mod memory;
+mod registers;
+mod simulator;
+
 use std::path::PathBuf;
-use capstone::prelude::*;
 use clap::{App, Arg};
+use memory::Memory;
+use crate::simulator::Simulator;
 
-fn example(code: &[u8]) -> CsResult<()> {
-    let cs = Capstone::new()
-        .arm()
-        .mode(arch::arm::ArchMode::Thumb)
-        .endian(capstone::Endian::Little)
-        .detail(true)
-        .build()?;
-
-    let insns = cs.disasm_all(code, 0x0)?;
-    println!("Found {} instructions", insns.len());
-    for i in insns.iter() {
-        println!("{}", i);
-    }
-    Ok(())
-}
+const DEFAULT_STACK_SIZE: u32 = 1024;
 
 fn main() {
 
@@ -40,7 +31,7 @@ fn main() {
         None => panic!("Failed to get .text section in elf file"),
     };
 
-    if let Err(err) = example(&text_scn.data) {
-        println!("Error: {}", err);
-    }
+    let memory = Memory::initialise(text_scn.data.clone(), DEFAULT_STACK_SIZE);
+    let mut simulator = Simulator::new(memory);
+    simulator.run();
 }
