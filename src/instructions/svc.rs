@@ -30,6 +30,5 @@ impl Instruction for SVC {
                 return true
             }
         }
-        false
     }
 }

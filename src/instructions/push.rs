@@ -23,7 +23,7 @@ impl PUSH {
 }
 
 impl Instruction for PUSH {
-    fn execute(&self, sim: &mut Simulator) -> bool {
+    fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         for r in &self.reg_list {
             sim.registers.sp = sim.registers.sp - 4;
             let register_value = sim.registers.get(r).to_le_bytes();
