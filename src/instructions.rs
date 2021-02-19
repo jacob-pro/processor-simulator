@@ -1,18 +1,19 @@
-pub type Register = String;
+use capstone::arch::arm::{ArmOperand, ArmOperandType};
+use capstone::prelude::*;
 
-pub fn decode_instruction(mnemonic: &str) -> i32 {
+pub fn decode_instruction(mnemonic: &str, operands: Vec<ArmOperand>, capstone: &Capstone) -> impl Instruction {
     let upper = mnemonic.to_ascii_uppercase();
     if upper.starts_with("ADC") {
         panic!("{} not yet implemented", upper);
     }
     if upper.starts_with("ADD") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("ADR") {
         panic!("{} not yet implemented", upper);
     }
     if upper.starts_with("AND") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("ASR") {
         panic!("{} not yet implemented", upper);
@@ -27,19 +28,19 @@ pub fn decode_instruction(mnemonic: &str) -> i32 {
         panic!("{} not yet implemented", upper);
     }
     if upper.starts_with("BL") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("BX") {
         panic!("{} not yet implemented", upper);
     }
     if upper.starts_with("B") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("CMN") {
         panic!("{} not yet implemented", upper);
     }
     if upper.starts_with("CMP") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("CPS") {
         panic!("{} not yet implemented", upper);
@@ -57,19 +58,19 @@ pub fn decode_instruction(mnemonic: &str) -> i32 {
         panic!("{} not yet implemented", upper);
     }
     if upper.starts_with("LDM") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("LDR") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("LSL") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("LSR") {
         panic!("{} not yet implemented", upper);
     }
     if upper.starts_with("MOV") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("MRS") {
         panic!("{} not yet implemented", upper);
@@ -78,22 +79,22 @@ pub fn decode_instruction(mnemonic: &str) -> i32 {
         panic!("{} not yet implemented", upper);
     }
     if upper.starts_with("MUL") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("MVN") {
         panic!("{} not yet implemented", upper);
     }
     if upper.starts_with("NOP") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("ORR") {
         panic!("{} not yet implemented", upper);
     }
     if upper.starts_with("POP") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("PUSH") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("REV") {
         panic!("{} not yet implemented", upper);
@@ -111,13 +112,13 @@ pub fn decode_instruction(mnemonic: &str) -> i32 {
         panic!("{} not yet implemented", upper);
     }
     if upper.starts_with("ST") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("SUB") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("SVC") {
-        return 0
+        return NOP::new()
     }
     if upper.starts_with("SXT") {
         panic!("{} not yet implemented", upper);
@@ -141,10 +142,43 @@ pub trait Instruction {
     fn execute(&self);
 }
 
-pub struct ADD {
-
+pub struct PUSH {
+    reg_list: Vec<String>
 }
 
-pub struct AND {
+impl PUSH {
+    fn new(operands: Vec<ArmOperand>, capstone: Capstone) -> Self {
+        let reg_list = operands.into_iter()
+            .map(|x: ArmOperand| {
+                if let ArmOperandType::Reg(id) = x.op_type {
+                    return capstone.reg_name(id).unwrap()
+                }
+                panic!("Unexpected operand type")
+            }).collect();
+        Self {
+            reg_list
+        }
+    }
+}
 
+impl Instruction for PUSH {
+    fn execute(&self) -> bool {
+        unimplemented!()
+    }
+}
+
+pub struct NOP {
+}
+
+impl NOP {
+    fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Instruction for NOP {
+    fn execute(&self) -> bool {
+        println!("NOP!!!");
+        false
+    }
 }

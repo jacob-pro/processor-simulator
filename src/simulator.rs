@@ -1,9 +1,9 @@
 use crate::memory::Memory;
 use crate::registers::RegisterFile;
 use capstone::prelude::*;
-use capstone::Insn;
-use std::process::exit;
-use crate::instructions::decode_instruction;
+use capstone::arch::arm::ArmOperand;
+use crate::instructions::{decode_instruction, Instruction};
+use capstone::arch::ArchOperand;
 
 pub struct Simulator {
     memory: Memory,
@@ -37,6 +37,9 @@ impl Simulator {
             cycle_counter = cycle_counter + 1;
             let instr_bytes = self.fetch();
             let instr_decoded = self.decode(instr_bytes.as_slice());
+            if instr_decoded.execute() {
+                break
+            }
         }
     }
 
@@ -60,12 +63,23 @@ impl Simulator {
         code[0..instr_len as usize].to_vec()
     }
 
-    fn decode(&self, instr: &[u8]) {
-        let list = self.disassembler.disasm_all(instr, 0x0).expect("Invalid instruction");
+    fn decode(&self, instr: &[u8]) -> impl Instruction {
+        let list = self.disassembler.disasm_all(instr, 0x0)
+            .expect("Invalid instruction");
         let instr = list.iter().next().unwrap();
         let opcode = instr.mnemonic().unwrap();
+
+        let detail: InsnDetail = self.disassembler.insn_detail(&instr).expect("Failed to get insn detail");
+        let arch_detail: ArchDetail = detail.arch_detail();
+        let operands: Vec<ArmOperand> = arch_detail.operands().into_iter().map(|x| {
+            if let ArchOperand::ArmOperand(inner) = x {
+                return inner
+            }
+            panic!("Unexpected ArchOperand");
+        }).collect();
+
         println!("{} {}", opcode, instr.op_str().unwrap_or(""));
-        decode_instruction(opcode);
+        decode_instruction(opcode, operands, &self.disassembler)
     }
 
 }
