@@ -31,8 +31,10 @@ fn main() {
         Some(s) => s,
         None => panic!("Failed to get .text section in elf file"),
     };
+    let entry = elf_file.ehdr.entry as u32 - 1;
+    let actual_entry = entry - text_scn.shdr.addr as u32;
 
     let memory = Memory::initialise(text_scn.data.clone(), DEFAULT_STACK_SIZE);
-    let mut simulator = Simulator::new(memory);
+    let mut simulator = Simulator::new(memory, actual_entry);
     simulator.run();
 }

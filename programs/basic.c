@@ -9,5 +9,5 @@ void start() {
     for (int i = 0; i < 5; i++ ) {
         a[i] = b[i] + c[i];
     }
-
+    exit(0);
 }
