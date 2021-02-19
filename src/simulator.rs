@@ -32,6 +32,7 @@ impl Simulator {
             cycle_counter = cycle_counter + 1;
             let ins = self.fetch();
             println!("{} {}", ins.0, ins.1);
+            let decoded = self.decode(ins.0, ins.1);
         }
     }
 
@@ -46,6 +47,10 @@ impl Simulator {
         let mut mnemonic = instr.mnemonic().unwrap().to_owned();
         let operand = instr.op_str().unwrap_or("").to_owned();
         (mnemonic, operand)
+    }
+
+    fn decode(&self, mnemonic: String, operand: String) {
+
     }
 
 }

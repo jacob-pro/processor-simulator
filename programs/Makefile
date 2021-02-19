@@ -1,10 +1,10 @@
-COMPILE = arm-linux-gnueabi-gcc -march=armv6-m -mfloat-abi=hard -ffreestanding -nostdlib --entry=start
-DUMP = arm-linux-gnueabi-objdump -d
+COMPILE = arm-linux-gnueabi-gcc -mcpu=cortex-m0 -ffreestanding -nostdlib --entry=start libc.c
+DUMP = arm-linux-gnueabi-objdump -m cortex-m0 -d
 
 all : basic
 
 basic : basic.c libc.c
-	${COMPILE} basic.c libc.c -o basic.elf
+	${COMPILE} basic.c -o basic.elf
 	${DUMP} basic.elf > basic.dump
 
 clean :

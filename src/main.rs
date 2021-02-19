@@ -1,6 +1,7 @@
 mod memory;
 mod registers;
 mod simulator;
+mod instructions;
 
 use std::path::PathBuf;
 use clap::{App, Arg};
