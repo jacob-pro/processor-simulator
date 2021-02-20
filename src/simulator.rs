@@ -79,9 +79,7 @@ impl Simulator {
         let ins_name = self.capstone.insn_name(instr.id()).unwrap();
         let arm_detail = arch_detail.arm().unwrap();
 
-        let decoded = decode_instruction(
-            &ins_name,
-            arm_detail.update_flags(), operands);
+        let decoded = decode_instruction(&ins_name, &arm_detail, operands);
         (decoded, arm_detail.cc())
     }
 

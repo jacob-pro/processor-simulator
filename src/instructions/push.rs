@@ -12,9 +12,7 @@ impl PUSH {
     pub fn new(operands: Vec<ArmOperand>) -> Self {
         let reg_list = operands.into_iter()
             .map(|x: ArmOperand| x.reg_id().unwrap()).collect();
-        Self {
-            reg_list
-        }
+        Self { reg_list }
     }
 }
 

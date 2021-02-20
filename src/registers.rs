@@ -1,6 +1,6 @@
 use capstone::prelude::*;
 use std::rc::Rc;
-use capstone::arch::arm::{ArmOperand, ArmOperandType, ArmShift};
+use capstone::arch::arm::{ArmOperand, ArmOperandType, ArmShift, ArmOpMem};
 
 #[derive(Default)]
 pub struct ConditionFlags {
@@ -61,6 +61,18 @@ impl RegisterFile {
             ArmOperandType::Imm(value) => { value as u32 }
             _ => panic!("Unsupported type")
         }
+    }
+
+    pub fn eval_op_mem(&mut self, op_mem: &ArmOpMem) -> u32 {
+        let base_reg_val = *self.get_by_id(op_mem.base()) as i64;
+        let displacement: i32 = if op_mem.index().0 == 0 {
+            op_mem.disp()
+        } else {
+            let index_val = *self.get_by_id(op_mem.index());
+            (index_val as i32) * op_mem.scale()
+        };
+        let result = base_reg_val + displacement as i64;
+        result as u32
     }
 
 }

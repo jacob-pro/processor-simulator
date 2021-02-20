@@ -6,8 +6,11 @@ mod mov;
 mod b;
 mod add;
 mod cmp;
+mod ldm;
+mod lsl;
+mod ldr;
 
-use capstone::arch::arm::ArmOperand;
+use capstone::arch::arm::{ArmOperand, ArmInsnDetail};
 use crate::simulator::Simulator;
 
 pub type ShouldTerminate = bool;
@@ -18,11 +21,14 @@ pub trait Instruction {
 
 /*
 https://en.wikipedia.org/wiki/ARM_Cortex-M#Instruction_sets
+https://developer.arm.com/documentation/dui0497/a/the-cortex-m0-instruction-set/instruction-set-summary?lang=en
 https://www.keil.com/support/man/docs/armasm/armasm_dom1361289850039.htm
  */
 pub fn decode_instruction(name: &str,
-                          update_flags: bool,
+                          detail: &ArmInsnDetail,
                           operands: Vec<ArmOperand>) -> Box<dyn Instruction> {
+    let update_flags = detail.update_flags();
+    let writeback = detail.writeback();
     return match name.to_ascii_uppercase().as_str() {
         "ADC" => panic!("{} not yet implemented", name),
         "ADD" => Box::new(add::ADD::new(operands, update_flags)),
@@ -42,13 +48,13 @@ pub fn decode_instruction(name: &str,
         "DSB" => panic!("{} not yet implemented", name),
         "EOR" => panic!("{} not yet implemented", name),
         "ISB" => panic!("{} not yet implemented", name),
-        "LDM" => Box::new(nop::NOP::new()),
-        "LDR" => Box::new(nop::NOP::new()),
+        "LDM" => Box::new(ldm::LDM::new(operands, writeback)),
+        "LDR" => Box::new(ldr::LDR::new(operands)),
         "LDRB" => panic!("{} not yet implemented", name),
         "LDRH" => panic!("{} not yet implemented", name),
         "LDRSB" => panic!("{} not yet implemented", name),
         "LDRSH" => panic!("{} not yet implemented", name),
-        "LSL" => Box::new(nop::NOP::new()),
+        "LSL" => Box::new(lsl::LSL::new(operands)),
         "LSR" => panic!("{} not yet implemented", name),
         "MOV" => Box::new(mov::MOV::new(operands, update_flags)),
         "MRS" => panic!("{} not yet implemented", name),

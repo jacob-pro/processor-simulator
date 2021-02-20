@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 
 pub struct Memory {
     text: Vec<u8>,
@@ -26,6 +27,11 @@ impl Memory {
             }
         }
         panic!("Invalid memory address range {} + {}", base_address, length)
+    }
+
+    pub fn read_u32(&self, address: u32) -> u32 {
+        let bytes = self.read_bytes(address, 4);
+        u32::from_le_bytes( bytes.try_into().unwrap())
     }
 
     pub fn write_bytes(&mut self, base_address: u32, bytes: &[u8]) {
