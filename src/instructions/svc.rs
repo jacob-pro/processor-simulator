@@ -1,6 +1,6 @@
 use super::{Instruction, ShouldTerminate};
 use crate::simulator::Simulator;
-use capstone::arch::arm::{ArmOperand, ArmOperandType};
+use capstone::arch::arm::{ArmOperand};
 use crate::instructions::util::ArmOperandExt;
 
 pub struct SVC {
@@ -9,10 +9,8 @@ pub struct SVC {
 
 impl SVC {
     pub fn new(operands: Vec<ArmOperand>) -> Self {
-        let id = operands.first().unwrap().imm_value().unwrap();
-        return Self {
-            id
-        }
+        let id = operands[0].imm_value().unwrap();
+        Self { id }
     }
 }
 

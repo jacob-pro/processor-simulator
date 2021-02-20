@@ -2,12 +2,20 @@ use capstone::prelude::*;
 use std::rc::Rc;
 use capstone::arch::arm::{ArmOperand, ArmOperandType, ArmShift};
 
+#[derive(Default)]
+pub struct ConditionFlags {
+    pub n: bool,    // Negative
+    pub z: bool,    // Zero
+    pub c: bool,    // Carry
+    pub v: bool,    // Signed overflow
+}
+
 pub struct RegisterFile {
     pub gprs: [u32; 13],
     pub sp: u32,
     pub lr: u32,
     pub pc: u32,
-    pub psr: u32,
+    pub cond_flags: ConditionFlags,
     capstone: Rc<Capstone>,
 }
 
@@ -19,7 +27,7 @@ impl RegisterFile {
             sp: std::u32::MAX,
             lr: 0,
             pc,
-            psr: 0,
+            cond_flags: Default::default(),
             capstone
         }
     }
@@ -34,8 +42,7 @@ impl RegisterFile {
             "SP" => &mut self.sp,
             "LR" => &mut self.lr,
             "PC" => &mut self.pc,
-            "PSR" => &mut self.psr,
-            _ => panic!("Unknown register")
+            _ => panic!("Unknown register {}", name)
         }
     }
 
@@ -44,10 +51,11 @@ impl RegisterFile {
         self.get_by_name(&n)
     }
 
-    pub fn value_of_flexible_second_operand(&mut self, op: &ArmOperand) -> u32 {
+    // https://www.keil.com/support/man/docs/armasm/armasm_dom1361289851539.htm
+    pub fn value_of_flexible_second_operand(&mut self, op: &ArmOperand, _update_c_flag: bool) -> u32 {
         match op.op_type {
             ArmOperandType::Reg(reg_id) => {
-                assert!(op.shift == ArmShift::Invalid, "Shift not implemented");
+                assert!(op.shift == ArmShift::Invalid, "Shift not yet implemented");
                 *self.get_by_id(reg_id)
             },
             ArmOperandType::Imm(value) => { value as u32 }

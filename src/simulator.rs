@@ -36,7 +36,7 @@ impl Simulator {
             cycle_counter = cycle_counter + 1;
             let instr_bytes = self.fetch();
             let (instr, cc) = self.decode(instr_bytes.as_slice());
-            if instr.execute(self) {
+            if self.should_execute(&cc) && instr.execute(self) {
                 break
             }
         }
@@ -83,6 +83,29 @@ impl Simulator {
             &ins_name,
             arm_detail.update_flags(), operands);
         (decoded, arm_detail.cc())
+    }
+
+    // https://community.arm.com/developer/ip-products/processors/b/processors-ip-blog/posts/condition-codes-1-condition-flags-and-codes
+    fn should_execute(&self, cc: &ArmCC) -> bool {
+        let flags = &self.registers.cond_flags;
+        return match cc {
+            ArmCC::ARM_CC_INVALID => {panic!("CC Invalid")},
+            ArmCC::ARM_CC_EQ => {flags.z == true},
+            ArmCC::ARM_CC_NE => {flags.z == false},
+            ArmCC::ARM_CC_HS => {flags.c == true},
+            ArmCC::ARM_CC_LO => {flags.c == false},
+            ArmCC::ARM_CC_MI => {flags.n == true},
+            ArmCC::ARM_CC_PL => {flags.n == false},
+            ArmCC::ARM_CC_VS => {flags.v == true},
+            ArmCC::ARM_CC_VC => {flags.v == false},
+            ArmCC::ARM_CC_HI => {flags.c == true && flags.z == false},
+            ArmCC::ARM_CC_LS => {flags.c == false || flags.z == true},
+            ArmCC::ARM_CC_GE => {flags.n == flags.v},
+            ArmCC::ARM_CC_LT => {flags.n != flags.v},
+            ArmCC::ARM_CC_GT => {flags.z == false && flags.n == flags.v},
+            ArmCC::ARM_CC_LE => {flags.z == true || flags.n != flags.v},
+            ArmCC::ARM_CC_AL => {true},
+        }
     }
 
 }

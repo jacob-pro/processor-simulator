@@ -19,8 +19,12 @@ impl MOV {
 
 impl Instruction for MOV {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
-        let val= sim.registers.value_of_flexible_second_operand(&self.src);
+        let val= sim.registers.value_of_flexible_second_operand(&self.src, self.update_flags);
         *sim.registers.get_by_id(self.dest) = val;
+        if self.update_flags {
+            sim.registers.cond_flags.n = (val as i32).is_negative();
+            sim.registers.cond_flags.z = val == 0;
+        }
         false
     }
 }

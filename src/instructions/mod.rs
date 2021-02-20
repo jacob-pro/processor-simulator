@@ -3,6 +3,9 @@ mod push;
 mod svc;
 mod util;
 mod mov;
+mod b;
+mod add;
+mod cmp;
 
 use capstone::arch::arm::ArmOperand;
 use crate::simulator::Simulator;
@@ -22,18 +25,18 @@ pub fn decode_instruction(name: &str,
                           operands: Vec<ArmOperand>) -> Box<dyn Instruction> {
     return match name.to_ascii_uppercase().as_str() {
         "ADC" => panic!("{} not yet implemented", name),
-        "ADD" => Box::new(nop::NOP::new()),
+        "ADD" => Box::new(add::ADD::new(operands, update_flags)),
         "ADR" => panic!("{} not yet implemented", name),
         "AND" => panic!("{} not yet implemented", name),
         "ASR" => panic!("{} not yet implemented", name),
-        "B" => Box::new(nop::NOP::new()),
+        "B" => Box::new(b::B::new(operands, false)),
         "BIC" => panic!("{} not yet implemented", name),
         "BKPT" => panic!("{} not yet implemented", name),
-        "BL" => panic!("{} not yet implemented", name),
+        "BL" => Box::new(b::B::new(operands, true)),
         "BLX" => panic!("{} not yet implemented", name),
         "BX" => panic!("{} not yet implemented", name),
-        "CMN" => panic!("{} not yet implemented", name),
-        "CMP" => Box::new(nop::NOP::new()),
+        "CMN" => Box::new(cmp::CMP::new(operands, true)),
+        "CMP" => Box::new(cmp::CMP::new(operands, false)),
         "CPS" => panic!("{} not yet implemented", name),
         "DMB" => panic!("{} not yet implemented", name),
         "DSB" => panic!("{} not yet implemented", name),
