@@ -1,6 +1,7 @@
 use super::{Instruction, ShouldTerminate};
 use crate::simulator::Simulator;
 use capstone::arch::arm::{ArmOperand, ArmOperandType};
+use crate::instructions::util::ArmOperandExt;
 
 pub struct SVC {
     id: i32
@@ -8,13 +9,10 @@ pub struct SVC {
 
 impl SVC {
     pub fn new(operands: Vec<ArmOperand>) -> Self {
-        let o = operands.first().unwrap();
-        if let ArmOperandType::Imm(imm) = o.op_type {
-            return Self {
-                id: imm
-            }
+        let id = operands.first().unwrap().imm_value().unwrap();
+        return Self {
+            id
         }
-        panic!("Unexpected SVC operands");
     }
 }
 
@@ -22,7 +20,7 @@ impl Instruction for SVC {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         match self.id {
             1 => {
-                println!("Program exited with code: {}", sim.registers.get("R0"));
+                println!("Program exited with code: {}", sim.registers.get_by_name("R0"));
                 return true
             }
             _ => {

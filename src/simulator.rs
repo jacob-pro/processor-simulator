@@ -1,33 +1,32 @@
 use crate::memory::Memory;
 use crate::registers::RegisterFile;
 use capstone::prelude::*;
-use capstone::arch::arm::ArmOperand;
+use capstone::arch::arm::{ArmOperand, ArmCC};
 use crate::instructions::{decode_instruction, Instruction};
 use capstone::arch::ArchOperand;
+use std::rc::Rc;
 
 pub struct Simulator {
     pub memory: Memory,
     pub registers: RegisterFile,
-    disassembler: Capstone,
+    capstone: Rc<Capstone>,
 }
 
 impl Simulator {
 
     pub fn new(memory: Memory, entry: u32) -> Self {
-        let cs = Capstone::new()
+        let cs = Rc::new(Capstone::new()
             .arm()
             .mode(arch::arm::ArchMode::Thumb)
             .endian(capstone::Endian::Little)
             .detail(true)
             .build()
-            .unwrap();
-        let mut registers=  RegisterFile::default();
-        registers.pc = entry;
-        registers.sp = std::u32::MAX;
+            .unwrap());
+        let registers=  RegisterFile::new(Rc::clone(&cs), entry);
         Self {
             memory,
             registers,
-            disassembler: cs,
+            capstone: cs,
         }
     }
 
@@ -36,8 +35,8 @@ impl Simulator {
         loop {
             cycle_counter = cycle_counter + 1;
             let instr_bytes = self.fetch();
-            let instr_decoded = self.decode(instr_bytes.as_slice());
-            if instr_decoded.execute(self) {
+            let (instr, cc) = self.decode(instr_bytes.as_slice());
+            if instr.execute(self) {
                 break
             }
         }
@@ -63,14 +62,13 @@ impl Simulator {
         code[0..instr_len as usize].to_vec()
     }
 
-    fn decode(&self, instr: &[u8]) -> Box<dyn Instruction> {
-        let list = self.disassembler.disasm_all(instr, 0x0)
+    fn decode(&self, instr: &[u8]) -> (Box<dyn Instruction>, ArmCC) {
+        let list = self.capstone.disasm_all(instr, 0x0)
             .expect("Invalid instruction");
         let instr = list.iter().next().unwrap();
-        let opcode = instr.mnemonic().unwrap();
 
-        let detail: InsnDetail = self.disassembler.insn_detail(&instr).expect("Failed to get insn detail");
-        let arch_detail: ArchDetail = detail.arch_detail();
+        let insn_detail: InsnDetail = self.capstone.insn_detail(&instr).expect("Failed to get insn detail");
+        let arch_detail = insn_detail.arch_detail();
         let operands: Vec<ArmOperand> = arch_detail.operands().into_iter().map(|x| {
             if let ArchOperand::ArmOperand(inner) = x {
                 return inner
@@ -78,7 +76,13 @@ impl Simulator {
             panic!("Unexpected ArchOperand");
         }).collect();
 
-        decode_instruction(opcode, operands, &self.disassembler)
+        let ins_name = self.capstone.insn_name(instr.id()).unwrap();
+        let arm_detail = arch_detail.arm().unwrap();
+
+        let decoded = decode_instruction(
+            &ins_name,
+            arm_detail.update_flags(), operands);
+        (decoded, arm_detail.cc())
     }
 
 }
