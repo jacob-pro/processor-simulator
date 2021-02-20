@@ -9,5 +9,11 @@ void start() {
     for (int i = 0; i < 5; i++ ) {
         a[i] = b[i] + c[i];
     }
-    exit(0);
+
+    asm volatile( "mov r0, %1 \n" // assign r0 =  x
+                  "svc %0     \n" // make system call SYS_EXIT
+    :
+    : "I" (SYS_EXIT), "I" (241)
+    : "r0" );
+
 }

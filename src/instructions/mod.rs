@@ -2,6 +2,7 @@ mod nop;
 mod push;
 mod svc;
 mod util;
+mod mov;
 
 use capstone::arch::arm::ArmOperand;
 use crate::simulator::Simulator;
@@ -12,6 +13,10 @@ pub trait Instruction {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate;
 }
 
+/*
+https://en.wikipedia.org/wiki/ARM_Cortex-M#Instruction_sets
+https://www.keil.com/support/man/docs/armasm/armasm_dom1361289850039.htm
+ */
 pub fn decode_instruction(name: &str,
                           update_flags: bool,
                           operands: Vec<ArmOperand>) -> Box<dyn Instruction> {
@@ -42,7 +47,7 @@ pub fn decode_instruction(name: &str,
         "LDRSH" => panic!("{} not yet implemented", name),
         "LSL" => Box::new(nop::NOP::new()),
         "LSR" => panic!("{} not yet implemented", name),
-        "MOV" => Box::new(nop::NOP::new()),
+        "MOV" => Box::new(mov::MOV::new(operands, update_flags)),
         "MRS" => panic!("{} not yet implemented", name),
         "MSR" => panic!("{} not yet implemented", name),
         "MUL" => panic!("{} not yet implemented", name),
@@ -75,5 +80,3 @@ pub fn decode_instruction(name: &str,
         _ => panic!("Unrecognised Cortex-M0 instruction: {}", name),
     }
 }
-
-

@@ -1,5 +1,6 @@
 use capstone::prelude::*;
 use std::rc::Rc;
+use capstone::arch::arm::{ArmOperand, ArmOperandType, ArmShift};
 
 pub struct RegisterFile {
     pub gprs: [u32; 13],
@@ -41,6 +42,17 @@ impl RegisterFile {
     pub fn get_by_id(&mut self, id: RegId) -> &mut u32 {
         let n = self.capstone.reg_name(id).expect("Couldn't get reg_name");
         self.get_by_name(&n)
+    }
+
+    pub fn value_of_flexible_second_operand(&mut self, op: &ArmOperand) -> u32 {
+        match op.op_type {
+            ArmOperandType::Reg(reg_id) => {
+                assert!(op.shift == ArmShift::Invalid, "Shift not implemented");
+                *self.get_by_id(reg_id)
+            },
+            ArmOperandType::Imm(value) => { value as u32 }
+            _ => panic!("Unsupported type")
+        }
     }
 
 }
