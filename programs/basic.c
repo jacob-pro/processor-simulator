@@ -9,6 +9,9 @@ int main() {
         a[i] = a[i] + b[i];
     }
 
-    exit(5);
-    return 5;
+    memset(&b, 23, 5);
+
+    exit(b[4]);
 }
+
+int __stack = 0;

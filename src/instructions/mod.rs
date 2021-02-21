@@ -1,5 +1,6 @@
 mod nop;
 mod push;
+mod pop;
 mod svc;
 mod util;
 mod mov;
@@ -13,6 +14,8 @@ mod lsl;
 mod ldr;
 mod stm;
 mod str;
+mod extends;
+mod tst;
 
 use capstone::arch::arm::{ArmOperand, ArmInsnDetail};
 use crate::simulator::Simulator;
@@ -67,7 +70,7 @@ pub fn decode_instruction(name: &str,
         "MVN" => panic!("{} not yet implemented", name),
         "NOP" => Box::new(nop::NOP::new()),
         "ORR" => panic!("{} not yet implemented", name),
-        "POP" => panic!("{} not yet implemented", name),
+        "POP" => Box::new(pop::POP::new(operands)),
         "PUSH" => Box::new(push::PUSH::new(operands)),
         "REV" => panic!("{} not yet implemented", name),
         "REV16" => panic!("{} not yet implemented", name),
@@ -77,16 +80,16 @@ pub fn decode_instruction(name: &str,
         "SBC" => panic!("{} not yet implemented", name),
         "SEV" => panic!("{} not yet implemented", name),
         "STM" => Box::new(stm::STM::new(operands, writeback)),
-        "STR" => Box::new(str::STR::new(operands)),
-        "STRB" => panic!("{} not yet implemented", name),
-        "STRH" => panic!("{} not yet implemented", name),
+        "STR" => Box::new(str::STR::new(operands, str::Mode::Word)),
+        "STRB" => Box::new(str::STR::new(operands, str::Mode::Byte)),
+        "STRH" => Box::new(str::STR::new(operands, str::Mode::HalfWord)),
         "SUB" => Box::new(sub::SUB::new(operands, update_flags)),
         "SVC" => Box::new(svc::SVC::new(operands)),
-        "SXTB" => panic!("{} not yet implemented", name),
-        "SXTH" => panic!("{} not yet implemented", name),
-        "TST" => panic!("{} not yet implemented", name),
-        "UXTB" => panic!("{} not yet implemented", name),
-        "UXTH" => panic!("{} not yet implemented", name),
+        "SXTB" => Box::new(extends::EXTENDS::new(operands, extends::Mode::SXTB)),
+        "SXTH" => Box::new(extends::EXTENDS::new(operands, extends::Mode::SXTH)),
+        "TST" => Box::new(tst::TST::new(operands)),
+        "UXTB" => Box::new(extends::EXTENDS::new(operands, extends::Mode::UXTB)),
+        "UXTH" => Box::new(extends::EXTENDS::new(operands, extends::Mode::UXTH)),
         "WFE" => panic!("{} not yet implemented", name),
         "WFI" => panic!("{} not yet implemented", name),
         "YIELD" => panic!("{} not yet implemented", name),

@@ -1,4 +1,4 @@
-COMPILE = arm-none-eabi-gcc -mthumb -mcpu=cortex-m0 -ffreestanding -nostdlib --entry=main -fpie sim.c
+COMPILE = arm-none-eabi-gcc -mthumb -mcpu=cortex-m0 -ffreestanding -fpie sim.c
 DUMP = arm-none-eabi-objdump -m cortex-m0 -d
 
 all : basic
