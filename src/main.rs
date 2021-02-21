@@ -20,6 +20,12 @@ fn main() {
             .help("Choose the name of the program to run")
             .required(true)
             .takes_value(true))
+        .arg(Arg::with_name("print")
+            .value_name("print")
+            .short("p")
+            .long("print")
+            .help("Prints instructions as they are executed")
+            .takes_value(false))
         .get_matches();
 
     let path = PathBuf::from(matches.value_of("program").unwrap());
@@ -36,5 +42,5 @@ fn main() {
 
     let memory = Memory::initialise(text_scn.data.clone(), DEFAULT_STACK_SIZE);
     let mut simulator = Simulator::new(memory, actual_entry);
-    simulator.run();
+    simulator.run(matches.is_present("print"));
 }

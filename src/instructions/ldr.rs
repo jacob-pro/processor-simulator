@@ -11,7 +11,6 @@ pub struct LDR {
 
 impl LDR {
     pub fn new(operands: Vec<ArmOperand>) -> Self {
-        println!("{:?}", operands[1]);
         Self { reg: operands[0].reg_id().unwrap(), mem: operands[1].op_mem_value().unwrap() }
     }
 }

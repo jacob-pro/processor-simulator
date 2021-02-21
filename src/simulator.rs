@@ -30,14 +30,22 @@ impl Simulator {
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self, print: bool) {
         let mut cycle_counter = 0;
         loop {
             cycle_counter = cycle_counter + 1;
             let instr_bytes = self.fetch();
-            let (instr, cc) = self.decode(instr_bytes.as_slice());
-            if self.should_execute(&cc) && instr.execute(self) {
-                break
+            let dec = self.decode(instr_bytes.as_slice());
+            let ex = self.should_execute(&dec.cc);
+            if print {
+                if ex {
+                    println!("{}", dec.string)
+                } else {
+                    println!("{} (skipped cc)", dec.string);
+                }
+            }
+            if ex {
+                dec.imp.execute(self);
             }
         }
     }
@@ -62,7 +70,7 @@ impl Simulator {
         code[0..instr_len as usize].to_vec()
     }
 
-    fn decode(&self, instr: &[u8]) -> (Box<dyn Instruction>, ArmCC) {
+    fn decode(&self, instr: &[u8]) -> DecodedInstruction {
         let list = self.capstone.disasm_all(instr, 0x0)
             .expect("Invalid instruction");
         let instr = list.iter().next().unwrap();
@@ -80,7 +88,11 @@ impl Simulator {
         let arm_detail = arch_detail.arm().unwrap();
 
         let decoded = decode_instruction(&ins_name, &arm_detail, operands);
-        (decoded, arm_detail.cc())
+        DecodedInstruction {
+            imp: decoded,
+            cc: arm_detail.cc(),
+            string: format!("{} {}", instr.mnemonic().unwrap(), instr.op_str().unwrap_or(""))
+        }
     }
 
     // https://community.arm.com/developer/ip-products/processors/b/processors-ip-blog/posts/condition-codes-1-condition-flags-and-codes
@@ -106,4 +118,10 @@ impl Simulator {
         }
     }
 
+}
+
+struct DecodedInstruction {
+    imp: Box<dyn Instruction>,
+    cc: ArmCC,
+    string: String,
 }
