@@ -1,51 +1,81 @@
 use std::convert::TryInto;
 
+struct Page {
+    write: bool,
+    data: Vec<u8>,
+    vaddr: u32,
+}
+
+#[derive(Default)]
 pub struct Memory {
-    text: Vec<u8>,
-    stack: Vec<u8>,
+    pages: Vec<Page>
 }
 
 impl Memory {
 
-    pub fn initialise(text: Vec<u8>, stack_size: u32) -> Self {
-        Memory{ text, stack: vec![0; stack_size as usize] }
+    pub fn new(stack_size: u32) -> Self {
+        let stack_page = Page {
+            write: true,
+            data: vec![0; stack_size as usize],
+            vaddr: std::u32::MAX - stack_size,
+        };
+        Self { pages: vec![stack_page] }
     }
 
-    fn stack_start(&self) -> u32 {
-        std::u32::MAX - self.stack.len() as u32
+    pub fn mmap(&mut self, address: u32, data: Vec<u8>, write: bool) {
+        // TODO: Prevent overlapping pages
+        self.pages.push(Page {
+            write,
+            data,
+            vaddr: address
+        });
     }
 
-    pub fn read_bytes(&self, base_address: u32, length: u32) -> &[u8] {
-        if (base_address as usize) < self.text.len() {
-            if ((base_address + length) as usize) <= self.text.len() {
-                return &self.text[base_address as usize..(base_address + length) as usize]
-            }
-        } else if base_address > self.stack_start() {
-            if base_address.checked_add(length - 1).is_some() {
-                let mapped = base_address - self.stack_start();
-                return &self.stack[mapped as usize..(mapped + length) as usize]
+    pub fn read_byte(&self, address: u32) -> u8 {
+        for p in &self.pages {
+            let p_end_addr = p.vaddr + p.data.len() as u32;
+            if address >= p.vaddr && address < p_end_addr {
+                let adj_addr = address - p.vaddr;
+                return p.data[adj_addr as usize];
             }
         }
-        panic!("Invalid memory address range {} + {}", base_address, length)
+        panic!("Invalid memory address {}", address)
+    }
+
+    pub fn write_byte(&mut self, address: u32, byte: u8) {
+        for p in &mut self.pages {
+            let p_end_addr = p.vaddr + p.data.len() as u32;
+            if address >= p.vaddr && address < p_end_addr {
+                let adj_addr = address - p.vaddr;
+                if p.write {
+                    p.data[adj_addr as usize] = byte;
+                    return;
+                } else {
+                    panic!("Tried to write to read only memory page, address {}", address);
+                }
+            }
+        }
+        panic!("Invalid memory address {}", address)
+    }
+
+
+    pub fn read_bytes(&self, base_address: u32, length: u32) -> Vec<u8> {
+        let mut ret = Vec::with_capacity(length as usize);
+        for i in 0..length {
+            ret.push(self.read_byte(base_address + i))
+        }
+        ret
     }
 
     pub fn read_u32(&self, address: u32) -> u32 {
         let bytes = self.read_bytes(address, 4);
-        u32::from_le_bytes( bytes.try_into().unwrap())
+        u32::from_le_bytes( bytes.as_slice().try_into().unwrap())
     }
 
     pub fn write_bytes(&mut self, base_address: u32, bytes: &[u8]) {
-        if (base_address as usize) < self.text.len() {
-            panic!("Text section is read only")
+        for i in 0..bytes.len() {
+            self.write_byte(base_address + i as u32, bytes[i]);
         }
-        if base_address > self.stack_start() {
-            if base_address.checked_add(bytes.len() as u32 - 1).is_some() {
-                let mapped = base_address - self.stack_start();
-                self.stack[mapped as usize..(mapped as usize + bytes.len())].copy_from_slice(bytes);
-                return;
-            }
-        }
-        panic!("Invalid memory address range {} + {}", base_address, bytes.len())
     }
 
 }

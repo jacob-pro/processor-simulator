@@ -30,14 +30,14 @@ impl Simulator {
         }
     }
 
-    pub fn run(&mut self, print: bool) {
+    pub fn run(&mut self, debug: bool) {
         let mut cycle_counter = 0;
         loop {
             cycle_counter = cycle_counter + 1;
             let instr_bytes = self.fetch();
             let dec = self.decode(instr_bytes.as_slice());
             let ex = self.should_execute(&dec.cc);
-            if print {
+            if debug {
                 if ex {
                     println!("{}", dec.string)
                 } else {

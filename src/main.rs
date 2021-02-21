@@ -8,6 +8,8 @@ use clap::{App, Arg};
 use memory::Memory;
 use crate::simulator::Simulator;
 use elf::types::PT_LOAD;
+use std::fs::File;
+use std::io::Read;
 
 const DEFAULT_STACK_SIZE: u32 = 1024;
 
@@ -21,40 +23,46 @@ fn main() {
             .help("Choose the name of the program to run")
             .required(true)
             .takes_value(true))
-        .arg(Arg::with_name("print")
-            .value_name("print")
-            .short("p")
-            .long("print")
-            .help("Prints instructions as they are executed")
+        .arg(Arg::with_name("debug")
+            .value_name("debug")
+            .short("d")
+            .long("debug")
+            .help("Prints debug information")
             .takes_value(false))
         .get_matches();
+    let debug = matches.is_present("debug");
 
     let path = PathBuf::from(matches.value_of("program").unwrap());
     let elf_file = match elf::File::open_path(&path) {
         Ok(f) => f,
         Err(e) => panic!("Error opening file: {:#?}", e),
     };
+    let mut elf_file_bytes = Vec::new();
+    File::open(&path).unwrap().read_to_end(&mut elf_file_bytes).unwrap();
 
-    let load = elf_file.phdrs.iter()
-        .filter(|x| x.progtype == PT_LOAD).next().expect("Couldn't find LOAD");
-    let mut prog =  vec![0; load.filesz as usize];
+    let mut memory = Memory::new(DEFAULT_STACK_SIZE);
 
-    for section in elf_file.sections.iter() {
-        match section.shdr.addr.checked_sub(section.shdr.offset) {
-            Some(x) if x == load.vaddr => {
-                let offset = section.shdr.offset as usize;
-                prog[offset..offset + section.data.len()].copy_from_slice(section.data.as_slice());
-                println!("Copying section {} at {}::{}", section.shdr.name, offset, offset + section.data.len());
-            },
-            _ => {},
+    // https://wiki.osdev.org/ELF#Loading_ELF_Binaries
+    for header in elf_file.phdrs.iter() {
+        if header.progtype == PT_LOAD {
+
+            let mut data =  vec![0; header.memsz as usize];
+            let elf_offset = header.offset as usize;
+            let end = elf_offset + header.filesz as usize;
+
+            data[0..header.filesz as usize]
+                .copy_from_slice(&elf_file_bytes[elf_offset..end]);
+
+            let write = (header.flags.0 & 0b10) > 0;
+            memory.mmap(header.vaddr as u32, data, write);
         }
     }
 
     let entry = elf_file.ehdr.entry as u32 - 1;
-    let actual_entry = entry - load.vaddr as u32;
-    println!("Entry at {}", actual_entry);
+    if debug {
+        println!("Entry point at {:#X}", entry);
+    }
 
-    let memory = Memory::initialise(prog, DEFAULT_STACK_SIZE);
-    let mut simulator = Simulator::new(memory, actual_entry);
-    simulator.run(matches.is_present("print"));
+    let mut simulator = Simulator::new(memory, entry);
+    simulator.run(debug);
 }
