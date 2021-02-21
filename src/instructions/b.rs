@@ -18,9 +18,9 @@ impl B {
 impl Instruction for B {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         if self.with_link {
-            sim.registers.lr = sim.registers.pc;
+            sim.registers.lr = sim.registers.future_pc;
         }
-        sim.registers.pc = (sim.registers.pc as i64 + self.jump as i64) as u32;
+        sim.registers.future_pc = (sim.registers.pc as i64 + self.jump as i64 - 4) as u32;
         false
     }
 }

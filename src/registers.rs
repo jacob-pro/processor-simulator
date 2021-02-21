@@ -17,6 +17,7 @@ pub struct RegisterFile {
     pub pc: u32,
     pub cond_flags: ConditionFlags,
     capstone: Rc<Capstone>,
+    pub future_pc : u32,
 }
 
 impl RegisterFile {
@@ -28,7 +29,8 @@ impl RegisterFile {
             lr: 0,
             pc,
             cond_flags: Default::default(),
-            capstone
+            capstone,
+            future_pc: 0,
         }
     }
 

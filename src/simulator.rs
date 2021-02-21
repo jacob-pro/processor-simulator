@@ -47,6 +47,7 @@ impl Simulator {
             if ex && dec.imp.execute(self) {
                 break
             }
+            self.registers.pc = self.registers.future_pc;
         }
     }
 
@@ -58,7 +59,6 @@ impl Simulator {
             the halfword is the first halfword of a 32-bit instruction:
             0b11101 0b11110 0b11111 Otherwise, the halfword is a 16-bit instruction.
          */
-        //assert_eq!(self.registers.pc & 0x1, 1, "PC must be in thumb mode");
         let addr = self.registers.pc;
         let code = self.memory.read_bytes(addr, 4);
         let bits_15_11 = code[1] >> 3;
@@ -67,7 +67,8 @@ impl Simulator {
             _ => 2
         };
         assert!(instr_len == 2 || instr_len == 4);
-        self.registers.pc = self.registers.pc + instr_len;
+        self.registers.future_pc = self.registers.pc + instr_len;
+        self.registers.pc = self.registers.pc + 4;  // The PC is a lie!
         code[0..instr_len as usize].to_vec()
     }
 
