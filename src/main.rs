@@ -34,19 +34,25 @@ fn main() {
         Ok(f) => f,
         Err(e) => panic!("Error opening file: {:#?}", e),
     };
-    let text_scn = match elf_file.get_section(".text") {
-        Some(s) => s,
-        None => panic!("Failed to get .text section in elf file"),
-    };
 
     let load = elf_file.phdrs.iter()
         .filter(|x| x.progtype == PT_LOAD).next().expect("Couldn't find LOAD");
     let mut prog =  vec![0; load.filesz as usize];
-    let base = text_scn.shdr.offset as usize;
-    prog[base..base + text_scn.data.len()].copy_from_slice(text_scn.data.as_slice());
+
+    for section in elf_file.sections.iter() {
+        match section.shdr.addr.checked_sub(section.shdr.offset) {
+            Some(x) if x == load.vaddr => {
+                let offset = section.shdr.offset as usize;
+                prog[offset..offset + section.data.len()].copy_from_slice(section.data.as_slice());
+                println!("Copying section {} at {}::{}", section.shdr.name, offset, offset + section.data.len());
+            },
+            _ => {},
+        }
+    }
 
     let entry = elf_file.ehdr.entry as u32 - 1;
     let actual_entry = entry - load.vaddr as u32;
+    println!("Entry at {}", actual_entry);
 
     let memory = Memory::initialise(prog, DEFAULT_STACK_SIZE);
     let mut simulator = Simulator::new(memory, actual_entry);

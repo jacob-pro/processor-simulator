@@ -4,13 +4,13 @@ use capstone::arch::arm::ArmOperand;
 use crate::instructions::util::ArmOperandExt;
 use capstone::prelude::*;
 
-pub struct LDM {
+pub struct STM {
     base_register: RegId,
     reg_list: Vec<RegId>,
     writeback: bool,
 }
 
-impl LDM {
+impl STM {
     pub fn new(operands: Vec<ArmOperand>, writeback: bool) -> Self {
         let reg_list: Vec<RegId> = operands.into_iter()
             .map(|x: ArmOperand| x.reg_id().unwrap()).collect();
@@ -18,14 +18,13 @@ impl LDM {
     }
 }
 
-impl Instruction for LDM {
-    // https://keleshev.com/ldm-my-favorite-arm-instruction/
+impl Instruction for STM {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         let base_addr = *sim.registers.get_by_id(self.base_register);
         for (idx, reg) in self.reg_list.iter().enumerate() {
             let adj_addr = base_addr + (idx as u32 * 4);
-            let val = sim.memory.read_u32(adj_addr);
-            *sim.registers.get_by_id(*reg) = val;
+            let reg_val = sim.registers.get_by_id(*reg);
+            sim.memory.write_bytes(adj_addr, &reg_val.to_le_bytes());
         }
         if self.writeback {
             let final_address = base_addr + (self.reg_list.len() as u32 * 4);

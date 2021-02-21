@@ -58,8 +58,9 @@ impl Simulator {
             the halfword is the first halfword of a 32-bit instruction:
             0b11101 0b11110 0b11111 Otherwise, the halfword is a 16-bit instruction.
          */
-        let pc = self.registers.pc;
-        let code = self.memory.read_bytes(pc, 4);
+        //assert_eq!(self.registers.pc & 0x1, 1, "PC must be in thumb mode");
+        let addr = self.registers.pc;
+        let code = self.memory.read_bytes(addr, 4);
         let bits_15_11 = code[1] >> 3;
         let instr_len = match bits_15_11 {
             0b11101 | 0b11110 | 0b11111 => 4,

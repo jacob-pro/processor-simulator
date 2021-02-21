@@ -5,10 +5,12 @@ mod util;
 mod mov;
 mod b;
 mod add;
+mod sub;
 mod cmp;
 mod ldm;
 mod lsl;
 mod ldr;
+mod stm;
 
 use capstone::arch::arm::{ArmOperand, ArmInsnDetail};
 use crate::simulator::Simulator;
@@ -72,11 +74,11 @@ pub fn decode_instruction(name: &str,
         "RSB" => panic!("{} not yet implemented", name),
         "SBC" => panic!("{} not yet implemented", name),
         "SEV" => panic!("{} not yet implemented", name),
-        "STM" => Box::new(nop::NOP::new()),
+        "STM" => Box::new(stm::STM::new(operands, writeback)),
         "STR" => Box::new(nop::NOP::new()),
         "STRB" => panic!("{} not yet implemented", name),
         "STRH" => panic!("{} not yet implemented", name),
-        "SUB" => Box::new(nop::NOP::new()),
+        "SUB" => Box::new(sub::SUB::new(operands, update_flags)),
         "SVC" => Box::new(svc::SVC::new(operands)),
         "SXTB" => panic!("{} not yet implemented", name),
         "SXTH" => panic!("{} not yet implemented", name),
