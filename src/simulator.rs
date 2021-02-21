@@ -68,7 +68,9 @@ impl Simulator {
         };
         assert!(instr_len == 2 || instr_len == 4);
         self.registers.future_pc = self.registers.pc + instr_len;
-        self.registers.pc = self.registers.pc + 4;  // The PC is a lie!
+        // The PC is a liar (sometimes)!
+        // The PC offset is always 4 bytes in Thumb state
+        self.registers.pc = self.registers.pc + 4;
         code[0..instr_len as usize].to_vec()
     }
 

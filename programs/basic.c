@@ -9,6 +9,6 @@ void start() {
         a[i] = a[i] + b[i];
     }
 
-    exit(a[4]);
+    exit(a[3]);
 
 }

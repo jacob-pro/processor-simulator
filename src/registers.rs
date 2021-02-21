@@ -67,12 +67,24 @@ impl RegisterFile {
     }
 
     pub fn eval_op_mem(&mut self, op_mem: &ArmOpMem) -> u32 {
-        let base_reg_val = *self.get_by_id(op_mem.base()) as i64;
+
+        /* PC appears WORD aligned to LDR/STR PC relative instructions
+        * https://community.arm.com/developer/ip-products/processors/f/cortex-m-forum/4541/real-value-of-pc-register/11430#11430
+         */
+        let base_reg_val = if self.capstone.reg_name(op_mem.base()).unwrap() == "pc" {
+            let pc_val = *self.get_by_id(op_mem.base()) as i64;
+            pc_val & 0xFFFFFFFC
+        } else {
+            *self.get_by_id(op_mem.base()) as i64
+        };
+
+        // Immediate offset
         let displacement: i32 = if op_mem.index().0 == 0 {
             op_mem.disp()
         } else {
+            // Register offset
             let index_val = *self.get_by_id(op_mem.index());
-            (index_val as i32) * op_mem.scale()
+            (index_val as i32) * op_mem.scale()     // Scale for index register (can be 1, or -1)
         };
         let result = base_reg_val + displacement as i64;
         result as u32

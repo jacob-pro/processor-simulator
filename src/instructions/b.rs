@@ -18,8 +18,10 @@ impl B {
 impl Instruction for B {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         if self.with_link {
+            // copy the address of the next instruction into LR
             sim.registers.lr = sim.registers.future_pc;
         }
+        // pc is always 4 bytes ahead of the actual current instruction
         sim.registers.future_pc = (sim.registers.pc as i64 + self.jump as i64 - 4) as u32;
         false
     }
