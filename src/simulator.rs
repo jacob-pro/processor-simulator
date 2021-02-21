@@ -44,8 +44,8 @@ impl Simulator {
                     println!("{} (skipped cc)", dec.string);
                 }
             }
-            if ex {
-                dec.imp.execute(self);
+            if ex && dec.imp.execute(self) {
+                break
             }
         }
     }

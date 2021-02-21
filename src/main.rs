@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use clap::{App, Arg};
 use memory::Memory;
 use crate::simulator::Simulator;
+use elf::types::PT_LOAD;
 
 const DEFAULT_STACK_SIZE: u32 = 1024;
 
@@ -37,10 +38,17 @@ fn main() {
         Some(s) => s,
         None => panic!("Failed to get .text section in elf file"),
     };
-    let entry = elf_file.ehdr.entry as u32 - 1;
-    let actual_entry = entry - text_scn.shdr.addr as u32;
 
-    let memory = Memory::initialise(text_scn.data.clone(), DEFAULT_STACK_SIZE);
+    let load = elf_file.phdrs.iter()
+        .filter(|x| x.progtype == PT_LOAD).next().expect("Couldn't find LOAD");
+    let mut prog =  vec![0; load.filesz as usize];
+    let base = text_scn.shdr.offset as usize;
+    prog[base..base + text_scn.data.len()].copy_from_slice(text_scn.data.as_slice());
+
+    let entry = elf_file.ehdr.entry as u32 - 1;
+    let actual_entry = entry - load.vaddr as u32;
+
+    let memory = Memory::initialise(prog, DEFAULT_STACK_SIZE);
     let mut simulator = Simulator::new(memory, actual_entry);
     simulator.run(matches.is_present("print"));
 }
