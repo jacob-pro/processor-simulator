@@ -2,7 +2,7 @@
 
 ## Build
 
-First install package `gcc-arm-linux-gnueabi`
+First install package `gcc-arm-none-eabi libnewlib-arm-none-eabi`
 
 Run `make all`
 

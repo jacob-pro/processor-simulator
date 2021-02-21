@@ -1,5 +1,5 @@
-COMPILE = arm-linux-gnueabi-gcc -mcpu=cortex-m0 -ffreestanding -fpie -nostdlib --entry=start libc.c
-DUMP = arm-linux-gnueabi-objdump -m cortex-m0 -d
+COMPILE = arm-none-eabi-gcc -mcpu=cortex-m0 -ffreestanding -fpie -nostdlib --entry=start libc.c
+DUMP = arm-none-eabi-objdump -m cortex-m0 -d
 
 all : basic
 
