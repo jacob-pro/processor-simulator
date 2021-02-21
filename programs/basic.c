@@ -10,6 +10,6 @@ void start() {
         a[i] = b[i] + c[i];
     }
 
-    exit(23);
+    exit(a[0]);
 
 }
