@@ -11,6 +11,7 @@ mod ldm;
 mod lsl;
 mod ldr;
 mod stm;
+mod str;
 
 use capstone::arch::arm::{ArmOperand, ArmInsnDetail};
 use crate::simulator::Simulator;
@@ -75,7 +76,7 @@ pub fn decode_instruction(name: &str,
         "SBC" => panic!("{} not yet implemented", name),
         "SEV" => panic!("{} not yet implemented", name),
         "STM" => Box::new(stm::STM::new(operands, writeback)),
-        "STR" => Box::new(nop::NOP::new()),
+        "STR" => Box::new(str::STR::new(operands)),
         "STRB" => panic!("{} not yet implemented", name),
         "STRH" => panic!("{} not yet implemented", name),
         "SUB" => Box::new(sub::SUB::new(operands, update_flags)),
