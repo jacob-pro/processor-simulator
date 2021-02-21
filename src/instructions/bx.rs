@@ -22,9 +22,8 @@ impl Instruction for BX {
             // copy the address of the next instruction into LR
             sim.registers.lr = sim.registers.future_pc;
         }
-        // pc is always 4 bytes ahead of the actual current instruction
-        let jump = *sim.registers.get_by_id(self.register);
-        sim.registers.future_pc = (sim.registers.pc as i64 + jump as i64 - 4) as u32;
+        let new_addr = *sim.registers.get_by_id(self.register);
+        sim.registers.future_pc = new_addr;
         false
     }
 }

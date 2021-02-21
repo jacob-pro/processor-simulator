@@ -39,7 +39,7 @@ impl Memory {
                 return p.data[adj_addr as usize];
             }
         }
-        panic!("Invalid memory address {}", address)
+        panic!("Invalid memory address {:#X}", address)
     }
 
     pub fn write_byte(&mut self, address: u32, byte: u8) {
@@ -51,11 +51,11 @@ impl Memory {
                     p.data[adj_addr as usize] = byte;
                     return;
                 } else {
-                    panic!("Tried to write to read only memory page, address {}", address);
+                    panic!("Tried to write to read only memory page, address {:#X}", address);
                 }
             }
         }
-        panic!("Invalid memory address {}", address)
+        panic!("Invalid memory address {:#X}", address)
     }
 
 
