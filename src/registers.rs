@@ -41,6 +41,7 @@ impl RegisterFile {
             return &mut self.gprs[number]
         }
         return match name.as_str() {
+            "SL" => &mut self.gprs[10], // Synonym
             "IP" => &mut self.gprs[12], // Synonym
             "SP" => &mut self.sp,
             "LR" => &mut self.lr,

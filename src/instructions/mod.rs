@@ -4,6 +4,7 @@ mod svc;
 mod util;
 mod mov;
 mod b;
+mod bx;
 mod add;
 mod sub;
 mod cmp;
@@ -42,8 +43,8 @@ pub fn decode_instruction(name: &str,
         "BIC" => panic!("{} not yet implemented", name),
         "BKPT" => panic!("{} not yet implemented", name),
         "BL" => Box::new(b::B::new(operands, true)),
-        "BLX" => panic!("{} not yet implemented", name),
-        "BX" => panic!("{} not yet implemented", name),
+        "BLX" => Box::new(bx::BX::new(operands, true)),
+        "BX" => Box::new(bx::BX::new(operands, false)),
         "CMN" => Box::new(cmp::CMP::new(operands, true)),
         "CMP" => Box::new(cmp::CMP::new(operands, false)),
         "CPS" => panic!("{} not yet implemented", name),

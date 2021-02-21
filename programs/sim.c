@@ -1,4 +1,4 @@
-#include "libc.h"
+#include "sim.h"
 
 void exit(uint32_t x) {
     asm volatile( "mov r0, %1 \n" // assign r0 =  x

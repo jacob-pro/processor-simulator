@@ -1,9 +1,9 @@
-COMPILE = arm-none-eabi-gcc -mcpu=cortex-m0 -ffreestanding -fpie -nostdlib --entry=start libc.c
+COMPILE = arm-none-eabi-gcc -mthumb -mcpu=cortex-m0 -ffreestanding -nostdlib --entry=main -fpie sim.c
 DUMP = arm-none-eabi-objdump -m cortex-m0 -d
 
 all : basic
 
-basic : basic.c libc.c
+basic : basic.c sim.c
 	${COMPILE} basic.c -o basic.elf
 	${DUMP} basic.elf > basic.dump
 

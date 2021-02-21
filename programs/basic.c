@@ -1,6 +1,6 @@
-#include "libc.h"
+#include "sim.h"
 
-void start() {
+int main() {
 
     int a[] = {29, 2, 33, 4, 54};
     int b[] = {29, 2, 34, 45, 54};
@@ -9,6 +9,6 @@ void start() {
         a[i] = a[i] + b[i];
     }
 
-    exit(a[3]);
-
+    exit(5);
+    return 5;
 }
