@@ -10,7 +10,7 @@ mod add;
 mod sub;
 mod cmp;
 mod ldm;
-mod lsl;
+mod shift;
 mod ldr;
 mod stm;
 mod str;
@@ -42,7 +42,7 @@ pub fn decode_instruction(name: &str,
         "ADD" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADD)),
         "ADR" => panic!("{} not yet implemented", name),
         "AND" => Box::new(logical::LOGICAL::new(operands, logical::Mode::AND)),
-        "ASR" => panic!("{} not yet implemented", name),
+        "ASR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ASR)),
         "B" => Box::new(b::B::new(operands, false)),
         "BIC" => Box::new(logical::LOGICAL::new(operands, logical::Mode::BIC)),
         "BKPT" => panic!("{} not yet implemented", name),
@@ -62,8 +62,8 @@ pub fn decode_instruction(name: &str,
         "LDRH" => Box::new(ldr::LDR::new(operands, ldr::Mode::HalfWord)),
         "LDRSB" => Box::new(ldr::LDR::new(operands, ldr::Mode::SignedByte)),
         "LDRSH" => Box::new(ldr::LDR::new(operands, ldr::Mode::SignedHalfWord)),
-        "LSL" => Box::new(lsl::LSL::new(operands)),
-        "LSR" => panic!("{} not yet implemented", name),
+        "LSL" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSL)),
+        "LSR" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSR)),
         "MOV" => Box::new(mov::MOV::new(operands, update_flags)),
         "MRS" => panic!("{} not yet implemented", name),
         "MSR" => panic!("{} not yet implemented", name),
@@ -76,7 +76,7 @@ pub fn decode_instruction(name: &str,
         "REV" => panic!("{} not yet implemented", name),
         "REV16" => panic!("{} not yet implemented", name),
         "REVSH" => panic!("{} not yet implemented", name),
-        "ROR" => panic!("{} not yet implemented", name),
+        "ROR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ROR)),
         "RSB" => panic!("{} not yet implemented", name),
         "SBC" => panic!("{} not yet implemented", name),
         "SEV" => panic!("{} not yet implemented", name),

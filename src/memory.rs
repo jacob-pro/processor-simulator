@@ -17,7 +17,7 @@ pub struct Memory {
  `readelf -s basic.elf | grep _stack` = 00080000
  newlib will deal with the stack pointer automatically
  */
-const _STACK: u32 = 0x80000;
+pub const _STACK: u32 = 0x80000;
 
 impl Memory {
 

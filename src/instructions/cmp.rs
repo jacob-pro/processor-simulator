@@ -29,20 +29,19 @@ impl Instruction for CMP {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         let first_value = sim.registers.read_by_id(self.first);
         let second_value = sim.registers.value_of_flexible_second_operand(&self.second, false);
+        // The CMP instruction subtracts either the value in the register specified by Rm, or the immediate imm from the value in Rn and updates the flags.
+        let (pos_res, pos_ovf) = first_value.overflowing_sub(second_value);
+        // The CMN instruction adds the value of Rm to the value in Rn and updates the flags.
+        let (neg_res, neg_ovf) = (first_value).overflowing_add(second_value);
+
         let res = match self.mode {
-            Mode::Positive => {
-                let (res, ovf) = first_value.overflowing_sub(second_value);
-                sim.registers.cond_flags.c = ovf;
-                res as i32
-            }
-            Mode::Negative => {
-                let (res, ovf) = (first_value as i32).overflowing_sub(second_value as i32);
-                sim.registers.cond_flags.v = ovf;
-                res
-            }
+            Mode::Positive => { pos_res }
+            Mode::Negative => { neg_res }
         };
-        sim.registers.cond_flags.n = res.is_negative();
+        sim.registers.cond_flags.n = (res as i32).is_negative();
         sim.registers.cond_flags.z = res == 0;
+        sim.registers.cond_flags.c = pos_ovf;
+        sim.registers.cond_flags.v = neg_ovf;
         false
     }
 }
