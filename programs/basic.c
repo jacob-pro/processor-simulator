@@ -16,5 +16,3 @@ int main() {
 
     exit(b[2]);
 }
-
-int __stack = 0;

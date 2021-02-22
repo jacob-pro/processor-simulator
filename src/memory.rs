@@ -11,13 +11,21 @@ pub struct Memory {
     pages: Vec<Page>
 }
 
+/*
+ The top of the stack as defined by the linker script
+ " .stack 0x80000 : { _stack = .; *(.stack) } "
+ `readelf -s basic.elf | grep _stack` = 00080000
+ newlib will deal with the stack pointer automatically
+ */
+const _STACK: u32 = 0x80000;
+
 impl Memory {
 
     pub fn new(stack_size: u32) -> Self {
         let stack_page = Page {
             write: true,
             data: vec![0; stack_size as usize],
-            vaddr: std::u32::MAX - stack_size,
+            vaddr: _STACK - stack_size,
         };
         Self { pages: vec![stack_page] }
     }

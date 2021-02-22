@@ -25,7 +25,7 @@ impl RegisterFile {
     pub fn new(capstone: Rc<Capstone>, pc: u32) -> Self {
         Self {
             gprs: Default::default(),
-            sp: std::u32::MAX,
+            sp: 0,
             lr: 0,
             pc,
             cond_flags: Default::default(),
