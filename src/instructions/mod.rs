@@ -7,7 +7,6 @@ mod mov;
 mod b;
 mod bx;
 mod add;
-mod sub;
 mod cmp;
 mod ldm;
 mod shift;
@@ -77,14 +76,14 @@ pub fn decode_instruction(name: &str,
         "REV16" => panic!("{} not yet implemented", name),
         "REVSH" => panic!("{} not yet implemented", name),
         "ROR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ROR)),
-        "RSB" => panic!("{} not yet implemented", name),
+        "RSB" => Box::new(add::ADD::new(operands, update_flags, add::Mode::RSB)),
         "SBC" => panic!("{} not yet implemented", name),
         "SEV" => panic!("{} not yet implemented", name),
         "STM" => Box::new(stm::STM::new(operands, writeback)),
         "STR" => Box::new(str::STR::new(operands, str::Mode::Word)),
         "STRB" => Box::new(str::STR::new(operands, str::Mode::Byte)),
         "STRH" => Box::new(str::STR::new(operands, str::Mode::HalfWord)),
-        "SUB" => Box::new(sub::SUB::new(operands, update_flags)),
+        "SUB" => Box::new(add::ADD::new(operands, update_flags, add::Mode::SUB)),
         "SVC" => Box::new(svc::SVC::new(operands)),
         "SXTB" => Box::new(extends::EXTENDS::new(operands, extends::Mode::SXTB)),
         "SXTH" => Box::new(extends::EXTENDS::new(operands, extends::Mode::SXTH)),

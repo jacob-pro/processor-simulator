@@ -42,8 +42,27 @@ impl Instruction for ADD {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         let first_val = sim.registers.read_by_id(self.first);
         let sec_val = sim.registers.value_of_flexible_second_operand(&self.second, self.update_flags);
-        let (result, unsigned_overflow) = first_val.overflowing_add(sec_val);
-        let (_, signed_overflow) = (first_val as i32).overflowing_add(sec_val as i32);
+
+        let (result, unsigned_overflow, signed_overflow) = match self.mode {
+            Mode::ADC => {panic!()}
+            Mode::ADD => {
+                let (result, unsigned_overflow) = first_val.overflowing_add(sec_val);
+                let (_, signed_overflow) = (first_val as i32).overflowing_add(sec_val as i32);
+                (result, unsigned_overflow, signed_overflow)
+            }
+            Mode::RSB => {
+                let (result, unsigned_overflow) = sec_val.overflowing_sub(first_val);
+                let (_, signed_overflow) = (sec_val as i32).overflowing_sub(first_val as i32);
+                (result, unsigned_overflow, signed_overflow)
+            }
+            Mode::SBC => {panic!()}
+            Mode::SUB => {
+                let (result, unsigned_overflow) = first_val.overflowing_sub(sec_val);
+                let (_, signed_overflow) = (first_val as i32).overflowing_sub(sec_val as i32);
+                (result, unsigned_overflow, signed_overflow)
+            }
+        };
+
         sim.registers.write_by_id(self.dest, result);
         if self.update_flags {
             sim.registers.cond_flags.n = (result as i32).is_negative();

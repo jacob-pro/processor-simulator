@@ -20,43 +20,48 @@ pub struct SHIFT {
 
 impl SHIFT {
     pub fn new(operands: Vec<ArmOperand>, mode: Mode) -> Self {
-        let dest = operands[0].reg_id().unwrap();
-        let first = operands[1].reg_id().unwrap();
-        let second = operands[2].clone();
-        return Self { mode, dest, first, second };
+        if operands.len() == 2 {
+            let dest = operands[0].reg_id().unwrap();
+            let first = operands[0].reg_id().unwrap();
+            let second = operands[1].clone();
+            return Self { mode, dest, first, second };
+        } else {
+            let dest = operands[0].reg_id().unwrap();
+            let first = operands[1].reg_id().unwrap();
+            let second = operands[2].clone();
+            return Self { mode, dest, first, second };
+        }
     }
 }
 
 impl Instruction for SHIFT {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         let first_val = sim.registers.read_by_id(self.first);
-        let second = sim.registers.value_of_flexible_second_operand(&self.second, true) as u8;
+        let shift = sim.registers.value_of_flexible_second_operand(&self.second, true) as u8;
 
         // The C flag is unaffected if the shift value is 0. Otherwise, the C flag is updated to the last bit shifted out.
         let result = match self.mode {
             Mode::ASR => {
-                if second > 0 {
-                    sim.registers.cond_flags.c = get_bit_at(first_val, second - 1);
-                }
-                (first_val as i32 >> second) as u32
+                assert!(shift >= 1 && shift <= 32);
+                sim.registers.cond_flags.c = get_bit_at(first_val, shift - 1);
+                (first_val as i32 >> shift) as u32
             }
             Mode::LSL => {
-                if second > 0 {
-                    sim.registers.cond_flags.c = get_bit_at(first_val, 31 - second);
+                assert!(shift <= 31);
+                if shift > 0 {
+                    sim.registers.cond_flags.c = get_bit_at(first_val, 31 - shift);
                 }
-                first_val << second
+                first_val << shift
             }
             Mode::LSR => {
-                if second > 0 {
-                    sim.registers.cond_flags.c = get_bit_at(first_val, second - 1);
-                }
-                first_val >> second
+                assert!(shift >= 1 && shift <= 32);
+                sim.registers.cond_flags.c = get_bit_at(first_val, shift - 1);
+                first_val >> shift
             }
             Mode::ROR => {
-                if second > 0 {
-                    sim.registers.cond_flags.c = get_bit_at(first_val, second - 1);
-                }
-                first_val.rotate_right(second as u32)
+                assert!(shift >= 1 && shift <= 31);
+                sim.registers.cond_flags.c = get_bit_at(first_val, shift - 1);
+                first_val.rotate_right(shift as u32)
             }
         };
         sim.registers.write_by_id(self.dest, result);
