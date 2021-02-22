@@ -72,6 +72,11 @@ impl Memory {
         u32::from_le_bytes( bytes.as_slice().try_into().unwrap())
     }
 
+    pub fn read_u16(&self, address: u32) -> u16 {
+        let bytes = self.read_bytes(address, 2);
+        u16::from_le_bytes( bytes.as_slice().try_into().unwrap())
+    }
+
     pub fn write_bytes(&mut self, base_address: u32, bytes: &[u8]) {
         for i in 0..bytes.len() {
             self.write_byte(base_address + i as u32, bytes[i]);
