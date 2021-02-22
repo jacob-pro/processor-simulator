@@ -26,12 +26,11 @@ impl Instruction for STR {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         let mem_addr = sim.registers.eval_op_mem(&self.mem);
         let reg_val = *sim.registers.get_by_id(self.reg);
-        let reg_val = match self.mode {
-            Mode::Word => {reg_val}
-            Mode::HalfWord => {reg_val as u16 as u32}
-            Mode::Byte => {reg_val as u8 as u32}
+        match self.mode {
+            Mode::Word => {sim.memory.write_bytes(mem_addr, &reg_val.to_le_bytes())}
+            Mode::HalfWord => {sim.memory.write_bytes(mem_addr, &(reg_val as u16).to_le_bytes())}
+            Mode::Byte => {sim.memory.write_bytes(mem_addr, &(reg_val as u8).to_le_bytes())}
         };
-        sim.memory.write_bytes(mem_addr, &reg_val.to_le_bytes());
         false
     }
 }
