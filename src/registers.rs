@@ -118,4 +118,27 @@ impl RegisterFile {
         result as u32
     }
 
+
+    /*
+     *  reglist must use only R0-R7. The exception is LR for a PUSH and PC for a POP.
+     * lowest numbered register using the lowest memory address
+     */
+    pub fn push_pop_register_asc(&self, mut reg_list: Vec<RegId>) -> Vec<RegId> {
+        reg_list.sort_by_key(|r| {
+            let name = self.capstone.reg_name(*r).unwrap().to_ascii_uppercase();
+            if name.starts_with("R") {
+                let number = name[1..].parse::<usize>().expect("Invalid register");
+                if number <= 7 {
+                    return number;
+                }
+            }
+            return match name.as_str() {
+                "LR" => 14,
+                "PC" => 15,
+                _ => panic!("Unknown register {}", name)
+            }
+        });
+        reg_list
+    }
+
 }
