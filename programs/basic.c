@@ -1,10 +1,10 @@
-#include "sim.h"
 #include <stdio.h>
 
 int main() {
 
     char hello[] = {'H', 'E', 'L', 'L', 'O', '\n'};
-    write(0, hello, sizeof(hello));
+    _write(0, hello, sizeof(hello));
+//    printf("HELLO2");
 
 
     int a[] = {29, 2, 33, 4, 54};
@@ -14,5 +14,5 @@ int main() {
         a[i] = a[i] + b[i];
     }
 
-    exit(a[1]);
+    return 25;
 }

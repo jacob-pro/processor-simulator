@@ -11,6 +11,13 @@ use elf::types::PT_LOAD;
 use std::fs::File;
 use std::io::Read;
 
+/*
+ The top of the stack as defined by the linker script
+ " .stack 0x80000 : { _stack = .; *(.stack) } "
+ `readelf -s basic.elf | grep _stack` = 00080000
+ newlib will deal with the stack pointer automatically
+ */
+const _STACK: u32 = 0x80000;
 const DEFAULT_STACK_SIZE: u32 = 4096;
 
 fn main() {
@@ -49,7 +56,8 @@ fn main() {
     let mut elf_file_bytes = Vec::new();
     File::open(&path).unwrap().read_to_end(&mut elf_file_bytes).unwrap();
 
-    let mut memory = Memory::new(stack_size);
+    let mut memory = Memory::default();
+    memory.mmap(_STACK - stack_size,  vec![0; stack_size as usize], true);
 
     // https://wiki.osdev.org/ELF#Loading_ELF_Binaries
     for header in elf_file.phdrs.iter() {

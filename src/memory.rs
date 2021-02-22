@@ -11,27 +11,21 @@ pub struct Memory {
     pages: Vec<Page>
 }
 
-/*
- The top of the stack as defined by the linker script
- " .stack 0x80000 : { _stack = .; *(.stack) } "
- `readelf -s basic.elf | grep _stack` = 00080000
- newlib will deal with the stack pointer automatically
- */
-pub const _STACK: u32 = 0x80000;
+
 
 impl Memory {
 
-    pub fn new(stack_size: u32) -> Self {
-        let stack_page = Page {
-            write: true,
-            data: vec![0; stack_size as usize],
-            vaddr: _STACK - stack_size,
-        };
-        Self { pages: vec![stack_page] }
-    }
-
     pub fn mmap(&mut self, address: u32, data: Vec<u8>, write: bool) {
-        // TODO: Prevent overlapping pages
+        for existing_p in &self.pages {
+            let existing_p_end = existing_p.vaddr + existing_p.data.len() as u32;
+            let new_p_end = address + data.len() as u32;
+            if address >= existing_p.vaddr && address < existing_p_end {
+                panic!("Cannot create page here");
+            }
+            if new_p_end >= existing_p.vaddr && new_p_end < existing_p_end {
+                panic!("Cannot create page here");
+            }
+        }
         self.pages.push(Page {
             write,
             data,
