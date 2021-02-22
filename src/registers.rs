@@ -47,7 +47,7 @@ impl RegisterFile {
             "IP" => self.gprs[12], // Synonym
             "SP" => self.sp,
             "LR" => self.lr,
-            "PC" => self.pc,
+            "PC" => self.pc & 0xFFFFFFFE,   // PC hides the plus one thing
             _ => panic!("Unknown register {}", name)
         }
     }
@@ -66,7 +66,7 @@ impl RegisterFile {
             "IP" => {self.gprs[12] = value}, // Synonym
             "SP" => {self.sp = value},
             "LR" => {self.lr = value},
-            "PC" => {self.future_pc = value},     // Write to the real PC!
+            "PC" => {self.future_pc = value},     // When an instruction updates the PC - write to the real PC!
             _ => panic!("Unknown register {}", name)
         }
     }

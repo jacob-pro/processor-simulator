@@ -14,5 +14,5 @@ int main() {
         a[i] = a[i] + b[i];
     }
 
-    exit(29);
+    exit(a[1]);
 }

@@ -11,10 +11,11 @@ use elf::types::PT_LOAD;
 use std::fs::File;
 use std::io::Read;
 
-const DEFAULT_STACK_SIZE: u32 = 1024;
+const DEFAULT_STACK_SIZE: u32 = 4096;
 
 fn main() {
 
+    let default_stack_size = DEFAULT_STACK_SIZE.to_string();
     let matches = App::new("Processor Simulator")
         .version("1.0")
         .author("Jacob Halsey")
@@ -29,8 +30,16 @@ fn main() {
             .long("debug")
             .help("Prints debug information")
             .takes_value(false))
+        .arg(Arg::with_name("stack")
+            .value_name("stack")
+            .long("stack")
+            .help("Set stack size in bytes")
+            .takes_value(true)
+            .default_value(default_stack_size.as_str()))
         .get_matches();
     let debug = matches.is_present("debug");
+    let stack_size: u32 = matches.value_of("stack").unwrap().parse()
+        .expect("--stack must be integer");
 
     let path = PathBuf::from(matches.value_of("program").unwrap());
     let elf_file = match elf::File::open_path(&path) {
@@ -40,7 +49,7 @@ fn main() {
     let mut elf_file_bytes = Vec::new();
     File::open(&path).unwrap().read_to_end(&mut elf_file_bytes).unwrap();
 
-    let mut memory = Memory::new(DEFAULT_STACK_SIZE);
+    let mut memory = Memory::new(stack_size);
 
     // https://wiki.osdev.org/ELF#Loading_ELF_Binaries
     for header in elf_file.phdrs.iter() {
