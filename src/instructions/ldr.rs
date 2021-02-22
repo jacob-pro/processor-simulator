@@ -19,7 +19,7 @@ impl Instruction for LDR {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         let mem_addr = sim.registers.eval_op_mem(&self.mem);
         let val_at_addr = sim.memory.read_u32(mem_addr);
-        *sim.registers.get_by_id(self.reg) = val_at_addr;
+        sim.registers.write_by_id(self.reg, val_at_addr);
         false
     }
 }

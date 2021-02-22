@@ -22,7 +22,7 @@ impl Instruction for BX {
             // copy the address of the next instruction into LR
             sim.registers.lr = sim.registers.future_pc;
         }
-        let new_addr = *sim.registers.get_by_id(self.register);
+        let new_addr = sim.registers.read_by_id(self.register);
         sim.registers.future_pc = new_addr;
         false
     }

@@ -25,7 +25,7 @@ impl STR {
 impl Instruction for STR {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         let mem_addr = sim.registers.eval_op_mem(&self.mem);
-        let reg_val = *sim.registers.get_by_id(self.reg);
+        let reg_val = sim.registers.read_by_id(self.reg);
         match self.mode {
             Mode::Word => {sim.memory.write_bytes(mem_addr, &reg_val.to_le_bytes())}
             Mode::HalfWord => {sim.memory.write_bytes(mem_addr, &(reg_val as u16).to_le_bytes())}

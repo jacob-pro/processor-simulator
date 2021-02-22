@@ -20,7 +20,7 @@ impl Instruction for POP {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         for r in &self.reg_list {
             let read_from_stack = sim.memory.read_u32(sim.registers.sp);
-            *sim.registers.get_by_id(*r) = read_from_stack;
+            sim.registers.write_by_id(*r, read_from_stack);
             sim.registers.sp = sim.registers.sp + 4;
         }
         return false

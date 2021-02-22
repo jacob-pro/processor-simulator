@@ -22,7 +22,7 @@ impl CMP {
 
 impl Instruction for CMP {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
-        let first_value = *sim.registers.get_by_id(self.first);
+        let first_value = sim.registers.read_by_id(self.first);
         let second_value = sim.registers.value_of_flexible_second_operand(&self.second, false);
         let res = if !self.negative {
             let (res, ovf) = first_value.overflowing_sub(second_value);

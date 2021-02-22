@@ -21,15 +21,15 @@ impl LDM {
 impl Instruction for LDM {
     // https://keleshev.com/ldm-my-favorite-arm-instruction/
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
-        let base_addr = *sim.registers.get_by_id(self.base_register);
+        let base_addr = sim.registers.read_by_id(self.base_register);
         for (idx, reg) in self.reg_list.iter().enumerate() {
             let adj_addr = base_addr + (idx as u32 * 4);
             let val = sim.memory.read_u32(adj_addr);
-            *sim.registers.get_by_id(*reg) = val;
+            sim.registers.write_by_id(*reg, val);
         }
         if self.writeback {
             let final_address = base_addr + (self.reg_list.len() as u32 * 4);
-            *sim.registers.get_by_id(self.base_register) = final_address;
+            sim.registers.write_by_id(self.base_register, final_address);
         }
         false
     }

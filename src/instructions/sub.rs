@@ -29,11 +29,11 @@ impl SUB {
 
 impl Instruction for SUB {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
-        let first_val = *sim.registers.get_by_id(self.first);
+        let first_val = sim.registers.read_by_id(self.first);
         let sec_val = sim.registers.value_of_flexible_second_operand(&self.second, self.update_flags);
         let (result, unsigned_overflow) = first_val.overflowing_sub(sec_val);
         let (_, signed_overflow) = (first_val as i32).overflowing_sub(sec_val as i32);
-        *sim.registers.get_by_id(self.dest) = result;
+        sim.registers.write_by_id(self.dest, result);
         if self.update_flags {
             sim.registers.cond_flags.n = (result as i32).is_negative();
             sim.registers.cond_flags.z = result == 0;
