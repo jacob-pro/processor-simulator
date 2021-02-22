@@ -2,9 +2,10 @@
 
 int main() {
 
+    printf("HELLO2");
+
     char hello[] = {'H', 'E', 'L', 'L', 'O', '\n'};
     _write(0, hello, sizeof(hello));
-//    printf("HELLO2");
 
 
     int a[] = {29, 2, 33, 4, 54};

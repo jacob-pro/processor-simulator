@@ -10,6 +10,15 @@ use crate::simulator::Simulator;
 use elf::types::PT_LOAD;
 use std::fs::File;
 use std::io::Read;
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
+
+#[derive(FromPrimitive, PartialEq, PartialOrd)]
+pub enum DebugLevel {
+    Off = 0,
+    Minimal = 1,
+    Full = 2,
+}
 
 /*
  The top of the stack as defined by the linker script
@@ -35,8 +44,9 @@ fn main() {
             .value_name("debug")
             .short("d")
             .long("debug")
-            .help("Prints debug information")
-            .takes_value(false))
+            .help("Level of debug information")
+            .default_value("0")
+            .takes_value(true))
         .arg(Arg::with_name("stack")
             .value_name("stack")
             .long("stack")
@@ -44,9 +54,12 @@ fn main() {
             .takes_value(true)
             .default_value(default_stack_size.as_str()))
         .get_matches();
-    let debug = matches.is_present("debug");
+
+    let debug_level: DebugLevel = FromPrimitive::from_u32(matches.value_of("debug")
+        .unwrap().parse::<u32>()
+        .expect("--debug must be integer")).expect("Invalid debug level");
     let stack_size: u32 = matches.value_of("stack").unwrap().parse()
-        .expect("--stack must be integer");
+        .expect("--stack must be an integer");
 
     let path = PathBuf::from(matches.value_of("program").unwrap());
     let elf_file = match elf::File::open_path(&path) {
@@ -76,10 +89,10 @@ fn main() {
     }
 
     let entry = elf_file.ehdr.entry as u32;
-    if debug {
+    if debug_level >= DebugLevel::Minimal {
         println!("Entry point at {:#X}", entry - 1);
     }
 
     let mut simulator = Simulator::new(memory, entry);
-    simulator.run(debug);
+    simulator.run(debug_level);
 }

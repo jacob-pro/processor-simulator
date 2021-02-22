@@ -5,6 +5,9 @@ use capstone::arch::arm::{ArmOperand, ArmCC};
 use crate::instructions::{decode_instruction, Instruction};
 use capstone::arch::ArchOperand;
 use std::rc::Rc;
+use crate::DebugLevel;
+use std::thread::sleep;
+use std::time::Duration;
 
 pub struct Simulator {
     pub memory: Memory,
@@ -30,19 +33,25 @@ impl Simulator {
         }
     }
 
-    pub fn run(&mut self, debug: bool) {
+    pub fn run(&mut self, debug: DebugLevel) {
         let mut cycle_counter = 0;
         loop {
             cycle_counter = cycle_counter + 1;
             let instr_bytes = self.fetch();
             let dec = self.decode(instr_bytes.as_slice());
             let ex = self.should_execute(&dec.cc);
-            if debug {
+            if debug >= DebugLevel::Minimal {
+                let mut output = String::new();
                 if ex {
-                    println!("{}", dec.string)
+                    output.push_str(&dec.string);
                 } else {
-                    println!("{} (skipped cc)", dec.string);
+                    output.push_str(&format!("{} (skipped cc)", dec.string));
                 }
+                if debug >= DebugLevel::Full {
+                    output.push_str(&format!("   [{}]", self.registers.debug_string()));
+                    sleep(Duration::from_millis(300));
+                }
+                println!("{}", output);
             }
             if ex && dec.imp.execute(self) {
                 break
