@@ -37,7 +37,7 @@ pub fn decode_instruction(name: &str,
     let update_flags = detail.update_flags();
     let writeback = detail.writeback();
     return match name.to_ascii_uppercase().as_str() {
-        "ADC" => panic!("{} not yet implemented", name),
+        "ADC" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADC)),
         "ADD" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADD)),
         "ADR" => panic!("{} not yet implemented", name),
         "AND" => Box::new(logical::LOGICAL::new(operands, logical::Mode::AND)),
