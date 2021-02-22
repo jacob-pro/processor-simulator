@@ -58,9 +58,9 @@ fn main() {
         }
     }
 
-    let entry = elf_file.ehdr.entry as u32 - 1;
+    let entry = elf_file.ehdr.entry as u32;
     if debug {
-        println!("Entry point at {:#X}", entry);
+        println!("Entry point at {:#X}", entry - 1);
     }
 
     let mut simulator = Simulator::new(memory, entry);
