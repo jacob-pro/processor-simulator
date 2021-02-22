@@ -4,26 +4,36 @@ use capstone::prelude::*;
 use capstone::arch::arm::ArmOperand;
 use crate::instructions::util::ArmOperandExt;
 
+#[allow(unused)]
+pub enum Mode {
+    ADC,
+    ADD,
+    RSB,
+    SBC,
+    SUB,
+}
+
 pub struct ADD {
     update_flags: bool,
+    mode: Mode,
     dest: RegId,
     first: RegId,
     second: ArmOperand,
 }
 
 impl ADD {
-    pub fn new(operands: Vec<ArmOperand>, update_flags: bool) -> Self {
+    pub fn new(operands: Vec<ArmOperand>, update_flags: bool, mode: Mode) -> Self {
         // https://stackoverflow.com/a/25577464/7547647
         if operands.len() == 2 {
             let dest = operands[0].reg_id().unwrap();
             let first = operands[0].reg_id().unwrap();
             let second = operands[1].clone();
-            return Self { update_flags, dest, first, second };
+            return Self { update_flags, mode, dest, first, second };
         } else {
             let dest = operands[0].reg_id().unwrap();
             let first = operands[1].reg_id().unwrap();
             let second = operands[2].clone();
-            return Self { update_flags, dest, first, second };
+            return Self { update_flags, mode, dest, first, second };
         }
     }
 }

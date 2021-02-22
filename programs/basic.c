@@ -3,17 +3,16 @@
 
 int main() {
 
-//    int a[] = {29, 2, 33, 4, 54};
-    char a[] = {'a', 'b', 'c', 'd', '\n'};
+    char hello[] = {'H', 'E', 'L', 'L', 'O', '\n'};
+    write(0, hello, sizeof(hello));
+
+
+    int a[] = {29, 2, 33, 4, 54};
     int b[] = {29, 2, 34, 45, 54};
 
-//    for (int i = 0; i < 5; i++) {
-//        a[i] = a[i] + b[i];
-//    }
-
-//    memset(&b[0], 23, 5);
-//    printf("%d", 5);
-    write(0, a, 5);
+    for (int i = 0; i < 5; i++) {
+        a[i] = a[i] + b[i];
+    }
 
     exit(b[2]);
 }
