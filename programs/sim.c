@@ -33,8 +33,17 @@ int _close(int file) {
     _exit(11);
 }
 
+#define MAX_HEAP_SIZE 4096
+static char HEAP[MAX_HEAP_SIZE];
+
 void *_sbrk(int incr) {
-    _exit(12);
+    static char* heap = HEAP;
+    char *prev_heap = heap;
+    heap += incr;
+    if (heap > &HEAP[MAX_HEAP_SIZE]) {
+        _exit(12);
+    };
+    return prev_heap;
 }
 
 int _fstat(int file, struct stat *st) {
