@@ -2,8 +2,8 @@
 #include <sys/stat.h>
 #include <string.h>
 
-#define SYS_EXIT ( 0x01 )
-#define SYS_WRITE ( 0x02 )
+#define SYS_EXIT  1
+#define SYS_WRITE 2
 
 // https://interrupt.memfault.com/blog/boostrapping-libc-with-newlib#system-calls
 
@@ -36,8 +36,7 @@ inline void write(char *buf, int count) {
 }
 
 int _read (int fd, char *buf, int count) {
-    char *msg = "Error: _read unimplemented\n";
-    _write(0, msg, strlen(msg));
+    write_str("Error: _read unimplemented\n");
     _exit(EXIT_FAILURE);
 }
 
@@ -69,19 +68,16 @@ int _isatty(int file) {
 }
 
 int _lseek(int file, int ptr, int dir) {
-    char *msg = "Error: _lseek unimplemented\n";
-    _write(0, msg, strlen(msg));
+    write_str("Error: _lseek unimplemented\n");
     _exit(EXIT_FAILURE);
 }
 
 void _kill(int pid, int sig) {
-    char *msg = "Error: _kill unimplemented\n";
-    _write(0, msg, strlen(msg));
+    write_str("Error: _kill unimplemented\n");
     _exit(EXIT_FAILURE);
 }
 
 int _getpid(void) {
-    char *msg = "Error: _getpid unimplemented\n";
-    _write(0, msg, strlen(msg));
+    write_str("Error: _getpid unimplemented\n");
     _exit(EXIT_FAILURE);
 }

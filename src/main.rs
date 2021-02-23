@@ -90,7 +90,7 @@ fn main() {
 
     let entry = elf_file.ehdr.entry as u32;
     if debug_level >= DebugLevel::Minimal {
-        //println!("Entry point at {:#X}", entry - 1);
+        println!("Entry point at {:#X}", entry & 0xFFFFFFFE);
     }
 
     let mut simulator = Simulator::new(memory, entry);

@@ -1,11 +1,11 @@
 # Programs
 
-## Build
+## Compiling
 
-First install package `gcc-arm-none-eabi libnewlib-arm-none-eabi`
+First install packages `gcc-arm-none-eabi libnewlib-arm-none-eabi`
 
 Run `make all`
 
 ## IDE Support
 
-`pip3 install compiledb`
+`pip3 install compiledb` and run `make ide` to create a `compile_commands.json`
