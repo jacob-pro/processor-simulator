@@ -15,10 +15,6 @@ void _exit(int status) {
     : "r0" );
 }
 
-inline void exit(int status) {
-    _exit(status);
-}
-
 int _write(int fd, char *buf, int count) {
     int r;
     asm volatile( "mov r0, %2 \n" // assign r0 = buf
@@ -42,7 +38,7 @@ inline void write(char *buf, int count) {
 int _read (int fd, char *buf, int count) {
     char *msg = "Error: _read unimplemented\n";
     _write(0, msg, strlen(msg));
-    _exit(1);
+    _exit(EXIT_FAILURE);
 }
 
 int _close(int file) {
@@ -58,7 +54,7 @@ void *_sbrk(int incr) {
     if (heap > &HEAP[MAX_HEAP_SIZE]) {
         char *msg = "OUT OF HEAP SPACE\n";
         _write(0, msg, strlen(msg));
-        _exit(1);
+        _exit(EXIT_FAILURE);
     }
     return prev_heap;
 }
@@ -69,25 +65,23 @@ int _fstat(int file, struct stat *st) {
 }
 
 int _isatty(int file) {
-    char *msg = "Error: _isatty unimplemented\n";
-    _write(0, msg, strlen(msg));
-    _exit(1);
+    return 1;   // File is character device (a terminal, console, printer, or serial port).
 }
 
 int _lseek(int file, int ptr, int dir) {
     char *msg = "Error: _lseek unimplemented\n";
     _write(0, msg, strlen(msg));
-    _exit(1);
+    _exit(EXIT_FAILURE);
 }
 
 void _kill(int pid, int sig) {
     char *msg = "Error: _kill unimplemented\n";
     _write(0, msg, strlen(msg));
-    _exit(1);
+    _exit(EXIT_FAILURE);
 }
 
 int _getpid(void) {
     char *msg = "Error: _getpid unimplemented\n";
     _write(0, msg, strlen(msg));
-    _exit(1);
+    _exit(EXIT_FAILURE);
 }
