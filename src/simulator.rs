@@ -6,8 +6,6 @@ use crate::instructions::{decode_instruction, Instruction};
 use capstone::arch::ArchOperand;
 use std::rc::Rc;
 use crate::DebugLevel;
-use std::thread::sleep;
-use std::time::Duration;
 
 pub struct Simulator {
     pub memory: Memory,
@@ -48,8 +46,8 @@ impl Simulator {
                     output.push_str(&format!("{} (skipped cc)", dec.string));
                 }
                 if debug >= DebugLevel::Full {
-                    output.push_str(&format!("   [{}]", self.registers.debug_string()));
-                    sleep(Duration::from_millis(300));
+                    let padding: String = vec![' '; 30 as usize - output.len()].iter().collect();
+                    output.push_str(&format!("{} [{}]", padding, self.registers.debug_string()));
                 }
                 println!("{}", output);
             }

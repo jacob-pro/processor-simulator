@@ -16,6 +16,7 @@ mod str;
 mod extends;
 mod tst;
 mod logical;
+mod mul;
 
 use capstone::arch::arm::{ArmOperand, ArmInsnDetail};
 use crate::simulator::Simulator;
@@ -66,7 +67,7 @@ pub fn decode_instruction(name: &str,
         "MOV" => Box::new(mov::MOV::new(operands, update_flags)),
         "MRS" => panic!("{} not yet implemented", name),
         "MSR" => panic!("{} not yet implemented", name),
-        "MUL" => panic!("{} not yet implemented", name),
+        "MUL" => Box::new(mul::MUL::new(operands)),
         "MVN" => panic!("{} not yet implemented", name),
         "NOP" => Box::new(nop::NOP::new()),
         "ORR" => Box::new(logical::LOGICAL::new(operands,  logical::Mode::ORR)),

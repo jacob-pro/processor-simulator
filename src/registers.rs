@@ -144,11 +144,11 @@ impl RegisterFile {
     pub fn debug_string(&self) -> String {
         let mut output = String::new();
         for i in 0..8 {
-            output.push_str(&format!("R{} {} ", i, self.gprs[i]));
+            output.push_str(&format!("R{} {:08X} ", i, self.gprs[i]));
         }
-        output.push_str(&format!("LR {:#X} ", self.lr));
-        output.push_str(&format!("PC {:#X} ", self.pc));
-        output.push_str(&format!("SP {:#X}", self.sp));
+        output.push_str(&format!("LR {:08X} ", self.lr));
+        output.push_str(&format!("PC {:08X} ", self.pc - 5));
+        output.push_str(&format!("SP {:08X}", self.sp));
         output
     }
 
