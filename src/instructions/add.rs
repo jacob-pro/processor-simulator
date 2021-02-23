@@ -47,11 +47,7 @@ impl Instruction for ADD {
             Mode::ADC => {
                 let (result_u, unsigned_overflow_1) = first_val.overflowing_add(sec_val);
                 let (result_s, signed_overflow_1) = (first_val as i32).overflowing_add(sec_val as i32);
-                let carry = if sim.registers.cond_flags.c {
-                    1
-                } else {
-                    0
-                } as u8;
+                let carry = sim.registers.cond_flags.c as u8;
                 let (result, unsigned_overflow_2) = result_u.overflowing_add(carry as u32);
                 let (_, signed_overflow_2) = result_s.overflowing_add(carry as i32);
                 let unsigned_overflow = unsigned_overflow_1 || unsigned_overflow_2;
@@ -68,7 +64,16 @@ impl Instruction for ADD {
                 let (_, signed_overflow) = (sec_val as i32).overflowing_sub(first_val as i32);
                 (result, unsigned_overflow, signed_overflow)
             }
-            Mode::SBC => {panic!()}
+            Mode::SBC => {
+                let (result_u, unsigned_overflow_1) = first_val.overflowing_sub(sec_val);
+                let (result_s, signed_overflow_1) = (first_val as i32).overflowing_sub(sec_val as i32);
+                let carry = sim.registers.cond_flags.c as u8;
+                let (result, unsigned_overflow_2) = result_u.overflowing_sub(carry as u32);
+                let (_, signed_overflow_2) = result_s.overflowing_sub(carry as i32);
+                let unsigned_overflow = unsigned_overflow_1 || unsigned_overflow_2;
+                let signed_overflow = signed_overflow_1 || signed_overflow_2;
+                (result, unsigned_overflow, signed_overflow)
+            }
             Mode::SUB => {
                 let (result, unsigned_overflow) = first_val.overflowing_sub(sec_val);
                 let (_, signed_overflow) = (first_val as i32).overflowing_sub(sec_val as i32);

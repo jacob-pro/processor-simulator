@@ -1,4 +1,6 @@
+#include "sim.h"
 #include <sys/stat.h>
+#include <string.h>
 
 #define SYS_EXIT ( 0x01 )
 #define SYS_WRITE ( 0x02 )
@@ -13,6 +15,10 @@ void _exit(int status) {
     : "r0" );
 }
 
+inline void exit(int status) {
+    _exit(status);
+}
+
 int _write(int fd, char *buf, int count) {
     int r;
     asm volatile( "mov r0, %2 \n" // assign r0 = buf
@@ -23,6 +29,14 @@ int _write(int fd, char *buf, int count) {
     : "I" (SYS_WRITE), "r" (buf), "r" (count)
     : "r0", "r1", "r2" );
     return r;
+}
+
+inline void write_str(char *str) {
+    _write(0, str, strlen(str));
+}
+
+inline void write(char *buf, int count) {
+    _write(0, buf, count);
 }
 
 int _read (int fd, char *buf, int count) {

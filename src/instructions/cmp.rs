@@ -5,8 +5,8 @@ use capstone::arch::arm::ArmOperand;
 use crate::instructions::util::ArmOperandExt;
 
 pub enum Mode {
-    Positive,
-    Negative,
+    CMP,
+    CMN,
 }
 
 pub struct CMP {
@@ -27,21 +27,26 @@ impl CMP {
 
 impl Instruction for CMP {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
-        let first_value = sim.registers.read_by_id(self.first);
-        let second_value = sim.registers.value_of_flexible_second_operand(&self.second, false);
-        // The CMP instruction subtracts either the value in the register specified by Rm, or the immediate imm from the value in Rn and updates the flags.
-        let (pos_res, pos_ovf) = second_value.overflowing_sub(first_value);
-        // The CMN instruction adds the value of Rm to the value in Rn and updates the flags.
-        let (neg_res, neg_ovf) = (second_value).overflowing_add(first_value);
+        let first_val = sim.registers.read_by_id(self.first);
+        let sec_val = sim.registers.value_of_flexible_second_operand(&self.second, false);
 
-        let res = match self.mode {
-            Mode::Positive => { pos_res }
-            Mode::Negative => { neg_res }
+        let (result, unsigned_overflow, signed_overflow) = match self.mode {
+            Mode::CMN => {
+                let (result, unsigned_overflow) = first_val.overflowing_add(sec_val);
+                let (_, signed_overflow) = (first_val as i32).overflowing_add(sec_val as i32);
+                (result, unsigned_overflow, signed_overflow)
+            }
+            Mode::CMP => {
+                let (result, unsigned_overflow) = first_val.overflowing_sub(sec_val);
+                let (_, signed_overflow) = (first_val as i32).overflowing_sub(sec_val as i32);
+                (result, unsigned_overflow, signed_overflow)
+            }
         };
-        sim.registers.cond_flags.n = (res as i32).is_negative();
-        sim.registers.cond_flags.z = res == 0;
-        sim.registers.cond_flags.c = pos_ovf;
-        sim.registers.cond_flags.v = neg_ovf;
+
+        sim.registers.cond_flags.n = (result as i32).is_negative();
+        sim.registers.cond_flags.z = result == 0;
+        sim.registers.cond_flags.c = unsigned_overflow;
+        sim.registers.cond_flags.v = signed_overflow;
         false
     }
 }
