@@ -1,11 +1,11 @@
-COMPILE = arm-none-eabi-gcc -mthumb -mcpu=cortex-m0 -ffreestanding -fpie sim.c --entry=main
+COMPILE = arm-none-eabi-gcc -mthumb -mcpu=cortex-m0 -ffreestanding -fpie sim.c
 DUMP = arm-none-eabi-objdump -m cortex-m0 -d
 
-all : basic
+all : test
 
-basic : basic.c sim.c
-	${COMPILE} basic.c -O0 -o basic.elf
-	${DUMP} basic.elf > basic.dump
+test : test.c sim.c
+	${COMPILE} test.c -O0 -o test.elf
+	${DUMP} test.elf > test.dump
 
 clean :
 	rm -f *.elf

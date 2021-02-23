@@ -19,7 +19,7 @@ impl Instruction for SVC {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         match self.id {
             1 => {
-                println!("Program exited with code: {}", sim.registers.read_by_name("R0"));
+                println!("Program exited with code: {}", sim.registers.read_by_name("R0") as i32);
                 return true;
             }
             2 => {
