@@ -19,7 +19,7 @@ void assert_false(bool condition, char* msg) {
 
 int main() {
 
-    write_str("Starting tests...\n");
+    write_str("Starting logic tests...\n");
 
     {
         int x = -5;
@@ -47,7 +47,7 @@ int main() {
     }
 
 
-//    printf("printf \n %d \n", 5);
+    printf("printf %d \n", 5);
 
     return 0;
 }

@@ -23,7 +23,8 @@ impl Instruction for BX {
             sim.registers.lr = sim.registers.future_pc;
         }
         let new_addr = sim.registers.read_by_id(self.register);
-        sim.registers.future_pc = new_addr;
+        // when you write to PC, LSB of value is loaded into the EPSR T-bit
+        sim.registers.future_pc = new_addr | 1;
         false
     }
 }

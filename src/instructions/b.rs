@@ -22,7 +22,8 @@ impl Instruction for B {
             sim.registers.lr = sim.registers.future_pc;
         }
         // pc is always 4 bytes ahead of the actual current instruction
-        sim.registers.future_pc = (sim.registers.pc as i64 + self.jump as i64 - 4) as u32;
+        // when you write to PC, LSB of value is loaded into the EPSR T-bit
+        sim.registers.future_pc = ((sim.registers.pc as i64 + self.jump as i64 - 4) as u32) | 1;
         false
     }
 }
