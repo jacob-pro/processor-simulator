@@ -6,6 +6,7 @@ use crate::instructions::{decode_instruction, Instruction};
 use capstone::arch::ArchOperand;
 use std::rc::Rc;
 use crate::DebugLevel;
+use std::time::Instant;
 
 pub struct Simulator {
     pub memory: Memory,
@@ -32,6 +33,7 @@ impl Simulator {
     }
 
     pub fn run(&mut self, debug: DebugLevel) {
+        let time_now = Instant::now();
         let mut cycle_counter = 0;
         loop {
             cycle_counter = cycle_counter + 1;
@@ -43,7 +45,7 @@ impl Simulator {
                 if ex {
                     output.push_str(&dec.string);
                 } else {
-                    output.push_str(&format!("{} (skipped cc)", dec.string));
+                    output.push_str(&format!("{} (omitted)", dec.string));
                 }
                 if debug >= DebugLevel::Full {
                     let padding: String = vec![' '; 30 as usize - output.len()].iter().collect();
@@ -56,6 +58,7 @@ impl Simulator {
             }
             self.registers.pc = self.registers.future_pc;
         }
+        println!("Simulator run {} cycles in {} seconds", cycle_counter, time_now.elapsed().as_secs());
     }
 
     fn fetch(&mut self) -> Vec<u8> {
