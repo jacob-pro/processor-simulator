@@ -26,23 +26,26 @@ int _write(int fd, char *buf, int count) {
 }
 
 int _read (int fd, char *buf, int count) {
-    _exit(10);
+    char *msg = "Error: _read unimplemented\n";
+    _write(0, msg, strlen(msg));
+    _exit(1);
 }
 
 int _close(int file) {
-    _exit(11);
+    return -1;
 }
 
 #define MAX_HEAP_SIZE 4096
 static char HEAP[MAX_HEAP_SIZE];
 
 void *_sbrk(int incr) {
-    static char* heap = HEAP;
+    static char* heap = &HEAP[0];
     char *prev_heap = heap;
-    heap += incr;
     if (heap > &HEAP[MAX_HEAP_SIZE]) {
-        _exit(12);
-    };
+        char *msg = "OUT OF HEAP SPACE\n";
+        _write(0, msg, strlen(msg));
+        _exit(1);
+    }
     return prev_heap;
 }
 
@@ -52,17 +55,25 @@ int _fstat(int file, struct stat *st) {
 }
 
 int _isatty(int file) {
-    _exit(14);
+    char *msg = "Error: _isatty unimplemented\n";
+    _write(0, msg, strlen(msg));
+    _exit(1);
 }
 
 int _lseek(int file, int ptr, int dir) {
-    _exit(15);
+    char *msg = "Error: _lseek unimplemented\n";
+    _write(0, msg, strlen(msg));
+    _exit(1);
 }
 
 void _kill(int pid, int sig) {
-    _exit(16);
+    char *msg = "Error: _kill unimplemented\n";
+    _write(0, msg, strlen(msg));
+    _exit(1);
 }
 
 int _getpid(void) {
-    _exit(17);
+    char *msg = "Error: _getpid unimplemented\n";
+    _write(0, msg, strlen(msg));
+    _exit(1);
 }

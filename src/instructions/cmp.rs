@@ -30,9 +30,9 @@ impl Instruction for CMP {
         let first_value = sim.registers.read_by_id(self.first);
         let second_value = sim.registers.value_of_flexible_second_operand(&self.second, false);
         // The CMP instruction subtracts either the value in the register specified by Rm, or the immediate imm from the value in Rn and updates the flags.
-        let (pos_res, pos_ovf) = first_value.overflowing_sub(second_value);
+        let (pos_res, pos_ovf) = second_value.overflowing_sub(first_value);
         // The CMN instruction adds the value of Rm to the value in Rn and updates the flags.
-        let (neg_res, neg_ovf) = (first_value).overflowing_add(second_value);
+        let (neg_res, neg_ovf) = (second_value).overflowing_add(first_value);
 
         let res = match self.mode {
             Mode::Positive => { pos_res }

@@ -2,7 +2,7 @@
 
 int main() {
 
-    printf("HELLO2");
+    printf("printf \n %d \n", 5);
 
     char hello[] = {'H', 'E', 'L', 'L', 'O', '\n'};
     _write(0, hello, sizeof(hello));

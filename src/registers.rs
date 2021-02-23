@@ -148,7 +148,11 @@ impl RegisterFile {
         }
         output.push_str(&format!("LR {:08X} ", self.lr));
         output.push_str(&format!("PC {:08X} ", self.pc - 5));
-        output.push_str(&format!("SP {:08X}", self.sp));
+        output.push_str(&format!("SP {:08X} ", self.sp));
+        output.push_str(&format!("N{}", self.cond_flags.n as u8));
+        output.push_str(&format!("Z{}", self.cond_flags.z as u8));
+        output.push_str(&format!("C{}", self.cond_flags.c as u8));
+        output.push_str(&format!("V{}", self.cond_flags.v as u8));
         output
     }
 
