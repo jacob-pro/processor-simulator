@@ -34,34 +34,38 @@ impl SHIFT {
     }
 }
 
+// https://developer.arm.com/documentation/dui0497/a/the-cortex-m0-instruction-set/about-the-instruction-descriptions/shift-operations?lang=en
 impl Instruction for SHIFT {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
-        let first_val = sim.registers.read_by_id(self.first);
-        let shift = sim.registers.value_of_flexible_second_operand(&self.second, true) as u8;
+        let value = sim.registers.read_by_id(self.first);
+        let n = sim.registers.value_of_flexible_second_operand(&self.second, true) as u8;
 
         // The C flag is unaffected if the shift value is 0. Otherwise, the C flag is updated to the last bit shifted out.
         let result = match self.mode {
             Mode::ASR => {
-                assert!(shift >= 1 && shift <= 32);
-                sim.registers.cond_flags.c = get_bit_at(first_val, shift - 1);
-                (first_val as i32 >> shift) as u32
+                assert!(n >= 1 && n <= 32);
+                sim.registers.cond_flags.c = get_bit_at(value, n - 1);
+                (value as i32 >> n) as u32
             }
             Mode::LSL => {
-                assert!(shift <= 31);
-                if shift > 0 {
-                    sim.registers.cond_flags.c = get_bit_at(first_val, 31 - shift);
+                assert!(n <= 31);
+                if n > 0 {
+                    sim.registers.cond_flags.c = get_bit_at(value, 32 - n);
                 }
-                first_val << shift
+                value << n
             }
             Mode::LSR => {
-                assert!(shift >= 1 && shift <= 32);
-                sim.registers.cond_flags.c = get_bit_at(first_val, shift - 1);
-                first_val.checked_shr(shift as u32).unwrap_or(0)
+                sim.registers.cond_flags.c = if n <= 32 {
+                     get_bit_at(value, n - 1)
+                } else {
+                    false   // If n is 33 or more and the carry flag is updated, it is updated to 0.
+                };
+                value.checked_shr(n as u32).unwrap_or(0)    // If n is 32 or more, then all the bits in the result are cleared to 0.
             }
             Mode::ROR => {
-                assert!(shift >= 1 && shift <= 31);
-                sim.registers.cond_flags.c = get_bit_at(first_val, shift - 1);
-                first_val.rotate_right(shift as u32)
+                assert!(n >= 1 && n <= 31);
+                sim.registers.cond_flags.c = get_bit_at(value, n - 1);
+                value.rotate_right(n as u32)
             }
         };
         sim.registers.write_by_id(self.dest, result);
