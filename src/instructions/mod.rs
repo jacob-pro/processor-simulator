@@ -17,6 +17,7 @@ mod extends;
 mod tst;
 mod logical;
 mod mul;
+mod adr;
 
 use capstone::arch::arm::{ArmOperand, ArmInsnDetail};
 use crate::simulator::Simulator;
@@ -30,7 +31,6 @@ pub trait Instruction {
 /*
 https://en.wikipedia.org/wiki/ARM_Cortex-M#Instruction_sets
 https://developer.arm.com/documentation/dui0497/a/the-cortex-m0-instruction-set/instruction-set-summary?lang=en
-https://www.keil.com/support/man/docs/armasm/armasm_dom1361289850039.htm
  */
 pub fn decode_instruction(name: &str,
                           detail: &ArmInsnDetail,
@@ -40,7 +40,7 @@ pub fn decode_instruction(name: &str,
     return match name.to_ascii_uppercase().as_str() {
         "ADC" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADC)),
         "ADD" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADD)),
-        "ADR" => panic!("{} not yet implemented", name),
+        "ADR" => Box::new(adr::ADR::new(operands)),
         "AND" => Box::new(logical::LOGICAL::new(operands, logical::Mode::AND)),
         "ASR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ASR)),
         "B" => Box::new(b::B::new(operands, false)),
@@ -64,11 +64,11 @@ pub fn decode_instruction(name: &str,
         "LDRSH" => Box::new(ldr::LDR::new(operands, ldr::Mode::SignedHalfWord)),
         "LSL" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSL)),
         "LSR" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSR)),
-        "MOV" => Box::new(mov::MOV::new(operands, update_flags)),
+        "MOV" => Box::new(mov::MOV::new(operands, mov::Mode::MOV, update_flags)),
         "MRS" => panic!("{} not yet implemented", name),
         "MSR" => panic!("{} not yet implemented", name),
         "MUL" => Box::new(mul::MUL::new(operands)),
-        "MVN" => panic!("{} not yet implemented", name),
+        "MVN" => Box::new(mov::MOV::new(operands, mov::Mode::MVN, update_flags)),
         "NOP" => Box::new(nop::NOP::new()),
         "ORR" => Box::new(logical::LOGICAL::new(operands,  logical::Mode::ORR)),
         "POP" => Box::new(pop::POP::new(operands)),

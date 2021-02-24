@@ -56,7 +56,7 @@ impl Instruction for SHIFT {
             Mode::LSR => {
                 assert!(shift >= 1 && shift <= 32);
                 sim.registers.cond_flags.c = get_bit_at(first_val, shift - 1);
-                first_val >> shift
+                first_val.checked_shr(shift as u32).unwrap_or(0)
             }
             Mode::ROR => {
                 assert!(shift >= 1 && shift <= 31);

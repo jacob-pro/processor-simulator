@@ -38,6 +38,8 @@ int main() {
     float x = 9.3;
     float y = 1.7;
 
+    printf("%f\n", x);
+
     return x + y;
 }
 
