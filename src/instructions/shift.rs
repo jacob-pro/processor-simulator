@@ -48,11 +48,14 @@ impl Instruction for SHIFT {
                 (value as i32 >> n) as u32
             }
             Mode::LSL => {
-                assert!(n <= 31);
-                if n > 0 {
-                    sim.registers.cond_flags.c = get_bit_at(value, 32 - n);
+                if n > 0 {  // These instructions do not affect the carry flag when used with LSL #0
+                    if n >= 33 {
+                        sim.registers.cond_flags.c = false;  // If n is 33 it is updated to 0.
+                    } else {
+                        sim.registers.cond_flags.c = get_bit_at(value, 32 - n); // carry flag is updated to the last bit shifted out, bit[32-n]
+                    }
                 }
-                value << n
+                value.checked_shl(n as u32).unwrap_or(0)  // If n is 32 or more, then all the bits in the result are cleared to 0.
             }
             Mode::LSR => {
                 sim.registers.cond_flags.c = if n <= 32 {

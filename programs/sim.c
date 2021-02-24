@@ -81,3 +81,16 @@ int _getpid(void) {
     write_str("Error: _getpid unimplemented\n");
     _exit(EXIT_FAILURE);
 }
+
+void _assert_impl(bool x, char *file, int line) {
+    if (!(x)) {
+        char buffer[33];
+        itoa(line, buffer, 10);
+        write_str("Assertion Failed: ");
+        write_str(file);
+        write_str(" line ");
+        write_str(buffer);
+        write_str("\n");
+        exit(EXIT_FAILURE);
+    }
+}

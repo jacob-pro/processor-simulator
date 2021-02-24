@@ -47,7 +47,7 @@ impl RegisterFile {
             "IP" => self.gprs[12], // Synonym
             "SP" => self.sp,
             "LR" => self.lr,
-            "PC" => self.pc,
+            "PC" => self.pc & 0xFFFFFFFE,
             _ => panic!("Unknown register {}", name)
         }
     }
@@ -90,7 +90,7 @@ impl RegisterFile {
         * https://community.arm.com/developer/ip-products/processors/f/cortex-m-forum/4541/real-value-of-pc-register/11430#11430
          */
         let base_reg_val = if self.reg_name(op_mem.base()) == "PC" {
-            let pc_val = self.read_by_id(op_mem.base()) as i64;
+            let pc_val = self.pc as i64;
             pc_val & 0xFFFFFFFC
         } else {
             self.read_by_id(op_mem.base()) as i64

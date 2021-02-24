@@ -18,7 +18,7 @@ impl ADR {
 
 impl Instruction for ADR {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
-        let pc = sim.registers.pc as i64;
+        let pc = (sim.registers.pc & 0xFFFFFFFC) as i64;
         let relative = pc + self.pc_rel as i64;
         sim.registers.write_by_id(self.dest, relative as u32);
         false
