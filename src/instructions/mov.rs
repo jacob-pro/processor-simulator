@@ -19,7 +19,10 @@ impl MOV {
 
 impl Instruction for MOV {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
-        let val= sim.registers.value_of_flexible_second_operand(&self.src, self.update_flags);
+        let mut val= sim.registers.value_of_flexible_second_operand(&self.src, self.update_flags);
+        if sim.registers.reg_name(self.dest) == "PC" {
+            val = val | 1;  // When Rd is the PC in a MOV instruction: Bit[0] of the result is discarded.
+        }
         sim.registers.write_by_id(self.dest, val);
         if self.update_flags {
             sim.registers.cond_flags.n = (val as i32).is_negative();

@@ -7,7 +7,7 @@ pub struct ConditionFlags {
     pub n: bool,    // Negative
     pub z: bool,    // Zero
     pub c: bool,    // Carry
-    pub v: bool,    // Signed overflow
+    pub v: bool,    // Overflow
 }
 
 pub struct RegisterFile {
@@ -34,8 +34,8 @@ impl RegisterFile {
         }
     }
 
-    pub fn read_by_name(&self, name: &str) -> u32 {
-        let name = name.to_ascii_uppercase();
+    pub fn read_by_id(&self, id: RegId) -> u32 {
+        let name = self.reg_name(id);
         if name.starts_with("R") {
             let number = name[1..].parse::<usize>().expect("Invalid register");
             return self.gprs[number]
@@ -47,13 +47,13 @@ impl RegisterFile {
             "IP" => self.gprs[12], // Synonym
             "SP" => self.sp,
             "LR" => self.lr,
-            "PC" => self.pc & 0xFFFFFFFE,   // PC hides the last bit
+            "PC" => self.pc,
             _ => panic!("Unknown register {}", name)
         }
     }
 
-    pub fn write_by_name(&mut self, name: &str, value: u32) {
-        let name = name.to_ascii_uppercase();
+    pub fn write_by_id(&mut self, id: RegId, value: u32) {
+        let name = self.reg_name(id);
         if name.starts_with("R") {
             let number = name[1..].parse::<usize>().expect("Invalid register");
             self.gprs[number] = value;
@@ -66,20 +66,9 @@ impl RegisterFile {
             "IP" => {self.gprs[12] = value}, // Synonym
             "SP" => {self.sp = value},
             "LR" => {self.lr = value},
-            "PC" => {self.future_pc = value | 1},     // When an instruction updates the PC - write to the real PC!
-                                                      // when you write to PC, LSB of value is loaded into the EPSR T-bit
+            "PC" => {self.future_pc = value},     // When an instruction updates the PC - write to the real PC!
             _ => panic!("Unknown register {}", name)
         }
-    }
-
-    pub fn read_by_id(&self, id: RegId) -> u32 {
-        let n = self.capstone.reg_name(id).expect("Couldn't get reg_name");
-        self.read_by_name(&n)
-    }
-
-    pub fn write_by_id(&mut self, id: RegId, value: u32) {
-        let n = self.capstone.reg_name(id).expect("Couldn't get reg_name");
-        self.write_by_name(&n, value);
     }
 
     // Can potentially update flags during computation of shift
@@ -95,12 +84,12 @@ impl RegisterFile {
         }
     }
 
-    pub fn eval_op_mem(&self, op_mem: &ArmOpMem) -> u32 {
+    pub fn eval_ldr_str_op_mem(&self, op_mem: &ArmOpMem) -> u32 {
 
         /* PC appears WORD aligned to LDR/STR PC relative instructions
         * https://community.arm.com/developer/ip-products/processors/f/cortex-m-forum/4541/real-value-of-pc-register/11430#11430
          */
-        let base_reg_val = if self.capstone.reg_name(op_mem.base()).unwrap() == "pc" {
+        let base_reg_val = if self.reg_name(op_mem.base()) == "PC" {
             let pc_val = self.read_by_id(op_mem.base()) as i64;
             pc_val & 0xFFFFFFFC
         } else {
@@ -126,7 +115,7 @@ impl RegisterFile {
      */
     pub fn push_pop_register_asc(&self, mut reg_list: Vec<RegId>) -> Vec<RegId> {
         reg_list.sort_by_key(|r| {
-            let name = self.capstone.reg_name(*r).unwrap().to_ascii_uppercase();
+            let name = self.reg_name(*r);
             if name.starts_with("R") {
                 let number = name[1..].parse::<usize>().expect("Invalid register");
                 if number <= 7 {
@@ -155,6 +144,11 @@ impl RegisterFile {
         output.push_str(&format!("C{}", self.cond_flags.c as u8));
         output.push_str(&format!("V{}", self.cond_flags.v as u8));
         output
+    }
+
+    #[inline]
+    pub fn reg_name(&self, reg_id: RegId) -> String {
+        self.capstone.reg_name(reg_id).expect("Couldn't get reg_name").to_ascii_uppercase()
     }
 
 }

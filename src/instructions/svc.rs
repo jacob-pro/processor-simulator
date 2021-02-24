@@ -19,12 +19,12 @@ impl Instruction for SVC {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         match self.id {
             1 => {
-                println!("Program exited with code: {}", sim.registers.read_by_name("R0") as i32);
+                println!("Program exited with code: {}", sim.registers.gprs[0] as i32);
                 return true;
             }
             2 => {
-                let buffer_addr = sim.registers.read_by_name("R0");
-                let buffer_len = sim.registers.read_by_name("R1");
+                let buffer_addr = sim.registers.gprs[0];
+                let buffer_len = sim.registers.gprs[1];
                 let data = sim.memory.read_bytes(buffer_addr, buffer_len);
                 std::io::stdout().write_all(&data).expect("Failed to write");
             }

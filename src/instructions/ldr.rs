@@ -26,7 +26,7 @@ impl LDR {
 
 impl Instruction for LDR {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
-        let mem_addr = sim.registers.eval_op_mem(&self.mem);
+        let mem_addr = sim.registers.eval_ldr_str_op_mem(&self.mem);
         let val_at_addr = match self.mode {
             Mode::Word => {sim.memory.read_u32(mem_addr)}
             Mode::HalfWord => {sim.memory.read_u16(mem_addr) as u32}

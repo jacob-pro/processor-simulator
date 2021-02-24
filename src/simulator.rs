@@ -69,7 +69,7 @@ impl Simulator {
             the halfword is the first halfword of a 32-bit instruction:
             0b11101 0b11110 0b11111 Otherwise, the halfword is a 16-bit instruction.
          */
-        assert_eq!(self.registers.pc & 1, 1);    // Last bit should be 1 for thumb mode
+        assert_eq!(self.registers.pc & 1, 1, "LSB of PC must be 1 for thumb mode");
         let addr = self.registers.pc & 0xFFFFFFFE;  // Ignore the last bit for actual address
         let code = self.memory.read_bytes(addr, 4);
         let bits_15_11 = code[1] >> 3;
