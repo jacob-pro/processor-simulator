@@ -17,3 +17,7 @@ to disassemble the ARM instructions into a readable / parsable form.
 
 Example usage:
 `cargo run -- programs/test.elf`
+
+## MVB / Lab Machines
+
+Just run `./mvb.sh`

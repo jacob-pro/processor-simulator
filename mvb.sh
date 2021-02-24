@@ -5,3 +5,5 @@ if ! command -v rustup &>/dev/null; then
   curl https://sh.rustup.rs -sSf | sh -s -- -y
   source $HOME/.cargo/env
 fi
+
+cargo run -- programs/test.elf
