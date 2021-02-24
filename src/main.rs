@@ -13,7 +13,7 @@ use std::io::Read;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 
-#[derive(FromPrimitive, PartialEq, PartialOrd)]
+#[derive(FromPrimitive, PartialEq, PartialOrd, Debug)]
 pub enum DebugLevel {
     Off = 0,
     Minimal = 1,
@@ -90,6 +90,7 @@ fn main() {
 
     let entry = elf_file.ehdr.entry as u32;
     if debug_level >= DebugLevel::Minimal {
+        println!("DEBUG MODE: {:?}", debug_level);
         println!("Entry point at {:#X}", entry & 0xFFFFFFFE);
     }
 

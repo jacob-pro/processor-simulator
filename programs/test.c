@@ -37,10 +37,11 @@ int main() {
 
     float x = 9.3;
     float y = 1.7;
+    int return_code = x + y;
 
-    printf("%f\n", x);
+    printf("Return code will be %f + %f = %d\n", x, y, return_code);
 
-    return (x+y);
+    return return_code;
 }
 
 

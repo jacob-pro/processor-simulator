@@ -33,7 +33,7 @@ impl Simulator {
     }
 
     pub fn run(&mut self, debug: DebugLevel) {
-        let time_now = Instant::now();
+        let start_time = Instant::now();
         let mut cycle_counter = 0;
         loop {
             cycle_counter = cycle_counter + 1;
@@ -58,7 +58,8 @@ impl Simulator {
             }
             self.registers.pc = self.registers.future_pc;
         }
-        println!("Simulator run {} cycles in {} seconds", cycle_counter, time_now.elapsed().as_secs());
+        let elapsed = start_time.elapsed();
+        println!("Simulator run {} cycles in {} seconds", cycle_counter, elapsed.as_millis() as f64 / 1000.0);
     }
 
     fn fetch(&mut self) -> Vec<u8> {
