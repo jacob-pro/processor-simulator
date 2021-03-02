@@ -19,7 +19,7 @@ impl Instruction for SVC {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         match self.id {
             1 => {
-                println!("Program exited with code: {}", sim.registers.gprs[0] as i32);
+                println!("\nProgram exited with code: {}", sim.registers.gprs[0] as i32);
                 return true;
             }
             2 => {
@@ -29,7 +29,7 @@ impl Instruction for SVC {
                 std::io::stdout().write_all(&data).expect("Failed to write");
             }
             _ => {
-                println!("Unknown SVC ID: {}", self.id);
+                println!("\nUnknown SVC ID: {}", self.id);
                 return true;
             }
         }
