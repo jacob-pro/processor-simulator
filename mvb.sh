@@ -8,3 +8,4 @@ fi
 
 cargo run -- programs/test.elf
 cargo run -- programs/fibonacci.elf
+cargo run -- programs/factorial.elf
