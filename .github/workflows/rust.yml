@@ -1,0 +1,30 @@
+name: Rust
+
+on: [push, pull_request]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: program_deps
+      run: sudo apt install -y gcc-arm-none-eabi libnewlib-arm-none-eabi
+      
+    - name: programs
+      run: cd programs && make all
+    
+    - name: Build
+      run: cargo build
+    
+    - name: Check style
+      run: cargo fmt -- --check
+      
+    - name: Test
+      run: ./mvb.sh
+      
