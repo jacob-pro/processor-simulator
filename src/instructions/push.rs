@@ -25,7 +25,10 @@ impl Instruction for PUSH {
         for r in &reg_list {
             sim.registers.sp = sim.registers.sp - 4;
             let register_value = sim.registers.read_by_id(*r).to_le_bytes();
-            sim.memory.write().unwrap().write_bytes(sim.registers.sp, &register_value);
+            sim.memory
+                .write()
+                .unwrap()
+                .write_bytes(sim.registers.sp, &register_value);
         }
         return false;
     }

@@ -28,7 +28,11 @@ impl Instruction for SVC {
             2 => {
                 let buffer_addr = sim.registers.gprs[0];
                 let buffer_len = sim.registers.gprs[1];
-                let data = sim.memory.read().unwrap().read_bytes(buffer_addr, buffer_len);
+                let data = sim
+                    .memory
+                    .read()
+                    .unwrap()
+                    .read_bytes(buffer_addr, buffer_len);
                 std::io::stdout().write_all(&data).expect("Failed to write");
             }
             _ => {

@@ -24,7 +24,7 @@ use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 
 pub type ShouldTerminate = bool;
 
-pub trait Instruction {
+pub trait Instruction: Send {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate;
 }
 

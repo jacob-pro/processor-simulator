@@ -1,59 +1,33 @@
-use crate::instructions::{decode_instruction, Instruction};
+use crate::instructions::{decode_instruction, Instruction, ShouldTerminate};
 use crate::memory::Memory;
 use crate::registers::RegisterFile;
 use crate::{DebugLevel, CAPSTONE};
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
 use capstone::prelude::*;
-use std::time::Instant;
-use std::sync::{RwLock, Arc};
+use std::sync::{Arc, RwLock};
 
 pub struct Simulator {
     pub memory: Arc<RwLock<Memory>>,
     pub registers: RegisterFile,
+    fetched_instruction: Option<Vec<u8>>,
+    decoded_instruction: Option<DecodedInstruction>,
+    pub executed_instruction: ShouldTerminate,
 }
 
 impl Simulator {
     pub fn new(memory: Arc<RwLock<Memory>>, entry: u32) -> Self {
         let registers = RegisterFile::new(entry);
-        Self { memory, registers }
-    }
-
-    pub fn run(&mut self, debug: DebugLevel) {
-        let start_time = Instant::now();
-        let mut cycle_counter = 0;
-        loop {
-            cycle_counter = cycle_counter + 1;
-            let instr_bytes = self.fetch();
-            let dec = self.decode(instr_bytes.as_slice());
-            let ex = self.should_execute(&dec.cc);
-            if debug >= DebugLevel::Minimal {
-                let mut output = String::new();
-                if ex {
-                    output.push_str(&dec.string);
-                } else {
-                    output.push_str(&format!("{} (omitted)", dec.string));
-                }
-                if debug >= DebugLevel::Full {
-                    let padding: String = vec![' '; 30 as usize - output.len()].iter().collect();
-                    output.push_str(&format!("{} [{}]", padding, self.registers.debug_string()));
-                }
-                println!("{}", output);
-            }
-            if ex && dec.imp.execute(self) {
-                break;
-            }
-            self.registers.pc = self.registers.real_pc;
+        Self {
+            memory,
+            registers,
+            fetched_instruction: None,
+            decoded_instruction: None,
+            executed_instruction: false,
         }
-        let elapsed = start_time.elapsed();
-        println!(
-            "Simulator run {} cycles in {} seconds",
-            cycle_counter,
-            elapsed.as_millis() as f64 / 1000.0
-        );
     }
 
-    fn fetch(&mut self) -> Vec<u8> {
+    pub fn fetch(mut self) -> Self {
         /*  The Thumb instruction stream is a sequence of halfword-aligned halfwords.
            Each Thumb instruction is either a single 16-bit halfword in that stream,
            or a 32-bit instruction consisting of two consecutive halfwords in that stream.
@@ -78,14 +52,16 @@ impl Simulator {
         // The PC is a liar (sometimes)!
         // The PC offset is always 4 bytes in Thumb state
         self.registers.pc = self.registers.pc + 4;
-        code[0..instr_len as usize].to_vec()
+        self.fetched_instruction = Some(code[0..instr_len as usize].to_vec());
+        self
     }
 
-    fn decode(&self, instr: &[u8]) -> DecodedInstruction {
+    pub fn decode(mut self) -> Self {
         CAPSTONE.with(|capstone| {
             let list = capstone
-                .disasm_all(instr, 0x0)
+                .disasm_all(self.fetched_instruction.as_ref().unwrap(), 0x0)
                 .expect("Invalid instruction");
+            self.fetched_instruction = None;
             let instr = list.iter().next().unwrap();
             let insn_detail: InsnDetail = capstone
                 .insn_detail(&instr)
@@ -106,7 +82,7 @@ impl Simulator {
             let arm_detail = arch_detail.arm().unwrap();
 
             let decoded = decode_instruction(&ins_name, &arm_detail, operands);
-            DecodedInstruction {
+            self.decoded_instruction = Some(DecodedInstruction {
                 imp: decoded,
                 cc: arm_detail.cc(),
                 string: format!(
@@ -114,8 +90,32 @@ impl Simulator {
                     instr.mnemonic().unwrap(),
                     instr.op_str().unwrap_or("")
                 ),
+            });
+        });
+        self
+    }
+
+    pub fn execute(mut self, debug: &DebugLevel) -> Self {
+        let dec = std::mem::take(&mut self.decoded_instruction).unwrap();
+        let ex = self.should_execute(&dec.cc);
+        if *debug >= DebugLevel::Minimal {
+            let mut output = String::new();
+            if ex {
+                output.push_str(&dec.string);
+            } else {
+                output.push_str(&format!("{} (omitted)", dec.string));
             }
-        })
+            if *debug >= DebugLevel::Full {
+                let padding: String = vec![' '; 30 as usize - output.len()].iter().collect();
+                output.push_str(&format!("{} [{}]", padding, self.registers.debug_string()));
+            }
+            println!("{}", output);
+        }
+        if ex {
+            self.executed_instruction = dec.imp.execute(&mut self);
+        }
+        self.registers.pc = self.registers.real_pc;
+        self
     }
 
     // https://community.arm.com/developer/ip-products/processors/b/processors-ip-blog/posts/condition-codes-1-condition-flags-and-codes

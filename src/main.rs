@@ -4,6 +4,7 @@ mod pipeline;
 mod registers;
 mod simulator;
 
+use crate::pipeline::PipelinedSimulator;
 use crate::simulator::Simulator;
 use capstone::prelude::*;
 use clap::{App, Arg};
@@ -112,12 +113,12 @@ fn main() {
     }
 
     let memory = Arc::new(RwLock::new(memory));
-    let mut simulator = Simulator::new(memory, entry);
-    simulator.run(debug_level);
+    let simulator = Simulator::new(memory, entry);
 
-    std::thread::spawn(move || {
-        let _k = simulator;
-    });
+    // std::thread::spawn(|| {
+    //     let _l = simulator;
+    // });
+    PipelinedSimulator::run(simulator, &debug_level);
 }
 
 thread_local! {

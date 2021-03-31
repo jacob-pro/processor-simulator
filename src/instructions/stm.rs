@@ -30,7 +30,10 @@ impl Instruction for STM {
         for (idx, reg) in self.reg_list.iter().enumerate() {
             let adj_addr = base_addr + (idx as u32 * 4);
             let reg_val = sim.registers.read_by_id(*reg);
-            sim.memory.write().unwrap().write_bytes(adj_addr, &reg_val.to_le_bytes());
+            sim.memory
+                .write()
+                .unwrap()
+                .write_bytes(adj_addr, &reg_val.to_le_bytes());
         }
         if self.writeback {
             let final_address = base_addr + (self.reg_list.len() as u32 * 4);
