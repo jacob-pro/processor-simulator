@@ -10,8 +10,10 @@ impl PipelinedSimulator {
         let mut cycle_counter = 0;
         loop {
             cycle_counter = cycle_counter + 1;
-            simulator = simulator.fetch();
-            simulator = simulator.decode(); //dec
+            let fetch_changes = simulator.fetch();
+            fetch_changes.apply(&mut simulator);
+            let decode_changes = simulator.decode(); //dec
+            decode_changes.apply(&mut simulator);
             simulator = simulator.execute(&debug_level);
             if simulator.executed_instruction {
                 break;

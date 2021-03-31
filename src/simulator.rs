@@ -15,6 +15,32 @@ pub struct Simulator {
     pub executed_instruction: ShouldTerminate,
 }
 
+pub struct FetchChanges {
+    pc: u32,
+    real_pc: u32,
+    instruction: Vec<u8>,
+}
+
+impl FetchChanges {
+    pub fn apply(self, sim: &mut Simulator) {
+        sim.registers.pc = self.pc;
+        sim.registers.real_pc = self.real_pc;
+        sim.fetched_instruction = Some(self.instruction)
+    }
+}
+
+pub struct DecodeChanges {
+    instruction: DecodedInstruction,
+}
+
+impl DecodeChanges {
+    pub fn apply(self, sim: &mut Simulator) {
+        sim.decoded_instruction = Some(self.instruction);
+    }
+}
+
+
+
 impl Simulator {
     pub fn new(memory: Arc<RwLock<Memory>>, entry: u32) -> Self {
         let registers = RegisterFile::new(entry);
@@ -27,7 +53,7 @@ impl Simulator {
         }
     }
 
-    pub fn fetch(mut self) -> Self {
+    pub fn fetch(&self) -> FetchChanges {
         /*  The Thumb instruction stream is a sequence of halfword-aligned halfwords.
            Each Thumb instruction is either a single 16-bit halfword in that stream,
            or a 32-bit instruction consisting of two consecutive halfwords in that stream.
@@ -48,20 +74,18 @@ impl Simulator {
             _ => 2,
         };
         assert!(instr_len == 2 || instr_len == 4);
-        self.registers.real_pc = self.registers.pc + instr_len;
-        // The PC is a liar (sometimes)!
-        // The PC offset is always 4 bytes in Thumb state
-        self.registers.pc = self.registers.pc + 4;
-        self.fetched_instruction = Some(code[0..instr_len as usize].to_vec());
-        self
+        FetchChanges {
+            pc: self.registers.real_pc + 4,         // The PC is a liar (sometimes)! - the PC offset is always 4 bytes even in Thumb state
+            real_pc: self.registers.real_pc + instr_len,
+            instruction: code[0..instr_len as usize].to_vec()
+        }
     }
 
-    pub fn decode(mut self) -> Self {
+    pub fn decode(&self) -> DecodeChanges {
         CAPSTONE.with(|capstone| {
             let list = capstone
                 .disasm_all(self.fetched_instruction.as_ref().unwrap(), 0x0)
                 .expect("Invalid instruction");
-            self.fetched_instruction = None;
             let instr = list.iter().next().unwrap();
             let insn_detail: InsnDetail = capstone
                 .insn_detail(&instr)
@@ -82,17 +106,18 @@ impl Simulator {
             let arm_detail = arch_detail.arm().unwrap();
 
             let decoded = decode_instruction(&ins_name, &arm_detail, operands);
-            self.decoded_instruction = Some(DecodedInstruction {
-                imp: decoded,
-                cc: arm_detail.cc(),
-                string: format!(
-                    "{} {}",
-                    instr.mnemonic().unwrap(),
-                    instr.op_str().unwrap_or("")
-                ),
-            });
-        });
-        self
+            DecodeChanges {
+                instruction: DecodedInstruction {
+                    imp: decoded,
+                    cc: arm_detail.cc(),
+                    string: format!(
+                        "{} {}",
+                        instr.mnemonic().unwrap(),
+                        instr.op_str().unwrap_or("")
+                    ),
+                }
+            }
+        })
     }
 
     pub fn execute(mut self, debug: &DebugLevel) -> Self {
@@ -114,7 +139,6 @@ impl Simulator {
         if ex {
             self.executed_instruction = dec.imp.execute(&mut self);
         }
-        self.registers.pc = self.registers.real_pc;
         self
     }
 
