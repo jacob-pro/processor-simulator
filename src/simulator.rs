@@ -29,13 +29,11 @@ impl FetchChanges {
     }
 }
 
-pub struct DecodeChanges {
-    instruction: DecodedInstruction,
-}
+pub struct DecodeChanges (Option<DecodedInstruction>);
 
 impl DecodeChanges {
     pub fn apply(self, sim: &mut Simulator) {
-        sim.decoded_instruction = Some(self.instruction);
+        sim.decoded_instruction = self.0;
     }
 }
 
@@ -52,6 +50,11 @@ impl Simulator {
             executed_instruction: false,
         }
     }
+
+    // pub fn flush_pipeline(&mut self) {
+    //     self.fetched_instruction = None;
+    //     self.decoded_instruction = None;
+    // }
 
     pub fn fetch(&self) -> FetchChanges {
         /*  The Thumb instruction stream is a sequence of halfword-aligned halfwords.
@@ -82,45 +85,51 @@ impl Simulator {
     }
 
     pub fn decode(&self) -> DecodeChanges {
-        CAPSTONE.with(|capstone| {
-            let list = capstone
-                .disasm_all(self.fetched_instruction.as_ref().unwrap(), 0x0)
-                .expect("Invalid instruction");
-            let instr = list.iter().next().unwrap();
-            let insn_detail: InsnDetail = capstone
-                .insn_detail(&instr)
-                .expect("Failed to get insn detail");
-            let arch_detail = insn_detail.arch_detail();
-            let operands: Vec<ArmOperand> = arch_detail
-                .operands()
-                .into_iter()
-                .map(|x| {
-                    if let ArchOperand::ArmOperand(inner) = x {
-                        return inner;
+        DecodeChanges(
+            self.fetched_instruction.as_ref().map(|fetched_instruction| {
+                CAPSTONE.with(|capstone| {
+                    let list = capstone
+                        .disasm_all(fetched_instruction, 0x0)
+                        .expect("Invalid instruction");
+                    let instr = list.iter().next().unwrap();
+                    let insn_detail: InsnDetail = capstone
+                        .insn_detail(&instr)
+                        .expect("Failed to get insn detail");
+                    let arch_detail = insn_detail.arch_detail();
+                    let operands: Vec<ArmOperand> = arch_detail
+                        .operands()
+                        .into_iter()
+                        .map(|x| {
+                            if let ArchOperand::ArmOperand(inner) = x {
+                                return inner;
+                            }
+                            panic!("Unexpected ArchOperand");
+                        })
+                        .collect();
+
+                    let ins_name = CAPSTONE.with(|capstone| capstone.insn_name(instr.id()).unwrap());
+                    let arm_detail = arch_detail.arm().unwrap();
+
+                    let decoded = decode_instruction(&ins_name, &arm_detail, operands);
+                    DecodedInstruction {
+                        imp: decoded,
+                        cc: arm_detail.cc(),
+                        string: format!(
+                            "{} {}",
+                            instr.mnemonic().unwrap(),
+                            instr.op_str().unwrap_or("")
+                        ),
                     }
-                    panic!("Unexpected ArchOperand");
                 })
-                .collect();
+            })
+        )
 
-            let ins_name = CAPSTONE.with(|capstone| capstone.insn_name(instr.id()).unwrap());
-            let arm_detail = arch_detail.arm().unwrap();
-
-            let decoded = decode_instruction(&ins_name, &arm_detail, operands);
-            DecodeChanges {
-                instruction: DecodedInstruction {
-                    imp: decoded,
-                    cc: arm_detail.cc(),
-                    string: format!(
-                        "{} {}",
-                        instr.mnemonic().unwrap(),
-                        instr.op_str().unwrap_or("")
-                    ),
-                }
-            }
-        })
     }
 
     pub fn execute(mut self, debug: &DebugLevel) -> Self {
+        if self.decoded_instruction.is_none() {
+            return self;
+        }
         let dec = std::mem::take(&mut self.decoded_instruction).unwrap();
         let ex = self.should_execute(&dec.cc);
         if *debug >= DebugLevel::Minimal {
