@@ -1,8 +1,7 @@
 use super::{Instruction, ShouldTerminate};
 use crate::simulator::Simulator;
 
-pub struct NOP {
-}
+pub struct NOP {}
 
 impl NOP {
     pub fn new() -> Self {

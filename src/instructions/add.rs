@@ -1,8 +1,8 @@
 use super::{Instruction, ShouldTerminate};
-use crate::simulator::Simulator;
-use capstone::prelude::*;
-use capstone::arch::arm::ArmOperand;
 use crate::instructions::util::ArmOperandExt;
+use crate::simulator::Simulator;
+use capstone::arch::arm::ArmOperand;
+use capstone::prelude::*;
 
 #[allow(unused)]
 pub enum Mode {
@@ -28,12 +28,24 @@ impl ADD {
             let dest = operands[0].reg_id().unwrap();
             let first = operands[0].reg_id().unwrap();
             let second = operands[1].clone();
-            return Self { update_flags, mode, dest, first, second };
+            return Self {
+                update_flags,
+                mode,
+                dest,
+                first,
+                second,
+            };
         } else {
             let dest = operands[0].reg_id().unwrap();
             let first = operands[1].reg_id().unwrap();
             let second = operands[2].clone();
-            return Self { update_flags, mode, dest, first, second };
+            return Self {
+                update_flags,
+                mode,
+                dest,
+                first,
+                second,
+            };
         }
     }
 }
@@ -41,7 +53,9 @@ impl ADD {
 impl Instruction for ADD {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
         let first_val = sim.registers.read_by_id(self.first);
-        let sec_val = sim.registers.value_of_flexible_second_operand(&self.second, self.update_flags);
+        let sec_val = sim
+            .registers
+            .value_of_flexible_second_operand(&self.second, self.update_flags);
 
         // NOTE! ARM uses an inverted carry flag for borrow (i.e. subtraction)
 

@@ -1,7 +1,7 @@
 use super::{Instruction, ShouldTerminate};
+use crate::instructions::util::ArmOperandExt;
 use crate::simulator::Simulator;
 use capstone::arch::arm::ArmOperand;
-use crate::instructions::util::ArmOperandExt;
 use capstone::prelude::*;
 
 pub struct ADR {
@@ -12,7 +12,10 @@ pub struct ADR {
 impl ADR {
     pub fn new(operands: Vec<ArmOperand>) -> Self {
         let dest = operands[0].reg_id().unwrap();
-        return Self { dest, pc_rel: operands[1].imm_value().unwrap() };
+        return Self {
+            dest,
+            pc_rel: operands[1].imm_value().unwrap(),
+        };
     }
 }
 
@@ -24,4 +27,3 @@ impl Instruction for ADR {
         false
     }
 }
-

@@ -1,8 +1,8 @@
 use super::{Instruction, ShouldTerminate};
-use crate::simulator::Simulator;
-use capstone::prelude::*;
-use capstone::arch::arm::ArmOperand;
 use crate::instructions::util::ArmOperandExt;
+use crate::simulator::Simulator;
+use capstone::arch::arm::ArmOperand;
+use capstone::prelude::*;
 
 pub struct MUL {
     dest: RegId,

@@ -8,13 +8,10 @@ struct Page {
 
 #[derive(Default)]
 pub struct Memory {
-    pages: Vec<Page>
+    pages: Vec<Page>,
 }
 
-
-
 impl Memory {
-
     pub fn mmap(&mut self, address: u32, data: Vec<u8>, write: bool) {
         for existing_p in &self.pages {
             let existing_p_end = existing_p.vaddr + existing_p.data.len() as u32;
@@ -29,7 +26,7 @@ impl Memory {
         self.pages.push(Page {
             write,
             data,
-            vaddr: address
+            vaddr: address,
         });
     }
 
@@ -53,13 +50,15 @@ impl Memory {
                     p.data[adj_addr as usize] = byte;
                     return;
                 } else {
-                    panic!("Tried to write to read only memory page, address {:#X}", address);
+                    panic!(
+                        "Tried to write to read only memory page, address {:#X}",
+                        address
+                    );
                 }
             }
         }
         panic!("Invalid memory address {:#X}", address)
     }
-
 
     pub fn read_bytes(&self, base_address: u32, length: u32) -> Vec<u8> {
         let mut ret = Vec::with_capacity(length as usize);
@@ -71,12 +70,12 @@ impl Memory {
 
     pub fn read_u32(&self, address: u32) -> u32 {
         let bytes = self.read_bytes(address, 4);
-        u32::from_le_bytes( bytes.as_slice().try_into().unwrap())
+        u32::from_le_bytes(bytes.as_slice().try_into().unwrap())
     }
 
     pub fn read_u16(&self, address: u32) -> u16 {
         let bytes = self.read_bytes(address, 2);
-        u16::from_le_bytes( bytes.as_slice().try_into().unwrap())
+        u16::from_le_bytes(bytes.as_slice().try_into().unwrap())
     }
 
     pub fn write_bytes(&mut self, base_address: u32, bytes: &[u8]) {
@@ -84,5 +83,4 @@ impl Memory {
             self.write_byte(base_address + i as u32, bytes[i]);
         }
     }
-
 }

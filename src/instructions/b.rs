@@ -1,7 +1,7 @@
 use super::{Instruction, ShouldTerminate};
+use crate::instructions::util::ArmOperandExt;
 use crate::simulator::Simulator;
 use capstone::arch::arm::ArmOperand;
-use crate::instructions::util::ArmOperandExt;
 
 pub struct B {
     jump: i32,
@@ -21,10 +21,10 @@ impl Instruction for B {
             // copy the address of the next instruction into LR
             // BL and BLX instructions also set bit[0] of the LR to 1
             // so that the value is suitable for use by a subsequent POP {PC}
-            sim.registers.lr = sim.registers.future_pc;
+            sim.registers.lr = sim.registers.real_pc;
         }
         // pc is always 4 bytes ahead of the actual current instruction
-        sim.registers.future_pc = (sim.registers.pc as i64 + self.jump as i64 - 4) as u32;
+        sim.registers.real_pc = (sim.registers.pc as i64 + self.jump as i64 - 4) as u32;
         false
     }
 }

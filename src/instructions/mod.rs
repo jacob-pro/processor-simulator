@@ -1,26 +1,26 @@
-mod nop;
-mod push;
-mod pop;
-mod svc;
-mod util;
-mod mov;
+mod add;
+mod adr;
 mod b;
 mod bx;
-mod add;
 mod cmp;
+mod extends;
 mod ldm;
-mod shift;
 mod ldr;
+mod logical;
+mod mov;
+mod mul;
+mod nop;
+mod pop;
+mod push;
+mod shift;
 mod stm;
 mod str;
-mod extends;
+mod svc;
 mod tst;
-mod logical;
-mod mul;
-mod adr;
+mod util;
 
-use capstone::arch::arm::{ArmOperand, ArmInsnDetail};
 use crate::simulator::Simulator;
+use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 
 pub type ShouldTerminate = bool;
 
@@ -32,9 +32,11 @@ pub trait Instruction {
 https://en.wikipedia.org/wiki/ARM_Cortex-M#Instruction_sets
 https://developer.arm.com/documentation/dui0497/a/the-cortex-m0-instruction-set/instruction-set-summary?lang=en
  */
-pub fn decode_instruction(name: &str,
-                          detail: &ArmInsnDetail,
-                          operands: Vec<ArmOperand>) -> Box<dyn Instruction> {
+pub fn decode_instruction(
+    name: &str,
+    detail: &ArmInsnDetail,
+    operands: Vec<ArmOperand>,
+) -> Box<dyn Instruction> {
     let update_flags = detail.update_flags();
     let writeback = detail.writeback();
     return match name.to_ascii_uppercase().as_str() {
@@ -54,7 +56,7 @@ pub fn decode_instruction(name: &str,
         "CPS" => panic!("{} not yet implemented", name),
         "DMB" => panic!("{} not yet implemented", name),
         "DSB" => panic!("{} not yet implemented", name),
-        "EOR" => Box::new(logical::LOGICAL::new(operands,  logical::Mode::EOR)),
+        "EOR" => Box::new(logical::LOGICAL::new(operands, logical::Mode::EOR)),
         "ISB" => panic!("{} not yet implemented", name),
         "LDM" => Box::new(ldm::LDM::new(operands, writeback)),
         "LDR" => Box::new(ldr::LDR::new(operands, ldr::Mode::Word)),
@@ -70,7 +72,7 @@ pub fn decode_instruction(name: &str,
         "MUL" => Box::new(mul::MUL::new(operands)),
         "MVN" => Box::new(mov::MOV::new(operands, mov::Mode::MVN, update_flags)),
         "NOP" => Box::new(nop::NOP::new()),
-        "ORR" => Box::new(logical::LOGICAL::new(operands,  logical::Mode::ORR)),
+        "ORR" => Box::new(logical::LOGICAL::new(operands, logical::Mode::ORR)),
         "POP" => Box::new(pop::POP::new(operands)),
         "PUSH" => Box::new(push::PUSH::new(operands)),
         "REV" => panic!("{} not yet implemented", name),
@@ -95,5 +97,5 @@ pub fn decode_instruction(name: &str,
         "WFI" => panic!("{} not yet implemented", name),
         "YIELD" => panic!("{} not yet implemented", name),
         _ => panic!("Unrecognised Cortex-M0 instruction: {}", name),
-    }
+    };
 }

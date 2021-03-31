@@ -1,8 +1,8 @@
 use super::{Instruction, ShouldTerminate};
-use crate::simulator::Simulator;
-use capstone::prelude::*;
-use capstone::arch::arm::ArmOperand;
 use crate::instructions::util::ArmOperandExt;
+use crate::simulator::Simulator;
+use capstone::arch::arm::ArmOperand;
+use capstone::prelude::*;
 
 #[derive(PartialEq)]
 pub enum Mode {
@@ -20,15 +20,22 @@ pub struct MOV {
 impl MOV {
     pub fn new(operands: Vec<ArmOperand>, mode: Mode, update_flags: bool) -> Self {
         let dest = operands[0].reg_id().unwrap();
-        Self { update_flags, mode, dest, src: operands[1].clone() }
+        Self {
+            update_flags,
+            mode,
+            dest,
+            src: operands[1].clone(),
+        }
     }
 }
 
 impl Instruction for MOV {
     fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
-        let mut val= sim.registers.value_of_flexible_second_operand(&self.src, self.update_flags);
+        let mut val = sim
+            .registers
+            .value_of_flexible_second_operand(&self.src, self.update_flags);
         if sim.registers.reg_name(self.dest) == "PC" {
-            val = val | 1;  // When Rd is the PC in a MOV instruction: Bit[0] of the result is discarded.
+            val = val | 1; // When Rd is the PC in a MOV instruction: Bit[0] of the result is discarded.
         }
         if self.mode == Mode::MVN {
             val = !val;
