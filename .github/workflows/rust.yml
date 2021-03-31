@@ -21,10 +21,10 @@ jobs:
     
     - name: Build
       run: cargo build
-    
-    - name: Check style
-      run: cargo fmt -- --check
       
     - name: Test
       run: ./mvb.sh
+
+    - name: Check style
+      run: cargo fmt -- --check
       
