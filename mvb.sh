@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 if ! command -v rustup &>/dev/null; then
   echo 'Downloading rustup...'
