@@ -17,7 +17,9 @@ pub struct RegisterFile {
     pub lr: u32,
     pub pc: u32,
     pub cond_flags: ConditionFlags,
-    pub cur_instr_len: u32,
+    pub next_instr_len: Option<u32>,
+    pub cur_instr_len: Option<u32>,
+    pub changed_pc: bool,
 }
 
 impl RegisterFile {
@@ -28,14 +30,16 @@ impl RegisterFile {
             lr: 0,
             pc: pc,
             cond_flags: Default::default(),
-            cur_instr_len: 0
+            next_instr_len: None,
+            cur_instr_len: None,
+            changed_pc: false
         }
     }
 
     // The PC is a liar (sometimes)!
     // the PC offset is always 4 bytes even in Thumb state
     pub fn arm_adjusted_pc(&self) -> u32 {
-        self.pc - self.cur_instr_len + 4
+        self.pc - self.cur_instr_len.unwrap() + 4 - self.next_instr_len.unwrap()
     }
 
     pub fn read_by_id(&self, id: RegId) -> u32 {
@@ -70,7 +74,10 @@ impl RegisterFile {
             "IP" => self.gprs[12] = value, // Synonym
             "SP" => self.sp = value,
             "LR" => self.lr = value,
-            "PC" => self.pc = value, // When an instruction updates the PC - write to the real PC!
+            "PC" => {
+                self.pc = value;
+                self.changed_pc = true;
+            }, // When an instruction updates the PC - write to the real PC!
             _ => panic!("Unknown register {}", name),
         }
     }

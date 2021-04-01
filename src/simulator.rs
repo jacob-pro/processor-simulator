@@ -6,6 +6,8 @@ use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
 use capstone::prelude::*;
 use std::sync::{Arc, RwLock};
+use std::rc::Rc;
+use capstone::Insn;
 
 pub struct Simulator {
     pub memory: Arc<RwLock<Memory>>,
@@ -17,14 +19,14 @@ pub struct Simulator {
 
 pub struct FetchChanges {
     pc: u32,
-    real_pc: u32,
     instruction: Vec<u8>,
 }
 
 impl FetchChanges {
     pub fn apply(self, sim: &mut Simulator) {
-        sim.registers.pc = self.real_pc;
-        sim.fetched_instruction = Some(self.instruction)
+        sim.registers.pc = self.pc;
+        sim.registers.next_instr_len = Some(self.instruction.len() as u32);
+        sim.fetched_instruction = Some(self.instruction);
     }
 }
 
@@ -35,7 +37,7 @@ impl DecodeChanges {
         match self.0.as_ref() {
             None => {}
             Some(x) => {
-                sim.registers.cur_instr_len = x.length;
+                sim.registers.cur_instr_len = Some(x.length);
             }
         }
         sim.decoded_instruction = self.0;
@@ -56,10 +58,10 @@ impl Simulator {
         }
     }
 
-    // pub fn flush_pipeline(&mut self) {
-    //     self.fetched_instruction = None;
-    //     self.decoded_instruction = None;
-    // }
+    pub fn flush_pipeline(&mut self) {
+        self.fetched_instruction = None;
+        self.decoded_instruction = None;
+    }
 
     pub fn fetch(&self) -> FetchChanges {
         /*  The Thumb instruction stream is a sequence of halfword-aligned halfwords.
@@ -83,8 +85,7 @@ impl Simulator {
         };
         assert!(instr_len == 2 || instr_len == 4);
         FetchChanges {
-            pc: self.registers.pc + 4,
-            real_pc: self.registers.pc + instr_len,
+            pc: self.registers.pc + instr_len,
             instruction: code[0..instr_len as usize].to_vec()
         }
     }
@@ -96,36 +97,48 @@ impl Simulator {
                     let list = capstone
                         .disasm_all(fetched_instruction, 0x0)
                         .expect("Invalid instruction");
-                    let instr = list.iter().next().unwrap();
-                    let insn_detail: InsnDetail = capstone
-                        .insn_detail(&instr)
-                        .expect("Failed to get insn detail");
-                    let arch_detail = insn_detail.arch_detail();
-                    let operands: Vec<ArmOperand> = arch_detail
-                        .operands()
-                        .into_iter()
-                        .map(|x| {
-                            if let ArchOperand::ArmOperand(inner) = x {
-                                return inner;
+                    match list.iter().next() {
+                        None => {
+                            DecodedInstruction {
+                                imp: Rc::new(InvalidInstruction{}),
+                                cc: ArmCC::ARM_CC_INVALID,
+                                string: "Invalid".to_string(),
+                                length: fetched_instruction.len() as u32
                             }
-                            panic!("Unexpected ArchOperand");
-                        })
-                        .collect();
+                        }
+                        Some(instr) => {
+                            let insn_detail: InsnDetail = capstone
+                                .insn_detail(&instr)
+                                .expect("Failed to get insn detail");
+                            let arch_detail = insn_detail.arch_detail();
+                            let operands: Vec<ArmOperand> = arch_detail
+                                .operands()
+                                .into_iter()
+                                .map(|x| {
+                                    if let ArchOperand::ArmOperand(inner) = x {
+                                        return inner;
+                                    }
+                                    panic!("Unexpected ArchOperand");
+                                })
+                                .collect();
 
-                    let ins_name = CAPSTONE.with(|capstone| capstone.insn_name(instr.id()).unwrap());
-                    let arm_detail = arch_detail.arm().unwrap();
+                            let ins_name = CAPSTONE.with(|capstone| capstone.insn_name(instr.id()).unwrap());
+                            let arm_detail = arch_detail.arm().unwrap();
 
-                    let decoded = decode_instruction(&ins_name, &arm_detail, operands);
-                    DecodedInstruction {
-                        imp: decoded,
-                        cc: arm_detail.cc(),
-                        string: format!(
-                            "{} {}",
-                            instr.mnemonic().unwrap(),
-                            instr.op_str().unwrap_or("")
-                        ),
-                        length: instr.bytes().len() as u32
+                            let decoded = decode_instruction(&ins_name, &arm_detail, operands);
+                            DecodedInstruction {
+                                imp: decoded.into(),
+                                cc: arm_detail.cc(),
+                                string: format!(
+                                    "{} {}",
+                                    instr.mnemonic().unwrap(),
+                                    instr.op_str().unwrap_or("")
+                                ),
+                                length: instr.bytes().len() as u32
+                            }
+                        }
                     }
+
                 })
             })
         )
@@ -136,7 +149,7 @@ impl Simulator {
         if self.decoded_instruction.is_none() {
             return self;
         }
-        let dec = std::mem::take(&mut self.decoded_instruction).unwrap();
+        let dec = self.decoded_instruction.clone().unwrap();
         let ex = self.should_execute(&dec.cc);
         if *debug >= DebugLevel::Minimal {
             let mut output = String::new();
@@ -185,9 +198,18 @@ impl Simulator {
     }
 }
 
+#[derive(Clone)]
 struct DecodedInstruction {
-    imp: Box<dyn Instruction>,
+    imp: Rc<dyn Instruction>,
     cc: ArmCC,
     string: String,
     length: u32,
+}
+
+struct InvalidInstruction {}
+
+impl Instruction for InvalidInstruction {
+    fn execute(&self, sim: &mut Simulator) -> bool {
+        panic!()
+    }
 }

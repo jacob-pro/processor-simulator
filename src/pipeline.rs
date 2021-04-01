@@ -11,10 +11,19 @@ impl PipelinedSimulator {
         loop {
             cycle_counter = cycle_counter + 1;
             let fetch_changes = simulator.fetch();
+
+            // fetch_changes.apply(&mut simulator);
+
+            let decode_changes = simulator.decode();
+
             fetch_changes.apply(&mut simulator);
-            let decode_changes = simulator.decode(); //dec
             decode_changes.apply(&mut simulator);
+
             simulator = simulator.execute(&debug_level);
+            if simulator.registers.changed_pc {
+                simulator.flush_pipeline();
+                simulator.registers.changed_pc = false;
+            }
             if simulator.executed_instruction {
                 break;
             }
