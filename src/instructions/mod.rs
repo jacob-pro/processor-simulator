@@ -19,7 +19,7 @@ mod svc;
 mod tst;
 mod util;
 
-use crate::simulator::{Simulator, ExecuteChanges};
+use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 
 pub type ShouldTerminate = bool;

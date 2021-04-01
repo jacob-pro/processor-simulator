@@ -1,9 +1,9 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::{Simulator, ExecuteChanges};
+use crate::registers::SP;
+use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
-use crate::registers::SP;
 
 pub struct PUSH {
     reg_list: Vec<RegId>,
@@ -27,10 +27,7 @@ impl Instruction for PUSH {
         for r in &reg_list {
             sp = sp - 4;
             let register_value = sim.registers.read_by_id(*r).to_le_bytes();
-            sim.memory
-                .write()
-                .unwrap()
-                .write_bytes(sim.registers.sp, &register_value);
+            sim.memory.write().unwrap().write_bytes(sp, &register_value);
         }
         changes.register_change(SP, sp);
         return false;

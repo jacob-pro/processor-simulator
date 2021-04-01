@@ -1,9 +1,9 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::{Simulator, ExecuteChanges};
+use crate::registers::SP;
+use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
-use crate::registers::SP;
 
 pub struct POP {
     reg_list: Vec<RegId>,
@@ -24,7 +24,7 @@ impl Instruction for POP {
         let reg_list = sim.registers.push_pop_register_asc(self.reg_list.clone());
         let mut sp = sim.registers.sp;
         for r in &reg_list {
-            let read_from_stack = sim.memory.read().unwrap().read_u32(sim.registers.sp);
+            let read_from_stack = sim.memory.read().unwrap().read_u32(sp);
             changes.register_change(*r, read_from_stack);
             sp = sp + 4;
         }

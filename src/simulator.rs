@@ -1,6 +1,6 @@
 use crate::instructions::{decode_instruction, Instruction, ShouldTerminate};
 use crate::memory::Memory;
-use crate::registers::{RegisterFile, ConditionFlag, PC};
+use crate::registers::{ConditionFlag, RegisterFile, PC};
 use crate::{DebugLevel, CAPSTONE};
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
@@ -51,7 +51,6 @@ pub struct ExecuteChanges {
 }
 
 impl ExecuteChanges {
-
     pub fn register_change(&mut self, reg_id: RegId, value: u32) {
         self.register_changes.push((reg_id, value));
     }

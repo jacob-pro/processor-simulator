@@ -1,9 +1,9 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::{Simulator, ExecuteChanges};
+use crate::registers::ConditionFlag;
+use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
-use crate::registers::ConditionFlag;
 
 pub enum Mode {
     ASR,
@@ -66,17 +66,21 @@ impl Instruction for SHIFT {
                     if n >= 33 {
                         changes.flag_change(ConditionFlag::C, false); // If n is 33 it is updated to 0.
                     } else {
-                        changes.flag_change(ConditionFlag::C, get_bit_at(value, 32 - n)); // carry flag is updated to the last bit shifted out, bit[32-n]
+                        changes.flag_change(ConditionFlag::C, get_bit_at(value, 32 - n));
+                        // carry flag is updated to the last bit shifted out, bit[32-n]
                     }
                 }
                 value.checked_shl(n as u32).unwrap_or(0) // If n is 32 or more, then all the bits in the result are cleared to 0.
             }
             Mode::LSR => {
-                changes.flag_change(ConditionFlag::C, if n <= 32 {
-                    get_bit_at(value, n - 1)
-                } else {
-                    false // If n is 33 or more and the carry flag is updated, it is updated to 0.
-                });
+                changes.flag_change(
+                    ConditionFlag::C,
+                    if n <= 32 {
+                        get_bit_at(value, n - 1)
+                    } else {
+                        false // If n is 33 or more and the carry flag is updated, it is updated to 0.
+                    },
+                );
                 value.checked_shr(n as u32).unwrap_or(0) // If n is 32 or more, then all the bits in the result are cleared to 0.
             }
             Mode::ROR => {

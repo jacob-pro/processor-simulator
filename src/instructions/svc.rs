@@ -1,6 +1,6 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::{Simulator, ExecuteChanges};
+use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::ArmOperand;
 use std::io::Write;
 
@@ -16,7 +16,7 @@ impl SVC {
 }
 
 impl Instruction for SVC {
-    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &Simulator, _changes: &mut ExecuteChanges) -> ShouldTerminate {
         match self.id {
             1 => {
                 println!(

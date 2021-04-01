@@ -1,7 +1,7 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::registers::{PC, ConditionFlag};
-use crate::simulator::{Simulator, ExecuteChanges};
+use crate::registers::{ConditionFlag, PC};
+use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 

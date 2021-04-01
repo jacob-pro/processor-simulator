@@ -1,9 +1,9 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::{Simulator, ExecuteChanges};
+use crate::registers::ConditionFlag;
+use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
-use crate::registers::ConditionFlag;
 
 pub struct TST {
     first: RegId,

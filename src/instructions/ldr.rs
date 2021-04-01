@@ -1,6 +1,6 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::{Simulator, ExecuteChanges};
+use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::{ArmOpMem, ArmOperand};
 use capstone::prelude::*;
 

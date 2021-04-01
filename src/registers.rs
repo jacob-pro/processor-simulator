@@ -20,14 +20,12 @@ pub const SL: RegId = RegId(76);
 pub const FP: RegId = RegId(77);
 pub const IP: RegId = RegId(78);
 
-
 pub enum ConditionFlag {
     N,
     Z,
     C,
     V,
 }
-
 
 #[derive(Default, Debug, Clone)]
 pub struct ConditionFlags {
@@ -38,13 +36,12 @@ pub struct ConditionFlags {
 }
 
 impl ConditionFlags {
-
     pub fn write_flag(&mut self, flag: ConditionFlag, value: bool) {
         match flag {
-            ConditionFlag::N => {self.n = value}
-            ConditionFlag::Z => {self.z = value}
-            ConditionFlag::C => {self.c = value}
-            ConditionFlag::V => {self.v = value}
+            ConditionFlag::N => self.n = value,
+            ConditionFlag::Z => self.z = value,
+            ConditionFlag::C => self.c = value,
+            ConditionFlag::V => self.v = value,
         }
     }
 }
@@ -119,11 +116,7 @@ impl RegisterFile {
 
     // Can potentially update flags during computation of shift
     // https://www.keil.com/support/man/docs/armasm/armasm_dom1361289851539.htm
-    pub fn value_of_flexible_second_operand(
-        &self,
-        op: &ArmOperand,
-        _update_c_flag: bool,
-    ) -> u32 {
+    pub fn value_of_flexible_second_operand(&self, op: &ArmOperand, _update_c_flag: bool) -> u32 {
         match op.op_type {
             ArmOperandType::Reg(reg_id) => {
                 assert!(op.shift == ArmShift::Invalid, "Shift not supported");

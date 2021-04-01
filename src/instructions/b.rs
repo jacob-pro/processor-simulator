@@ -1,8 +1,8 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::{Simulator, ExecuteChanges};
-use capstone::arch::arm::ArmOperand;
 use crate::registers::{LR, PC};
+use crate::simulator::{ExecuteChanges, Simulator};
+use capstone::arch::arm::ArmOperand;
 
 pub struct B {
     jump: i32,
@@ -25,7 +25,10 @@ impl Instruction for B {
             changes.register_change(LR, sim.registers.pc - sim.registers.next_instr_len.unwrap());
         }
         // pc is always 4 bytes ahead of the actual current instruction
-        changes.register_change(PC, (sim.registers.arm_adjusted_pc() as i64 + self.jump as i64 - 4) as u32);
+        changes.register_change(
+            PC,
+            (sim.registers.arm_adjusted_pc() as i64 + self.jump as i64 - 4) as u32,
+        );
         false
     }
 }

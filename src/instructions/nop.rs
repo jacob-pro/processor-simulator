@@ -1,5 +1,5 @@
 use super::{Instruction, ShouldTerminate};
-use crate::simulator::{Simulator, ExecuteChanges};
+use crate::simulator::{ExecuteChanges, Simulator};
 
 pub struct NOP {}
 
