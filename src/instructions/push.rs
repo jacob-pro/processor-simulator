@@ -24,7 +24,7 @@ impl Instruction for PUSH {
     fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let mut reg_list = sim.registers.push_pop_register_asc(self.reg_list.clone());
         reg_list.reverse();
-        let mut sp = sim.registers.sp;
+        let mut sp = sim.registers.read_by_id(SP);
         for r in &reg_list {
             sp = sp - 4;
             let register_value = sim.registers.read_by_id(*r).to_le_bytes();

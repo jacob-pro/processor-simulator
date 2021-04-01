@@ -1,4 +1,5 @@
 use crate::CAPSTONE;
+use capstone::arch::arm::ArmCC;
 use capstone::arch::arm::{ArmOpMem, ArmOperand, ArmOperandType, ArmShift};
 use capstone::prelude::*;
 
@@ -29,10 +30,10 @@ pub enum ConditionFlag {
 
 #[derive(Default, Debug, Clone)]
 pub struct ConditionFlags {
-    pub n: bool, // Negative
-    pub z: bool, // Zero
-    pub c: bool, // Carry
-    pub v: bool, // Overflow
+    n: bool, // Negative
+    z: bool, // Zero
+    c: bool, // Carry
+    v: bool, // Overflow
 }
 
 impl ConditionFlags {
@@ -44,36 +45,63 @@ impl ConditionFlags {
             ConditionFlag::V => self.v = value,
         }
     }
+
+    pub fn read_flag(&self, flag: ConditionFlag) -> bool {
+        match flag {
+            ConditionFlag::N => self.n,
+            ConditionFlag::Z => self.z,
+            ConditionFlag::C => self.c,
+            ConditionFlag::V => self.v,
+        }
+    }
+
+    // https://community.arm.com/developer/ip-products/processors/b/processors-ip-blog/posts/condition-codes-1-condition-flags-and-codes
+    pub fn should_execute(&self, cc: &ArmCC) -> bool {
+        return match cc {
+            ArmCC::ARM_CC_INVALID => panic!("CC Invalid"),
+            ArmCC::ARM_CC_EQ => self.z == true,
+            ArmCC::ARM_CC_NE => self.z == false,
+            ArmCC::ARM_CC_HS => self.c == true,
+            ArmCC::ARM_CC_LO => self.c == false,
+            ArmCC::ARM_CC_MI => self.n == true,
+            ArmCC::ARM_CC_PL => self.n == false,
+            ArmCC::ARM_CC_VS => self.v == true,
+            ArmCC::ARM_CC_VC => self.v == false,
+            ArmCC::ARM_CC_HI => self.c == true && self.z == false,
+            ArmCC::ARM_CC_LS => self.c == false || self.z == true,
+            ArmCC::ARM_CC_GE => self.n == self.v,
+            ArmCC::ARM_CC_LT => self.n != self.v,
+            ArmCC::ARM_CC_GT => self.z == false && self.n == self.v,
+            ArmCC::ARM_CC_LE => self.z == true || self.n != self.v,
+            ArmCC::ARM_CC_AL => true,
+        };
+    }
 }
 
 #[derive(Debug, Clone)]
 pub struct RegisterFile {
-    pub gprs: [u32; 13],
-    pub sp: u32,
-    pub lr: u32,
-    pub pc: u32,
+    gprs: [u32; 13],
+    sp: u32,
+    lr: u32,
+    pc: u32,
     pub cond_flags: ConditionFlags,
-    pub next_instr_len: Option<u32>,
-    pub cur_instr_len: Option<u32>,
 }
 
 impl RegisterFile {
-    pub fn new(pc: u32) -> Self {
+    pub fn new() -> Self {
         Self {
             gprs: Default::default(),
             sp: crate::_STACK,
             lr: 0,
-            pc: pc,
+            pc: 0,
             cond_flags: Default::default(),
-            next_instr_len: None,
-            cur_instr_len: None,
         }
     }
 
     // The PC is a liar (sometimes)!
-    // the PC offset is always 4 bytes even in Thumb state
+    // the PC always appears as the current instruction address + 4 bytes - even in Thumb state
     pub fn arm_adjusted_pc(&self) -> u32 {
-        self.pc - self.cur_instr_len.unwrap() + 4 - self.next_instr_len.unwrap()
+        self.pc + 4
     }
 
     pub fn read_by_id(&self, id: RegId) -> u32 {
@@ -176,7 +204,7 @@ impl RegisterFile {
             output.push_str(&format!("R{} {:08X} ", i, self.gprs[i]));
         }
         output.push_str(&format!("LR {:08X} ", self.lr));
-        output.push_str(&format!("PC {:08X} ", self.arm_adjusted_pc() - 5));
+        output.push_str(&format!("PC {:08X} ", self.pc & 0xFFFFFFFE));
         output.push_str(&format!("SP {:08X} ", self.sp));
         output.push_str(&format!("N{}", self.cond_flags.n as u8));
         output.push_str(&format!("Z{}", self.cond_flags.z as u8));

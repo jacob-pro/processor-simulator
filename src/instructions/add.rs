@@ -66,7 +66,7 @@ impl Instruction for ADD {
                 let (result_u, carry1) = first_val.overflowing_add(sec_val);
                 let (result_s, overflow1) = (first_val as i32).overflowing_add(sec_val as i32);
 
-                let carry = sim.registers.cond_flags.c as u8;
+                let carry = sim.registers.cond_flags.read_flag(ConditionFlag::C) as u8;
                 let (result, carry2) = result_u.overflowing_add(carry as u32);
                 let (_, overflow2) = result_s.overflowing_add(carry as i32);
 
@@ -87,7 +87,7 @@ impl Instruction for ADD {
                 let (result_s, overflow1) = (first_val as i32).overflowing_sub(sec_val as i32);
 
                 // If the carry flag is clear, the result is reduced by one.
-                let carry = !sim.registers.cond_flags.c as u8;
+                let carry = !sim.registers.cond_flags.read_flag(ConditionFlag::C) as u8;
                 let (result, carry2) = result_u.overflowing_sub(carry as u32);
                 let (_, overflow2) = result_s.overflowing_sub(carry as i32);
 

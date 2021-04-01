@@ -17,8 +17,12 @@ impl Simulator {
 
             fetch_changes.apply(&mut simulator);
             decode_changes.apply(&mut simulator);
-            if ex_changes.apply(&mut simulator) {
-                simulator.flush_pipeline();
+            match ex_changes.apply(&mut simulator) {
+                None => {}
+                Some(pc) => {
+                    simulator.flush_pipeline();
+                    simulator.next_instr_addr = pc;
+                }
             }
             if simulator.should_terminate {
                 break;

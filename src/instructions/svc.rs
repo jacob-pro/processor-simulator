@@ -2,6 +2,7 @@ use super::{Instruction, ShouldTerminate};
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
+use crate::registers::{R0, R1};
 use capstone::arch::arm::ArmOperand;
 use std::io::Write;
 
@@ -22,13 +23,13 @@ impl Instruction for SVC {
             1 => {
                 println!(
                     "\nProgram exited with code: {}",
-                    sim.registers.gprs[0] as i32
+                    sim.registers.read_by_id(R0) as i32
                 );
                 return true;
             }
             2 => {
-                let buffer_addr = sim.registers.gprs[0];
-                let buffer_len = sim.registers.gprs[1];
+                let buffer_addr = sim.registers.read_by_id(R0);
+                let buffer_len = sim.registers.read_by_id(R1);
                 let data = sim
                     .memory
                     .read()

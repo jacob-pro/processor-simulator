@@ -23,7 +23,7 @@ impl POP {
 impl Instruction for POP {
     fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let reg_list = sim.registers.push_pop_register_asc(self.reg_list.clone());
-        let mut sp = sim.registers.sp;
+        let mut sp = sim.registers.read_by_id(SP);
         for r in &reg_list {
             let read_from_stack = sim.memory.read().unwrap().read_u32(sp);
             changes.register_change(*r, read_from_stack);

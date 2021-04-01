@@ -27,7 +27,7 @@ impl Instruction for BX {
             // copy the address of the next instruction into LR
             // BL and BLX instructions also set bit[0] of the LR to 1
             // so that the value is suitable for use by a subsequent POP {PC}
-            changes.register_change(LR, sim.registers.pc - sim.registers.next_instr_len.unwrap());
+            changes.register_change(LR, sim.registers.arm_adjusted_pc());
         }
         let new_addr = sim.registers.read_by_id(self.register);
         changes.register_change(PC, new_addr);
