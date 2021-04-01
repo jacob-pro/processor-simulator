@@ -2,6 +2,24 @@ use crate::CAPSTONE;
 use capstone::arch::arm::{ArmOpMem, ArmOperand, ArmOperandType, ArmShift};
 use capstone::prelude::*;
 
+pub const LR: RegId = RegId(10);
+pub const PC: RegId = RegId(11);
+pub const SP: RegId = RegId(12);
+
+pub const R0: RegId = RegId(66);
+pub const R1: RegId = RegId(67);
+pub const R2: RegId = RegId(68);
+pub const R3: RegId = RegId(69);
+pub const R4: RegId = RegId(70);
+pub const R5: RegId = RegId(71);
+pub const R6: RegId = RegId(72);
+pub const R7: RegId = RegId(73);
+pub const R8: RegId = RegId(74);
+pub const SB: RegId = RegId(75);
+pub const SL: RegId = RegId(76);
+pub const FP: RegId = RegId(77);
+pub const IP: RegId = RegId(78);
+
 #[derive(Default, Debug, Clone)]
 pub struct ConditionFlags {
     pub n: bool, // Negative
@@ -43,7 +61,7 @@ impl RegisterFile {
     }
 
     pub fn read_by_id(&self, id: RegId) -> u32 {
-        let name = self.reg_name(id);
+        let name = Self::reg_name(id);
         if name.starts_with("R") {
             let number = name[1..].parse::<usize>().expect("Invalid register");
             return self.gprs[number];
@@ -55,13 +73,12 @@ impl RegisterFile {
             "IP" => self.gprs[12], // Synonym
             "SP" => self.sp,
             "LR" => self.lr,
-            "PC" => self.arm_adjusted_pc() & 0xFFFFFFFE,
             _ => panic!("Unknown register {}", name),
         };
     }
 
     pub fn write_by_id(&mut self, id: RegId, value: u32) {
-        let name = self.reg_name(id);
+        let name = Self::reg_name(id);
         if name.starts_with("R") {
             let number = name[1..].parse::<usize>().expect("Invalid register");
             self.gprs[number] = value;
@@ -103,7 +120,7 @@ impl RegisterFile {
         /* PC appears WORD aligned to LDR/STR PC relative instructions
          * https://community.arm.com/developer/ip-products/processors/f/cortex-m-forum/4541/real-value-of-pc-register/11430#11430
          */
-        let base_reg_val = if self.reg_name(op_mem.base()) == "PC" {
+        let base_reg_val = if op_mem.base() == PC {
             let pc_val = self.arm_adjusted_pc() as i64;
             pc_val & 0xFFFFFFFC
         } else {
@@ -128,7 +145,7 @@ impl RegisterFile {
      */
     pub fn push_pop_register_asc(&self, mut reg_list: Vec<RegId>) -> Vec<RegId> {
         reg_list.sort_by_key(|r| {
-            let name = self.reg_name(*r);
+            let name = Self::reg_name(*r);
             if name.starts_with("R") {
                 let number = name[1..].parse::<usize>().expect("Invalid register");
                 if number <= 7 {
@@ -160,12 +177,36 @@ impl RegisterFile {
     }
 
     #[inline]
-    pub fn reg_name(&self, reg_id: RegId) -> String {
+    fn reg_name(reg_id: RegId) -> String {
         CAPSTONE.with(|capstone| {
             capstone
                 .reg_name(reg_id)
                 .expect("Couldn't get reg_name")
                 .to_ascii_uppercase()
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn reg_names() {
+        assert_eq!(RegisterFile::reg_name(R0), "R0");
+        assert_eq!(RegisterFile::reg_name(R1), "R1");
+        assert_eq!(RegisterFile::reg_name(R2), "R2");
+        assert_eq!(RegisterFile::reg_name(R3), "R3");
+        assert_eq!(RegisterFile::reg_name(R4), "R4");
+        assert_eq!(RegisterFile::reg_name(R5), "R5");
+        assert_eq!(RegisterFile::reg_name(R6), "R6");
+        assert_eq!(RegisterFile::reg_name(R7), "R7");
+        assert_eq!(RegisterFile::reg_name(R8), "R8");
+        assert_eq!(RegisterFile::reg_name(SB), "SB");
+        assert_eq!(RegisterFile::reg_name(SL), "SL");
+        assert_eq!(RegisterFile::reg_name(FP), "FP");
+        assert_eq!(RegisterFile::reg_name(IP), "IP");
+        assert_eq!(RegisterFile::reg_name(LR), "LR");
+        assert_eq!(RegisterFile::reg_name(PC), "PC");
+        assert_eq!(RegisterFile::reg_name(SP), "SP");
     }
 }

@@ -5,7 +5,6 @@ use crate::{DebugLevel, CAPSTONE};
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
 use capstone::prelude::*;
-use capstone::Insn;
 use std::rc::Rc;
 use std::sync::{Arc, RwLock};
 
@@ -189,10 +188,6 @@ impl Simulator {
             ArmCC::ARM_CC_AL => true,
         };
     }
-
-    pub fn curr_instr_len(&self) -> u32 {
-        self.decoded_instruction.as_ref().unwrap().length
-    }
 }
 
 #[derive(Clone)]
@@ -206,7 +201,7 @@ struct DecodedInstruction {
 struct InvalidInstruction {}
 
 impl Instruction for InvalidInstruction {
-    fn execute(&self, sim: &mut Simulator) -> bool {
+    fn execute(&self, _sim: &mut Simulator) -> bool {
         panic!()
     }
 }

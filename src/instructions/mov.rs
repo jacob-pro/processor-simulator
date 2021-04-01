@@ -1,5 +1,6 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
+use crate::registers::PC;
 use crate::simulator::Simulator;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
@@ -34,7 +35,7 @@ impl Instruction for MOV {
         let mut val = sim
             .registers
             .value_of_flexible_second_operand(&self.src, self.update_flags);
-        if sim.registers.reg_name(self.dest) == "PC" {
+        if self.dest == PC {
             val = val | 1; // When Rd is the PC in a MOV instruction: Bit[0] of the result is discarded.
         }
         if self.mode == Mode::MVN {
