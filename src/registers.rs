@@ -55,7 +55,6 @@ pub struct RegisterFile {
     pub cond_flags: ConditionFlags,
     pub next_instr_len: Option<u32>,
     pub cur_instr_len: Option<u32>,
-    pub changed_pc: bool,
 }
 
 impl RegisterFile {
@@ -68,7 +67,6 @@ impl RegisterFile {
             cond_flags: Default::default(),
             next_instr_len: None,
             cur_instr_len: None,
-            changed_pc: false,
         }
     }
 

@@ -59,17 +59,19 @@ impl ExecuteChanges {
         self.flag_changes.push((flag, value));
     }
 
-    pub fn apply(self, sim: &mut Simulator) {
+    pub fn apply(self, sim: &mut Simulator) -> bool {
+        let mut changed_pc = false;
         for (reg_id, value) in self.register_changes {
             sim.registers.write_by_id(reg_id, value);
             if reg_id == PC {
-                sim.registers.changed_pc = true;
+                changed_pc = true;
             }
         }
         for (flag, value) in self.flag_changes {
             sim.registers.cond_flags.write_flag(flag, value);
         }
         sim.should_terminate = self.should_terminate;
+        changed_pc
     }
 }
 

@@ -20,11 +20,9 @@ impl PipelinedSimulator {
             decode_changes.apply(&mut simulator);
 
             let ex_changes = simulator.execute(&debug_level);
-            ex_changes.apply(&mut simulator);
 
-            if simulator.registers.changed_pc {
+            if ex_changes.apply(&mut simulator) {
                 simulator.flush_pipeline();
-                simulator.registers.changed_pc = false;
             }
             if simulator.should_terminate {
                 break;
