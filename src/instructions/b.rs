@@ -1,7 +1,8 @@
 use super::{Instruction, ShouldTerminate};
+use crate::cpu_state::execute::ExecuteChanges;
+use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
 use crate::registers::{LR, PC};
-use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::ArmOperand;
 
 pub struct B {
@@ -17,7 +18,7 @@ impl B {
 }
 
 impl Instruction for B {
-    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
         if self.with_link {
             // copy the address of the next instruction into LR
             // BL and BLX instructions also set bit[0] of the LR to 1

@@ -1,7 +1,8 @@
 use super::{Instruction, ShouldTerminate};
+use crate::cpu_state::execute::ExecuteChanges;
+use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
 use crate::registers::SP;
-use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
@@ -20,7 +21,7 @@ impl PUSH {
 }
 
 impl Instruction for PUSH {
-    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let mut reg_list = sim.registers.push_pop_register_asc(self.reg_list.clone());
         reg_list.reverse();
         let mut sp = sim.registers.sp;

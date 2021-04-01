@@ -19,13 +19,14 @@ mod svc;
 mod tst;
 mod util;
 
-use crate::simulator::{ExecuteChanges, Simulator};
+use crate::cpu_state::execute::ExecuteChanges;
+use crate::cpu_state::CpuState;
 use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 
 pub type ShouldTerminate = bool;
 
 pub trait Instruction: Send {
-    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate;
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate;
 }
 
 /*

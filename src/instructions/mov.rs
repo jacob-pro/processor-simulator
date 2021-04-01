@@ -1,7 +1,8 @@
 use super::{Instruction, ShouldTerminate};
+use crate::cpu_state::execute::ExecuteChanges;
+use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
 use crate::registers::{ConditionFlag, PC};
-use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
@@ -31,7 +32,7 @@ impl MOV {
 }
 
 impl Instruction for MOV {
-    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let mut val = sim
             .registers
             .value_of_flexible_second_operand(&self.src, self.update_flags);

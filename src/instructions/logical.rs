@@ -1,7 +1,8 @@
 use super::{Instruction, ShouldTerminate};
+use crate::cpu_state::execute::ExecuteChanges;
+use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
 use crate::registers::ConditionFlag;
-use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
@@ -27,7 +28,7 @@ impl LOGICAL {
 }
 
 impl Instruction for LOGICAL {
-    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let first_val = sim.registers.read_by_id(self.dest);
         let sec_val = sim.registers.read_by_id(self.second);
         let result = match self.mode {

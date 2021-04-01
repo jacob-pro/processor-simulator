@@ -1,11 +1,11 @@
-use crate::simulator::Simulator;
+use crate::cpu_state::CpuState;
 use crate::DebugLevel;
 use std::time::Instant;
 
 pub struct PipelinedSimulator {}
 
 impl PipelinedSimulator {
-    pub fn run(mut simulator: Simulator, debug_level: &DebugLevel) {
+    pub fn run(mut simulator: CpuState, debug_level: &DebugLevel) {
         let start_time = Instant::now();
         let mut cycle_counter = 0;
         loop {

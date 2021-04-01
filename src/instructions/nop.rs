@@ -1,5 +1,6 @@
 use super::{Instruction, ShouldTerminate};
-use crate::simulator::{ExecuteChanges, Simulator};
+use crate::cpu_state::execute::ExecuteChanges;
+use crate::cpu_state::CpuState;
 
 pub struct NOP {}
 
@@ -10,7 +11,7 @@ impl NOP {
 }
 
 impl Instruction for NOP {
-    fn execute(&self, _: &Simulator, _: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, _: &CpuState, _: &mut ExecuteChanges) -> ShouldTerminate {
         false
     }
 }

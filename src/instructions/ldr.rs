@@ -1,6 +1,7 @@
 use super::{Instruction, ShouldTerminate};
+use crate::cpu_state::execute::ExecuteChanges;
+use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::{ExecuteChanges, Simulator};
 use capstone::arch::arm::{ArmOpMem, ArmOperand};
 use capstone::prelude::*;
 
@@ -29,7 +30,7 @@ impl LDR {
 }
 
 impl Instruction for LDR {
-    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let mem_addr = sim.registers.eval_ldr_str_op_mem(&self.mem);
         let val_at_addr = match self.mode {
             Mode::Word => sim.memory.read().unwrap().read_u32(mem_addr),
