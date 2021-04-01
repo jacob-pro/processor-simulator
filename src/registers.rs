@@ -32,7 +32,7 @@ impl RegisterFile {
             cond_flags: Default::default(),
             next_instr_len: None,
             cur_instr_len: None,
-            changed_pc: false
+            changed_pc: false,
         }
     }
 
@@ -77,7 +77,7 @@ impl RegisterFile {
             "PC" => {
                 self.pc = value;
                 self.changed_pc = true;
-            }, // When an instruction updates the PC - write to the real PC!
+            } // When an instruction updates the PC - write to the real PC!
             _ => panic!("Unknown register {}", name),
         }
     }

@@ -5,9 +5,9 @@ use crate::{DebugLevel, CAPSTONE};
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
 use capstone::prelude::*;
-use std::sync::{Arc, RwLock};
-use std::rc::Rc;
 use capstone::Insn;
+use std::rc::Rc;
+use std::sync::{Arc, RwLock};
 
 pub struct Simulator {
     pub memory: Arc<RwLock<Memory>>,
@@ -30,7 +30,7 @@ impl FetchChanges {
     }
 }
 
-pub struct DecodeChanges (Option<DecodedInstruction>);
+pub struct DecodeChanges(Option<DecodedInstruction>);
 
 impl DecodeChanges {
     pub fn apply(self, sim: &mut Simulator) {
@@ -43,8 +43,6 @@ impl DecodeChanges {
         sim.decoded_instruction = self.0;
     }
 }
-
-
 
 impl Simulator {
     pub fn new(memory: Arc<RwLock<Memory>>, entry: u32) -> Self {
@@ -86,63 +84,62 @@ impl Simulator {
         assert!(instr_len == 2 || instr_len == 4);
         FetchChanges {
             pc: self.registers.pc + instr_len,
-            instruction: code[0..instr_len as usize].to_vec()
+            instruction: code[0..instr_len as usize].to_vec(),
         }
     }
 
     pub fn decode(&self) -> DecodeChanges {
         DecodeChanges(
-            self.fetched_instruction.as_ref().map(|fetched_instruction| {
-                CAPSTONE.with(|capstone| {
-                    let list = capstone
-                        .disasm_all(fetched_instruction, 0x0)
-                        .expect("Invalid instruction");
-                    match list.iter().next() {
-                        None => {
-                            DecodedInstruction {
-                                imp: Rc::new(InvalidInstruction{}),
+            self.fetched_instruction
+                .as_ref()
+                .map(|fetched_instruction| {
+                    CAPSTONE.with(|capstone| {
+                        let list = capstone
+                            .disasm_all(fetched_instruction, 0x0)
+                            .expect("Invalid instruction");
+                        match list.iter().next() {
+                            None => DecodedInstruction {
+                                imp: Rc::new(InvalidInstruction {}),
                                 cc: ArmCC::ARM_CC_INVALID,
                                 string: "Invalid".to_string(),
-                                length: fetched_instruction.len() as u32
+                                length: fetched_instruction.len() as u32,
+                            },
+                            Some(instr) => {
+                                let insn_detail: InsnDetail = capstone
+                                    .insn_detail(&instr)
+                                    .expect("Failed to get insn detail");
+                                let arch_detail = insn_detail.arch_detail();
+                                let operands: Vec<ArmOperand> = arch_detail
+                                    .operands()
+                                    .into_iter()
+                                    .map(|x| {
+                                        if let ArchOperand::ArmOperand(inner) = x {
+                                            return inner;
+                                        }
+                                        panic!("Unexpected ArchOperand");
+                                    })
+                                    .collect();
+
+                                let ins_name = CAPSTONE
+                                    .with(|capstone| capstone.insn_name(instr.id()).unwrap());
+                                let arm_detail = arch_detail.arm().unwrap();
+
+                                let decoded = decode_instruction(&ins_name, &arm_detail, operands);
+                                DecodedInstruction {
+                                    imp: decoded.into(),
+                                    cc: arm_detail.cc(),
+                                    string: format!(
+                                        "{} {}",
+                                        instr.mnemonic().unwrap(),
+                                        instr.op_str().unwrap_or("")
+                                    ),
+                                    length: instr.bytes().len() as u32,
+                                }
                             }
                         }
-                        Some(instr) => {
-                            let insn_detail: InsnDetail = capstone
-                                .insn_detail(&instr)
-                                .expect("Failed to get insn detail");
-                            let arch_detail = insn_detail.arch_detail();
-                            let operands: Vec<ArmOperand> = arch_detail
-                                .operands()
-                                .into_iter()
-                                .map(|x| {
-                                    if let ArchOperand::ArmOperand(inner) = x {
-                                        return inner;
-                                    }
-                                    panic!("Unexpected ArchOperand");
-                                })
-                                .collect();
-
-                            let ins_name = CAPSTONE.with(|capstone| capstone.insn_name(instr.id()).unwrap());
-                            let arm_detail = arch_detail.arm().unwrap();
-
-                            let decoded = decode_instruction(&ins_name, &arm_detail, operands);
-                            DecodedInstruction {
-                                imp: decoded.into(),
-                                cc: arm_detail.cc(),
-                                string: format!(
-                                    "{} {}",
-                                    instr.mnemonic().unwrap(),
-                                    instr.op_str().unwrap_or("")
-                                ),
-                                length: instr.bytes().len() as u32
-                            }
-                        }
-                    }
-
-                })
-            })
+                    })
+                }),
         )
-
     }
 
     pub fn execute(mut self, debug: &DebugLevel) -> Self {
