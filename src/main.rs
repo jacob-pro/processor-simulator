@@ -1,11 +1,11 @@
 mod cpu_state;
 mod instructions;
 mod memory;
-mod pipeline;
 mod registers;
+mod simulator;
 
 use crate::cpu_state::CpuState;
-use crate::pipeline::PipelinedSimulator;
+use crate::simulator::Simulator;
 use capstone::prelude::*;
 use clap::{App, Arg};
 use elf::types::PT_LOAD;
@@ -118,7 +118,7 @@ fn main() {
     // std::thread::spawn(|| {
     //     let _l = simulator;
     // });
-    PipelinedSimulator::run(simulator, &debug_level);
+    Simulator::run(simulator, &debug_level);
 }
 
 thread_local! {
