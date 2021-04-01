@@ -17,7 +17,7 @@ pub struct RegisterFile {
     pub lr: u32,
     pub pc: u32,
     pub cond_flags: ConditionFlags,
-    pub real_pc: u32,
+    pub cur_instr_len: u32,
 }
 
 impl RegisterFile {
@@ -26,10 +26,16 @@ impl RegisterFile {
             gprs: Default::default(),
             sp: crate::_STACK,
             lr: 0,
-            pc,
+            pc: pc,
             cond_flags: Default::default(),
-            real_pc: pc,
+            cur_instr_len: 0
         }
+    }
+
+    // The PC is a liar (sometimes)!
+    // the PC offset is always 4 bytes even in Thumb state
+    pub fn arm_adjusted_pc(&self) -> u32 {
+        self.pc - self.cur_instr_len + 4
     }
 
     pub fn read_by_id(&self, id: RegId) -> u32 {
@@ -45,7 +51,7 @@ impl RegisterFile {
             "IP" => self.gprs[12], // Synonym
             "SP" => self.sp,
             "LR" => self.lr,
-            "PC" => self.pc & 0xFFFFFFFE,
+            "PC" => self.arm_adjusted_pc() & 0xFFFFFFFE,
             _ => panic!("Unknown register {}", name),
         };
     }
@@ -64,7 +70,7 @@ impl RegisterFile {
             "IP" => self.gprs[12] = value, // Synonym
             "SP" => self.sp = value,
             "LR" => self.lr = value,
-            "PC" => self.real_pc = value, // When an instruction updates the PC - write to the real PC!
+            "PC" => self.pc = value, // When an instruction updates the PC - write to the real PC!
             _ => panic!("Unknown register {}", name),
         }
     }
@@ -91,7 +97,7 @@ impl RegisterFile {
          * https://community.arm.com/developer/ip-products/processors/f/cortex-m-forum/4541/real-value-of-pc-register/11430#11430
          */
         let base_reg_val = if self.reg_name(op_mem.base()) == "PC" {
-            let pc_val = self.pc as i64;
+            let pc_val = self.arm_adjusted_pc() as i64;
             pc_val & 0xFFFFFFFC
         } else {
             self.read_by_id(op_mem.base()) as i64
@@ -137,7 +143,7 @@ impl RegisterFile {
             output.push_str(&format!("R{} {:08X} ", i, self.gprs[i]));
         }
         output.push_str(&format!("LR {:08X} ", self.lr));
-        output.push_str(&format!("PC {:08X} ", self.pc - 5));
+        output.push_str(&format!("PC {:08X} ", self.arm_adjusted_pc() - 5));
         output.push_str(&format!("SP {:08X} ", self.sp));
         output.push_str(&format!("N{}", self.cond_flags.n as u8));
         output.push_str(&format!("Z{}", self.cond_flags.z as u8));

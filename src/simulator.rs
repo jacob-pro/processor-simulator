@@ -23,8 +23,7 @@ pub struct FetchChanges {
 
 impl FetchChanges {
     pub fn apply(self, sim: &mut Simulator) {
-        sim.registers.pc = self.pc;
-        sim.registers.real_pc = self.real_pc;
+        sim.registers.pc = self.real_pc;
         sim.fetched_instruction = Some(self.instruction)
     }
 }
@@ -33,6 +32,12 @@ pub struct DecodeChanges (Option<DecodedInstruction>);
 
 impl DecodeChanges {
     pub fn apply(self, sim: &mut Simulator) {
+        match self.0.as_ref() {
+            None => {}
+            Some(x) => {
+                sim.registers.cur_instr_len = x.length;
+            }
+        }
         sim.decoded_instruction = self.0;
     }
 }
@@ -65,11 +70,11 @@ impl Simulator {
            0b11101 0b11110 0b11111 Otherwise, the halfword is a 16-bit instruction.
         */
         assert_eq!(
-            self.registers.real_pc & 1,
+            self.registers.pc & 1,
             1,
             "LSB of PC must be 1 for thumb mode"
         );
-        let addr = self.registers.real_pc & 0xFFFFFFFE; // Ignore the last bit for actual address
+        let addr = self.registers.pc & 0xFFFFFFFE; // Ignore the last bit for actual address
         let code = self.memory.read().unwrap().read_bytes(addr, 4);
         let bits_15_11 = code[1] >> 3;
         let instr_len = match bits_15_11 {
@@ -78,8 +83,8 @@ impl Simulator {
         };
         assert!(instr_len == 2 || instr_len == 4);
         FetchChanges {
-            pc: self.registers.real_pc + 4,         // The PC is a liar (sometimes)! - the PC offset is always 4 bytes even in Thumb state
-            real_pc: self.registers.real_pc + instr_len,
+            pc: self.registers.pc + 4,
+            real_pc: self.registers.pc + instr_len,
             instruction: code[0..instr_len as usize].to_vec()
         }
     }
@@ -119,6 +124,7 @@ impl Simulator {
                             instr.mnemonic().unwrap(),
                             instr.op_str().unwrap_or("")
                         ),
+                        length: instr.bytes().len() as u32
                     }
                 })
             })
@@ -173,10 +179,15 @@ impl Simulator {
             ArmCC::ARM_CC_AL => true,
         };
     }
+
+    pub fn curr_instr_len(&self) -> u32 {
+        self.decoded_instruction.as_ref().unwrap().length
+    }
 }
 
 struct DecodedInstruction {
     imp: Box<dyn Instruction>,
     cc: ArmCC,
     string: String,
+    length: u32,
 }
