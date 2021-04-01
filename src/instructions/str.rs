@@ -1,6 +1,6 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::Simulator;
+use crate::simulator::{Simulator, ExecuteChanges};
 use capstone::arch::arm::{ArmOpMem, ArmOperand};
 use capstone::prelude::*;
 
@@ -27,7 +27,7 @@ impl STR {
 }
 
 impl Instruction for STR {
-    fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
+    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let mem_addr = sim.registers.eval_ldr_str_op_mem(&self.mem);
         let reg_val = sim.registers.read_by_id(self.reg);
         match self.mode {

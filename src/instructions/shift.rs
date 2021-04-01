@@ -1,8 +1,9 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::Simulator;
+use crate::simulator::{Simulator, ExecuteChanges};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use crate::registers::ConditionFlag;
 
 pub enum Mode {
     ASR,
@@ -46,7 +47,7 @@ impl SHIFT {
 
 // https://developer.arm.com/documentation/dui0497/a/the-cortex-m0-instruction-set/about-the-instruction-descriptions/shift-operations?lang=en
 impl Instruction for SHIFT {
-    fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
+    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let value = sim.registers.read_by_id(self.first);
         let n = sim
             .registers
@@ -56,37 +57,37 @@ impl Instruction for SHIFT {
         let result = match self.mode {
             Mode::ASR => {
                 assert!(n >= 1 && n <= 32);
-                sim.registers.cond_flags.c = get_bit_at(value, n - 1);
+                changes.flag_change(ConditionFlag::C, get_bit_at(value, n - 1));
                 (value as i32 >> n) as u32
             }
             Mode::LSL => {
                 if n > 0 {
                     // These instructions do not affect the carry flag when used with LSL #0
                     if n >= 33 {
-                        sim.registers.cond_flags.c = false; // If n is 33 it is updated to 0.
+                        changes.flag_change(ConditionFlag::C, false); // If n is 33 it is updated to 0.
                     } else {
-                        sim.registers.cond_flags.c = get_bit_at(value, 32 - n); // carry flag is updated to the last bit shifted out, bit[32-n]
+                        changes.flag_change(ConditionFlag::C, get_bit_at(value, 32 - n)); // carry flag is updated to the last bit shifted out, bit[32-n]
                     }
                 }
                 value.checked_shl(n as u32).unwrap_or(0) // If n is 32 or more, then all the bits in the result are cleared to 0.
             }
             Mode::LSR => {
-                sim.registers.cond_flags.c = if n <= 32 {
+                changes.flag_change(ConditionFlag::C, if n <= 32 {
                     get_bit_at(value, n - 1)
                 } else {
                     false // If n is 33 or more and the carry flag is updated, it is updated to 0.
-                };
+                });
                 value.checked_shr(n as u32).unwrap_or(0) // If n is 32 or more, then all the bits in the result are cleared to 0.
             }
             Mode::ROR => {
                 assert!(n >= 1 && n <= 31);
-                sim.registers.cond_flags.c = get_bit_at(value, n - 1);
+                changes.flag_change(ConditionFlag::C, get_bit_at(value, n - 1));
                 value.rotate_right(n as u32)
             }
         };
-        sim.registers.write_by_id(self.dest, result);
-        sim.registers.cond_flags.n = (result as i32).is_negative();
-        sim.registers.cond_flags.z = result == 0;
+        changes.register_change(self.dest, result);
+        changes.flag_change(ConditionFlag::N, (result as i32).is_negative());
+        changes.flag_change(ConditionFlag::Z, result == 0);
         false
     }
 }

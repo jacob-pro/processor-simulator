@@ -1,8 +1,9 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::Simulator;
+use crate::simulator::{Simulator, ExecuteChanges};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use crate::registers::ConditionFlag;
 
 pub struct TST {
     first: RegId,
@@ -18,14 +19,14 @@ impl TST {
 }
 
 impl Instruction for TST {
-    fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
+    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let first_val = sim.registers.read_by_id(self.first);
         let sec_val = sim
             .registers
             .value_of_flexible_second_operand(&self.second, true);
         let result = first_val & sec_val;
-        sim.registers.cond_flags.n = (result as i32).is_negative();
-        sim.registers.cond_flags.z = result == 0;
+        changes.flag_change(ConditionFlag::N, (result as i32).is_negative());
+        changes.flag_change(ConditionFlag::Z, result == 0);
         false
     }
 }

@@ -1,8 +1,9 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::Simulator;
+use crate::simulator::{Simulator, ExecuteChanges};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use crate::registers::SP;
 
 pub struct POP {
     reg_list: Vec<RegId>,
@@ -19,13 +20,15 @@ impl POP {
 }
 
 impl Instruction for POP {
-    fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
+    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let reg_list = sim.registers.push_pop_register_asc(self.reg_list.clone());
+        let mut sp = sim.registers.sp;
         for r in &reg_list {
             let read_from_stack = sim.memory.read().unwrap().read_u32(sim.registers.sp);
-            sim.registers.write_by_id(*r, read_from_stack);
-            sim.registers.sp = sim.registers.sp + 4;
+            changes.register_change(*r, read_from_stack);
+            sp = sp + 4;
         }
+        changes.register_change(SP, sp);
         return false;
     }
 }

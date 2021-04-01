@@ -1,6 +1,6 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::Simulator;
+use crate::simulator::{Simulator, ExecuteChanges};
 use capstone::arch::arm::{ArmOpMem, ArmOperand};
 use capstone::prelude::*;
 
@@ -29,7 +29,7 @@ impl LDR {
 }
 
 impl Instruction for LDR {
-    fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
+    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let mem_addr = sim.registers.eval_ldr_str_op_mem(&self.mem);
         let val_at_addr = match self.mode {
             Mode::Word => sim.memory.read().unwrap().read_u32(mem_addr),
@@ -38,7 +38,7 @@ impl Instruction for LDR {
             Mode::SignedHalfWord => sim.memory.read().unwrap().read_u16(mem_addr) as i32 as u32,
             Mode::SignedByte => sim.memory.read().unwrap().read_byte(mem_addr) as i32 as u32,
         };
-        sim.registers.write_by_id(self.reg, val_at_addr);
+        changes.register_change(self.reg, val_at_addr);
         false
     }
 }

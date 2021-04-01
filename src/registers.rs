@@ -20,12 +20,33 @@ pub const SL: RegId = RegId(76);
 pub const FP: RegId = RegId(77);
 pub const IP: RegId = RegId(78);
 
+
+pub enum ConditionFlag {
+    N,
+    Z,
+    C,
+    V,
+}
+
+
 #[derive(Default, Debug, Clone)]
 pub struct ConditionFlags {
     pub n: bool, // Negative
     pub z: bool, // Zero
     pub c: bool, // Carry
     pub v: bool, // Overflow
+}
+
+impl ConditionFlags {
+
+    pub fn write_flag(&mut self, flag: ConditionFlag, value: bool) {
+        match flag {
+            ConditionFlag::N => {self.n = value}
+            ConditionFlag::Z => {self.z = value}
+            ConditionFlag::C => {self.c = value}
+            ConditionFlag::V => {self.v = value}
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -91,10 +112,7 @@ impl RegisterFile {
             "IP" => self.gprs[12] = value, // Synonym
             "SP" => self.sp = value,
             "LR" => self.lr = value,
-            "PC" => {
-                self.pc = value;
-                self.changed_pc = true;
-            } // When an instruction updates the PC - write to the real PC!
+            "PC" => self.pc = value, // When an instruction updates the PC - write to the real PC!
             _ => panic!("Unknown register {}", name),
         }
     }
@@ -102,13 +120,13 @@ impl RegisterFile {
     // Can potentially update flags during computation of shift
     // https://www.keil.com/support/man/docs/armasm/armasm_dom1361289851539.htm
     pub fn value_of_flexible_second_operand(
-        &mut self,
+        &self,
         op: &ArmOperand,
         _update_c_flag: bool,
     ) -> u32 {
         match op.op_type {
             ArmOperandType::Reg(reg_id) => {
-                assert!(op.shift == ArmShift::Invalid, "Shift not yet implemented");
+                assert!(op.shift == ArmShift::Invalid, "Shift not supported");
                 self.read_by_id(reg_id)
             }
             ArmOperandType::Imm(value) => value as u32,

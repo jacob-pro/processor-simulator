@@ -1,6 +1,6 @@
 use crate::instructions::{decode_instruction, Instruction, ShouldTerminate};
 use crate::memory::Memory;
-use crate::registers::RegisterFile;
+use crate::registers::{RegisterFile, ConditionFlag, PC};
 use crate::{DebugLevel, CAPSTONE};
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
@@ -13,7 +13,7 @@ pub struct Simulator {
     pub registers: RegisterFile,
     fetched_instruction: Option<Vec<u8>>,
     decoded_instruction: Option<DecodedInstruction>,
-    pub executed_instruction: ShouldTerminate,
+    pub should_terminate: ShouldTerminate,
 }
 
 pub struct FetchChanges {
@@ -43,6 +43,37 @@ impl DecodeChanges {
     }
 }
 
+#[derive(Default)]
+pub struct ExecuteChanges {
+    register_changes: Vec<(RegId, u32)>,
+    flag_changes: Vec<(ConditionFlag, bool)>,
+    should_terminate: bool,
+}
+
+impl ExecuteChanges {
+
+    pub fn register_change(&mut self, reg_id: RegId, value: u32) {
+        self.register_changes.push((reg_id, value));
+    }
+
+    pub fn flag_change(&mut self, flag: ConditionFlag, value: bool) {
+        self.flag_changes.push((flag, value));
+    }
+
+    pub fn apply(self, sim: &mut Simulator) {
+        for (reg_id, value) in self.register_changes {
+            sim.registers.write_by_id(reg_id, value);
+            if reg_id == PC {
+                sim.registers.changed_pc = true;
+            }
+        }
+        for (flag, value) in self.flag_changes {
+            sim.registers.cond_flags.write_flag(flag, value);
+        }
+        sim.should_terminate = self.should_terminate;
+    }
+}
+
 impl Simulator {
     pub fn new(memory: Arc<RwLock<Memory>>, entry: u32) -> Self {
         let registers = RegisterFile::new(entry);
@@ -51,7 +82,7 @@ impl Simulator {
             registers,
             fetched_instruction: None,
             decoded_instruction: None,
-            executed_instruction: false,
+            should_terminate: false,
         }
     }
 
@@ -141,9 +172,10 @@ impl Simulator {
         )
     }
 
-    pub fn execute(mut self, debug: &DebugLevel) -> Self {
+    pub fn execute(&self, debug: &DebugLevel) -> ExecuteChanges {
+        let mut changes = ExecuteChanges::default();
         if self.decoded_instruction.is_none() {
-            return self;
+            return changes;
         }
         let dec = self.decoded_instruction.clone().unwrap();
         let ex = self.should_execute(&dec.cc);
@@ -161,9 +193,9 @@ impl Simulator {
             println!("{}", output);
         }
         if ex {
-            self.executed_instruction = dec.imp.execute(&mut self);
+            changes.should_terminate = dec.imp.execute(self, &mut changes);
         }
-        self
+        changes
     }
 
     // https://community.arm.com/developer/ip-products/processors/b/processors-ip-blog/posts/condition-codes-1-condition-flags-and-codes
@@ -201,7 +233,7 @@ struct DecodedInstruction {
 struct InvalidInstruction {}
 
 impl Instruction for InvalidInstruction {
-    fn execute(&self, _sim: &mut Simulator) -> bool {
+    fn execute(&self, _: &Simulator, _: &mut ExecuteChanges) -> bool {
         panic!()
     }
 }

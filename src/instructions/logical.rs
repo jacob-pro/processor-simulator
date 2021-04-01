@@ -1,8 +1,9 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::Simulator;
+use crate::simulator::{Simulator, ExecuteChanges};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use crate::registers::ConditionFlag;
 
 pub enum Mode {
     AND,
@@ -26,7 +27,7 @@ impl LOGICAL {
 }
 
 impl Instruction for LOGICAL {
-    fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
+    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let first_val = sim.registers.read_by_id(self.dest);
         let sec_val = sim.registers.read_by_id(self.second);
         let result = match self.mode {
@@ -35,9 +36,9 @@ impl Instruction for LOGICAL {
             Mode::EOR => first_val ^ sec_val,
             Mode::BIC => first_val & (!sec_val),
         };
-        sim.registers.write_by_id(self.dest, result);
-        sim.registers.cond_flags.n = (result as i32).is_negative();
-        sim.registers.cond_flags.z = result == 0;
+        changes.register_change(self.dest, result);
+        changes.flag_change(ConditionFlag::N, (result as i32).is_negative());
+        changes.flag_change(ConditionFlag::Z, result == 0);
         false
     }
 }

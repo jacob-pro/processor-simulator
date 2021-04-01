@@ -1,7 +1,7 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::registers::PC;
-use crate::simulator::Simulator;
+use crate::registers::{PC, ConditionFlag};
+use crate::simulator::{Simulator, ExecuteChanges};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
@@ -31,7 +31,7 @@ impl MOV {
 }
 
 impl Instruction for MOV {
-    fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
+    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let mut val = sim
             .registers
             .value_of_flexible_second_operand(&self.src, self.update_flags);
@@ -41,10 +41,10 @@ impl Instruction for MOV {
         if self.mode == Mode::MVN {
             val = !val;
         }
-        sim.registers.write_by_id(self.dest, val);
+        changes.register_change(self.dest, val);
         if self.update_flags {
-            sim.registers.cond_flags.n = (val as i32).is_negative();
-            sim.registers.cond_flags.z = val == 0;
+            changes.flag_change(ConditionFlag::N, (val as i32).is_negative());
+            changes.flag_change(ConditionFlag::Z, val == 0);
         }
         false
     }

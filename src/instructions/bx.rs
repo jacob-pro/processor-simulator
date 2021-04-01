@@ -1,8 +1,9 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::Simulator;
+use crate::simulator::{Simulator, ExecuteChanges};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use crate::registers::{LR, PC};
 
 pub struct BX {
     register: RegId,
@@ -20,16 +21,15 @@ impl BX {
 }
 
 impl Instruction for BX {
-    fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
+    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
         if self.with_link {
             // copy the address of the next instruction into LR
             // BL and BLX instructions also set bit[0] of the LR to 1
             // so that the value is suitable for use by a subsequent POP {PC}
-            sim.registers.lr = sim.registers.pc - sim.registers.next_instr_len.unwrap();
+            changes.register_change(LR, sim.registers.pc - sim.registers.next_instr_len.unwrap());
         }
         let new_addr = sim.registers.read_by_id(self.register);
-        sim.registers.pc = new_addr;
-        sim.registers.changed_pc = true;
+        changes.register_change(PC, new_addr);
         false
     }
 }

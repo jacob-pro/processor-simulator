@@ -1,6 +1,6 @@
 use super::{Instruction, ShouldTerminate};
 use crate::instructions::util::ArmOperandExt;
-use crate::simulator::Simulator;
+use crate::simulator::{Simulator, ExecuteChanges};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
@@ -26,16 +26,16 @@ impl LDM {
 
 impl Instruction for LDM {
     // https://keleshev.com/ldm-my-favorite-arm-instruction/
-    fn execute(&self, sim: &mut Simulator) -> ShouldTerminate {
+    fn execute(&self, sim: &Simulator, changes: &mut ExecuteChanges) -> ShouldTerminate {
         let base_addr = sim.registers.read_by_id(self.base_register);
         for (idx, reg) in self.reg_list.iter().enumerate() {
             let adj_addr = base_addr + (idx as u32 * 4);
             let val = sim.memory.read().unwrap().read_u32(adj_addr);
-            sim.registers.write_by_id(*reg, val);
+            changes.register_change(*reg, val);
         }
         if self.writeback {
             let final_address = base_addr + (self.reg_list.len() as u32 * 4);
-            sim.registers.write_by_id(self.base_register, final_address);
+            changes.register_change(self.base_register, final_address);
         }
         false
     }
