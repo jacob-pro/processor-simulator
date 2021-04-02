@@ -37,7 +37,6 @@ impl CpuState {
     }
 }
 
-#[derive(Clone)]
 pub struct DecodedInstruction {
     pub imp: Rc<dyn Instruction>,
     pub cc: ArmCC,
@@ -46,7 +45,6 @@ pub struct DecodedInstruction {
     pub address: u32,
 }
 
-#[derive(Clone)]
 pub struct FetchedInstruction {
     pub bytes: Vec<u8>,
     pub address: u32,

@@ -38,26 +38,32 @@ impl ExecuteChanges {
 impl CpuState {
     pub fn execute(&self, debug: &DebugLevel) -> ExecuteChanges {
         let mut changes = ExecuteChanges::default();
-        if self.decoded_instruction.is_none() {
-            return changes;
-        }
-        let dec = self.decoded_instruction.clone().unwrap();
-        let ex = self.registers.cond_flags.should_execute(&dec.cc);
-        if *debug >= DebugLevel::Minimal {
-            let mut output = String::new();
-            if ex {
-                output.push_str(&dec.string);
-            } else {
-                output.push_str(&format!("{} (omitted)", dec.string));
+        match &self.decoded_instruction {
+            None => {}
+            Some(dec) => {
+                let ex = self.registers.cond_flags.should_execute(&dec.cc);
+                if *debug >= DebugLevel::Minimal {
+                    let mut output = String::new();
+                    if ex {
+                        output.push_str(&dec.string);
+                    } else {
+                        output.push_str(&format!("{} (omitted)", dec.string));
+                    }
+                    if *debug >= DebugLevel::Full {
+                        let padding: String =
+                            vec![' '; 30 as usize - output.len()].iter().collect();
+                        output.push_str(&format!(
+                            "{} [{}]",
+                            padding,
+                            self.registers.debug_string()
+                        ));
+                    }
+                    println!("{}", output);
+                }
+                if ex {
+                    changes.should_terminate = dec.imp.execute(self, &mut changes);
+                }
             }
-            if *debug >= DebugLevel::Full {
-                let padding: String = vec![' '; 30 as usize - output.len()].iter().collect();
-                output.push_str(&format!("{} [{}]", padding, self.registers.debug_string()));
-            }
-            println!("{}", output);
-        }
-        if ex {
-            changes.should_terminate = dec.imp.execute(self, &mut changes);
         }
         changes
     }
