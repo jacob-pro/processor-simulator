@@ -6,6 +6,7 @@ mod simulators;
 
 use crate::cpu_state::CpuState;
 use crate::simulators::{NonPipelinedSimulator, PipelinedSimulator, Simulator};
+use anyhow::{anyhow, Context};
 use capstone::prelude::*;
 use clap::{App, Arg};
 use elf::types::PT_LOAD;
@@ -34,7 +35,7 @@ newlib will deal with the stack pointer automatically
 const _STACK: u32 = 0x80000;
 const DEFAULT_STACK_SIZE: u32 = 4096;
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let default_stack_size = DEFAULT_STACK_SIZE.to_string();
     let matches = App::new("Processor Simulator")
         .version("1.0")
@@ -76,25 +77,25 @@ fn main() {
             .value_of("debug")
             .unwrap()
             .parse::<u32>()
-            .expect("--debug must be integer"),
+            .with_context(|| "--debug must be an integer")?,
     )
-    .expect("Invalid debug level");
+    .with_context(|| "Unsupported debug level")?;
     let stack_size: u32 = matches
         .value_of("stack")
         .unwrap()
         .parse()
-        .expect("--stack must be an integer");
+        .with_context(|| "--stack must be an integer")?;
 
     let path = PathBuf::from(matches.value_of("program").unwrap());
-    let elf_file = match elf::File::open_path(&path) {
-        Ok(f) => f,
-        Err(e) => panic!("Error opening file: {:#?}", e),
-    };
+    let elf_file = elf::File::open_path(&path)
+        .map_err(|e| anyhow!(format!("{:?}", e)))
+        .with_context(|| "Reading elf binary")?;
+
     let mut elf_file_bytes = Vec::new();
     File::open(&path)
         .unwrap()
         .read_to_end(&mut elf_file_bytes)
-        .unwrap();
+        .with_context(|| "Reading elf file contents")?;
 
     let mut memory = Memory::default();
     memory.mmap(_STACK - stack_size, vec![0; stack_size as usize], true);
@@ -121,18 +122,21 @@ fn main() {
 
     let memory = Arc::new(RwLock::new(memory));
     let state = CpuState::new(memory, entry);
+
     let sim: Box<dyn Simulator> = if matches.is_present("no-pipeline") {
         Box::new(NonPipelinedSimulator {})
     } else {
         Box::new(PipelinedSimulator {})
     };
 
+    println!("Starting {}...\n", sim.name());
     let start_time = Instant::now();
     sim.run(state, &debug_level);
     println!(
         "Simulator ran for {} seconds",
         start_time.elapsed().as_millis() as f64 / 1000.0
     );
+    Ok(())
 }
 
 thread_local! {

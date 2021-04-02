@@ -3,6 +3,7 @@ use crate::DebugLevel;
 
 pub trait Simulator {
     fn run(&self, state: CpuState, debug_level: &DebugLevel);
+    fn name(&self) -> &'static str;
 }
 
 pub struct NonPipelinedSimulator {}
@@ -28,6 +29,10 @@ impl Simulator for NonPipelinedSimulator {
             }
         }
         println!("Total cycles: {}", cycle_counter);
+    }
+
+    fn name(&self) -> &'static str {
+        "Non pipelined scalar simulator"
     }
 }
 
@@ -79,5 +84,9 @@ impl Simulator for PipelinedSimulator {
          branch requires three or more cycles.
          */
         println!("Flushes due to taken branch: {}", flushes);
+    }
+
+    fn name(&self) -> &'static str {
+        "3 stage pipelined scalar simulator"
     }
 }
