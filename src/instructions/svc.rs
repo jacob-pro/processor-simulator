@@ -22,7 +22,7 @@ impl Instruction for SVC {
         match self.id {
             1 => {
                 println!(
-                    "\nProgram exited with code: {}",
+                    "\nProgram exited with code: {}\n",
                     sim.registers.read_by_id(R0) as i32
                 );
                 return true;

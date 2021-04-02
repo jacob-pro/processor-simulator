@@ -2,10 +2,10 @@ mod cpu_state;
 mod instructions;
 mod memory;
 mod registers;
-mod simulator;
+mod simulators;
 
 use crate::cpu_state::CpuState;
-use crate::simulator::Simulator;
+use crate::simulators::{NonPipelinedSimulator, PipelinedSimulator, Simulator};
 use capstone::prelude::*;
 use clap::{App, Arg};
 use elf::types::PT_LOAD;
@@ -16,6 +16,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
+use std::time::Instant;
 
 #[derive(FromPrimitive, PartialEq, PartialOrd, Debug)]
 pub enum DebugLevel {
@@ -120,8 +121,18 @@ fn main() {
 
     let memory = Arc::new(RwLock::new(memory));
     let state = CpuState::new(memory, entry);
+    let sim: Box<dyn Simulator> = if matches.is_present("no-pipeline") {
+        Box::new(NonPipelinedSimulator {})
+    } else {
+        Box::new(PipelinedSimulator {})
+    };
 
-    Simulator::run(state, &debug_level, !matches.is_present("no-pipeline"));
+    let start_time = Instant::now();
+    sim.run(state, &debug_level);
+    println!(
+        "Simulator ran for {} seconds",
+        start_time.elapsed().as_millis() as f64 / 1000.0
+    );
 }
 
 thread_local! {
