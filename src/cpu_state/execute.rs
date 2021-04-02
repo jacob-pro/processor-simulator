@@ -20,18 +20,20 @@ impl ExecuteChanges {
         self.flag_changes.push((flag, value));
     }
 
-    pub fn apply(self, sim: &mut CpuState) -> Option<u32> {
-        let mut changed_pc = None;
+    pub fn apply(self, state: &mut CpuState) -> bool {
+        let mut changed_pc = false;
         for (reg_id, value) in self.register_changes {
-            sim.registers.write_by_id(reg_id, value);
+            state.registers.write_by_id(reg_id, value);
             if reg_id == PC {
-                changed_pc = Some(value);
+                // If the PC is changed we must ensure the next fetch uses the updated PC
+                state.next_instr_addr = value;
+                changed_pc = true;
             }
         }
         for (flag, value) in self.flag_changes {
-            sim.registers.cond_flags.write_flag(flag, value);
+            state.registers.cond_flags.write_flag(flag, value);
         }
-        sim.should_terminate = self.should_terminate;
+        state.should_terminate = self.should_terminate;
         changed_pc
     }
 }

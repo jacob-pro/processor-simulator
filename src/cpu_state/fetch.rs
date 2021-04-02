@@ -6,12 +6,12 @@ pub struct FetchChanges {
 }
 
 impl FetchChanges {
-    pub fn apply(self, sim: &mut CpuState) {
-        sim.fetched_instruction = Some(FetchedInstruction {
+    pub fn apply(self, state: &mut CpuState) {
+        state.fetched_instruction = Some(FetchedInstruction {
             bytes: self.instruction,
-            address: sim.next_instr_addr,
+            address: state.next_instr_addr,
         });
-        sim.next_instr_addr = self.next_addr;
+        state.next_instr_addr = self.next_addr;
     }
 }
 

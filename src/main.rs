@@ -62,6 +62,12 @@ fn main() {
                 .takes_value(true)
                 .default_value(default_stack_size.as_str()),
         )
+        .arg(
+            Arg::with_name("no-pipeline")
+                .value_name("no-pipeline")
+                .long("no-pipeline")
+                .takes_value(false),
+        )
         .get_matches();
 
     let debug_level: DebugLevel = FromPrimitive::from_u32(
@@ -113,12 +119,9 @@ fn main() {
     }
 
     let memory = Arc::new(RwLock::new(memory));
-    let simulator = CpuState::new(memory, entry);
+    let state = CpuState::new(memory, entry);
 
-    // std::thread::spawn(|| {
-    //     let _l = simulator;
-    // });
-    Simulator::run(simulator, &debug_level);
+    Simulator::run(state, &debug_level, !matches.is_present("no-pipeline"));
 }
 
 thread_local! {

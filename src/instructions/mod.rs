@@ -25,8 +25,8 @@ use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 
 pub type ShouldTerminate = bool;
 
-pub trait Instruction: Send {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate;
+pub trait Instruction: Send + Sync {
+    fn execute(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate;
 }
 
 /*

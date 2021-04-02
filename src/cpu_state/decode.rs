@@ -6,21 +6,20 @@ use crate::CAPSTONE;
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
 use capstone::InsnDetail;
-use std::rc::Rc;
 
 pub struct DecodeChanges {
     instr: Option<DecodedInstruction>,
 }
 
 impl DecodeChanges {
-    pub fn apply(self, sim: &mut CpuState) {
+    pub fn apply(self, state: &mut CpuState) {
         match self.instr.as_ref() {
             None => {}
             Some(x) => {
-                sim.registers.write_by_id(PC, x.address);
+                state.registers.write_by_id(PC, x.address);
             }
         }
-        sim.decoded_instruction = self.instr;
+        state.decoded_instruction = self.instr;
     }
 }
 
@@ -36,7 +35,7 @@ impl CpuState {
                         .expect("Invalid instruction");
                     match list.iter().next() {
                         None => DecodedInstruction {
-                            imp: Rc::new(InvalidInstruction {}),
+                            imp: Box::new(InvalidInstruction {}),
                             cc: ArmCC::ARM_CC_INVALID,
                             string: "Invalid".to_string(),
                             length: fetched_instruction.bytes.len() as u32,

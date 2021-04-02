@@ -6,7 +6,6 @@ use crate::instructions::{Instruction, ShouldTerminate};
 use crate::memory::Memory;
 use crate::registers::RegisterFile;
 use capstone::arch::arm::ArmCC;
-use std::rc::Rc;
 use std::sync::{Arc, RwLock};
 
 pub struct CpuState {
@@ -38,7 +37,7 @@ impl CpuState {
 }
 
 pub struct DecodedInstruction {
-    pub imp: Rc<dyn Instruction>,
+    pub imp: Box<dyn Instruction>,
     pub cc: ArmCC,
     pub string: String,
     pub length: u32,
