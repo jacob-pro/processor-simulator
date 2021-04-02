@@ -32,15 +32,15 @@ impl CpuState {
             .map(|fetched_instruction| {
                 CAPSTONE.with(|capstone| {
                     let list = capstone
-                        .disasm_all(fetched_instruction, 0x0)
+                        .disasm_all(&fetched_instruction.bytes, 0x0)
                         .expect("Invalid instruction");
                     match list.iter().next() {
                         None => DecodedInstruction {
                             imp: Rc::new(InvalidInstruction {}),
                             cc: ArmCC::ARM_CC_INVALID,
                             string: "Invalid".to_string(),
-                            length: fetched_instruction.len() as u32,
-                            address: self.fetched_instr_addr.unwrap(),
+                            length: fetched_instruction.bytes.len() as u32,
+                            address: fetched_instruction.address,
                         },
                         Some(instr) => {
                             let insn_detail: InsnDetail = capstone
@@ -72,7 +72,7 @@ impl CpuState {
                                     instr.op_str().unwrap_or("")
                                 ),
                                 length: instr.bytes().len() as u32,
-                                address: self.fetched_instr_addr.unwrap(),
+                                address: fetched_instruction.address,
                             }
                         }
                     }

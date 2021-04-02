@@ -1,4 +1,4 @@
-use crate::cpu_state::CpuState;
+use crate::cpu_state::{CpuState, FetchedInstruction};
 
 pub struct FetchChanges {
     next_addr: u32,
@@ -7,8 +7,10 @@ pub struct FetchChanges {
 
 impl FetchChanges {
     pub fn apply(self, sim: &mut CpuState) {
-        sim.fetched_instruction = Some(self.instruction);
-        sim.fetched_instr_addr = Some(sim.next_instr_addr);
+        sim.fetched_instruction = Some(FetchedInstruction {
+            bytes: self.instruction,
+            address: sim.next_instr_addr,
+        });
         sim.next_instr_addr = self.next_addr;
     }
 }

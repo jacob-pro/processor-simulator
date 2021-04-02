@@ -19,7 +19,7 @@ impl B {
 
 impl Instruction for B {
     fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
-        let cur= sim.decoded_instruction.as_ref().unwrap();
+        let cur = sim.decoded_instruction.as_ref().unwrap();
         if self.with_link {
             // copy the address of the next instruction into LR
             // BL and BLX instructions also set bit[0] of the LR to 1
@@ -27,10 +27,7 @@ impl Instruction for B {
             changes.register_change(LR, cur.address + cur.length);
         }
         // pc is always 4 bytes ahead of the actual current instruction
-        changes.register_change(
-            PC,
-            (cur.address as i64 + self.jump as i64) as u32,
-        );
+        changes.register_change(PC, (cur.address as i64 + self.jump as i64) as u32);
         false
     }
 }

@@ -12,11 +12,10 @@ use std::sync::{Arc, RwLock};
 pub struct CpuState {
     pub memory: Arc<RwLock<Memory>>,
     pub registers: RegisterFile,
-    fetched_instruction: Option<Vec<u8>>,
-    pub decoded_instruction: Option<DecodedInstruction>,
+    pub next_instr_addr: u32, // Address of instruction waiting to be fetched
+    pub fetched_instruction: Option<FetchedInstruction>, // Instruction waiting to be decoded
+    pub decoded_instruction: Option<DecodedInstruction>, // Instruction waiting to be executed
     pub should_terminate: ShouldTerminate,
-    pub next_instr_addr: u32,
-    pub fetched_instr_addr: Option<u32>,
 }
 
 impl CpuState {
@@ -29,7 +28,6 @@ impl CpuState {
             decoded_instruction: None,
             should_terminate: false,
             next_instr_addr: entry,
-            fetched_instr_addr: None,
         }
     }
 
@@ -45,5 +43,11 @@ pub struct DecodedInstruction {
     pub cc: ArmCC,
     pub string: String,
     pub length: u32,
+    pub address: u32,
+}
+
+#[derive(Clone)]
+pub struct FetchedInstruction {
+    pub bytes: Vec<u8>,
     pub address: u32,
 }
