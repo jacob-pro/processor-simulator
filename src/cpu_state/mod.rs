@@ -13,7 +13,7 @@ pub struct CpuState {
     pub memory: Arc<RwLock<Memory>>,
     pub registers: RegisterFile,
     fetched_instruction: Option<Vec<u8>>,
-    decoded_instruction: Option<DecodedInstruction>,
+    pub decoded_instruction: Option<DecodedInstruction>,
     pub should_terminate: ShouldTerminate,
     pub next_instr_addr: u32,
     pub fetched_instr_addr: Option<u32>,
@@ -40,10 +40,10 @@ impl CpuState {
 }
 
 #[derive(Clone)]
-struct DecodedInstruction {
-    imp: Rc<dyn Instruction>,
-    cc: ArmCC,
-    string: String,
-    length: u32,
-    address: u32,
+pub struct DecodedInstruction {
+    pub imp: Rc<dyn Instruction>,
+    pub cc: ArmCC,
+    pub string: String,
+    pub length: u32,
+    pub address: u32,
 }
