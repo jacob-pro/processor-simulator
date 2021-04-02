@@ -2,7 +2,7 @@ use super::{Instruction, ShouldTerminate};
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::registers::{R0, R1};
+use crate::registers::ids::{R0, R1};
 use capstone::arch::arm::ArmOperand;
 use std::io::Write;
 

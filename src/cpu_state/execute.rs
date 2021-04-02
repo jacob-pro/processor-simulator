@@ -1,5 +1,6 @@
 use crate::cpu_state::CpuState;
-use crate::registers::{ConditionFlag, PC};
+use crate::registers::ids::PC;
+use crate::registers::ConditionFlag;
 use crate::DebugLevel;
 use capstone::prelude::*;
 
@@ -36,20 +37,20 @@ impl ExecuteChanges {
 }
 
 impl CpuState {
-    pub fn execute(&self, debug: &DebugLevel) -> ExecuteChanges {
+    pub fn execute(&self, debug_level: &DebugLevel) -> ExecuteChanges {
         let mut changes = ExecuteChanges::default();
         match &self.decoded_instruction {
             None => {}
             Some(dec) => {
                 let ex = self.registers.cond_flags.should_execute(&dec.cc);
-                if *debug >= DebugLevel::Minimal {
+                if *debug_level >= DebugLevel::Minimal {
                     let mut output = String::new();
                     if ex {
                         output.push_str(&dec.string);
                     } else {
                         output.push_str(&format!("{} (omitted)", dec.string));
                     }
-                    if *debug >= DebugLevel::Full {
+                    if *debug_level >= DebugLevel::Full {
                         let padding: String =
                             vec![' '; 30 as usize - output.len()].iter().collect();
                         output.push_str(&format!(

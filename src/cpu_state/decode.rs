@@ -1,7 +1,7 @@
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::{CpuState, DecodedInstruction};
 use crate::instructions::{decode_instruction, Instruction};
-use crate::registers::PC;
+use crate::registers::ids::PC;
 use crate::CAPSTONE;
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;

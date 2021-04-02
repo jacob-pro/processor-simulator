@@ -2,7 +2,7 @@ use super::{Instruction, ShouldTerminate};
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::registers::{LR, PC};
+use crate::registers::ids::{LR, PC};
 use capstone::arch::arm::ArmOperand;
 
 pub struct B {
@@ -26,7 +26,6 @@ impl Instruction for B {
             // so that the value is suitable for use by a subsequent POP {PC}
             changes.register_change(LR, cur.address + cur.length);
         }
-        // pc is always 4 bytes ahead of the actual current instruction
         changes.register_change(PC, (cur.address as i64 + self.jump as i64) as u32);
         false
     }

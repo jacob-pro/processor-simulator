@@ -2,7 +2,7 @@ use super::{Instruction, ShouldTerminate};
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::registers::{LR, PC};
+use crate::registers::ids::{LR, PC};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 

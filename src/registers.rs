@@ -1,25 +1,29 @@
+use crate::registers::ids::*;
 use crate::CAPSTONE;
 use capstone::arch::arm::ArmCC;
 use capstone::arch::arm::{ArmOpMem, ArmOperand, ArmOperandType, ArmShift};
 use capstone::prelude::*;
 
-pub const LR: RegId = RegId(10);
-pub const PC: RegId = RegId(11);
-pub const SP: RegId = RegId(12);
-
-pub const R0: RegId = RegId(66);
-pub const R1: RegId = RegId(67);
-pub const R2: RegId = RegId(68);
-pub const R3: RegId = RegId(69);
-pub const R4: RegId = RegId(70);
-pub const R5: RegId = RegId(71);
-pub const R6: RegId = RegId(72);
-pub const R7: RegId = RegId(73);
-pub const R8: RegId = RegId(74);
-pub const SB: RegId = RegId(75);
-pub const SL: RegId = RegId(76);
-pub const FP: RegId = RegId(77);
-pub const IP: RegId = RegId(78);
+#[allow(unused)]
+pub mod ids {
+    use capstone::RegId;
+    pub const LR: RegId = RegId(10);
+    pub const PC: RegId = RegId(11);
+    pub const SP: RegId = RegId(12);
+    pub const R0: RegId = RegId(66);
+    pub const R1: RegId = RegId(67);
+    pub const R2: RegId = RegId(68);
+    pub const R3: RegId = RegId(69);
+    pub const R4: RegId = RegId(70);
+    pub const R5: RegId = RegId(71);
+    pub const R6: RegId = RegId(72);
+    pub const R7: RegId = RegId(73);
+    pub const R8: RegId = RegId(74);
+    pub const SB: RegId = RegId(75);
+    pub const SL: RegId = RegId(76);
+    pub const FP: RegId = RegId(77);
+    pub const IP: RegId = RegId(78);
+}
 
 pub enum ConditionFlag {
     N,
