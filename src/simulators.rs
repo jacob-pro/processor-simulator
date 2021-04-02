@@ -37,17 +37,30 @@ impl Simulator for PipelinedSimulator {
     fn run(&self, mut state: CpuState, debug_level: &DebugLevel) {
         let mut cycle_counter = 0;
         let mut flushes = 0;
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(3)
+            .build()
+            .unwrap();
         loop {
             cycle_counter = cycle_counter + 1;
 
-            // These operations are stateless, they can take place in any order / concurrently
-            let fetch = state.fetch();
-            let decode = state.decode();
-            let execute = state.execute(&debug_level);
+            let mut fetch = None;
+            let mut decode = None;
+            let mut execute = None;
 
-            fetch.apply(&mut state);
-            decode.apply(&mut state);
-            if execute.apply(&mut state) {
+            // These operations are stateless, they can take place in any order / concurrently
+            // However because they are not actually computationally demanding it is actually slower
+            // running in parallel (overhead of threading library)!
+            // But is still here to demonstrate the ability to do it.
+            pool.scope(|s| {
+                s.spawn(|_| fetch = Some(state.fetch()));
+                s.spawn(|_| decode = Some(state.decode()));
+                s.spawn(|_| execute = Some(state.execute(&debug_level)));
+            });
+
+            fetch.unwrap().apply(&mut state);
+            decode.unwrap().apply(&mut state);
+            if execute.unwrap().apply(&mut state) {
                 flushes = flushes + 1;
                 state.flush_pipeline();
             }

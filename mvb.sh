@@ -7,6 +7,6 @@ if ! command -v rustup &>/dev/null; then
   source $HOME/.cargo/env
 fi
 
-cargo run -- programs/test.elf
-cargo run -- programs/fibonacci.elf
-cargo run -- programs/factorial.elf
+cargo run --release -- programs/test.elf
+cargo run --release -- programs/fibonacci.elf
+cargo run --release -- programs/factorial.elf

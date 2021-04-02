@@ -13,16 +13,16 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
-    - name: program_deps
+    - name: Install programs dependencies
       run: sudo apt install -y gcc-arm-none-eabi libnewlib-arm-none-eabi
       
-    - name: programs
+    - name: Build programs
       run: cd programs && make all
     
-    - name: Build
-      run: cargo build
+    - name: Cargo Test
+      run: cargo test
       
-    - name: Test
+    - name: Run programs
       run: ./mvb.sh
 
     - name: Check style
