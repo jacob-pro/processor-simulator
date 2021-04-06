@@ -23,10 +23,8 @@ use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 
-pub type ShouldTerminate = bool;
-
 pub trait Instruction: Send + Sync {
-    fn execute(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate;
+    fn execute(&self, state: &CpuState, changes: &mut ExecuteChanges);
 }
 
 /*

@@ -1,4 +1,4 @@
-use super::{Instruction, ShouldTerminate};
+use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
@@ -27,7 +27,7 @@ impl LDM {
 
 impl Instruction for LDM {
     // https://keleshev.com/ldm-my-favorite-arm-instruction/
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
         let base_addr = sim.registers.read_by_id(self.base_register);
         for (idx, reg) in self.reg_list.iter().enumerate() {
             let adj_addr = base_addr + (idx as u32 * 4);
@@ -38,6 +38,5 @@ impl Instruction for LDM {
             let final_address = base_addr + (self.reg_list.len() as u32 * 4);
             changes.register_change(self.base_register, final_address);
         }
-        false
     }
 }

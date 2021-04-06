@@ -84,7 +84,7 @@ impl CpuState {
 struct InvalidInstruction {}
 
 impl Instruction for InvalidInstruction {
-    fn execute(&self, _: &CpuState, _: &mut ExecuteChanges) -> bool {
+    fn execute(&self, _: &CpuState, _: &mut ExecuteChanges) {
         panic!()
     }
 }

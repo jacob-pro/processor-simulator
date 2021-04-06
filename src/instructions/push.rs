@@ -1,4 +1,4 @@
-use super::{Instruction, ShouldTerminate};
+use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
@@ -21,7 +21,7 @@ impl PUSH {
 }
 
 impl Instruction for PUSH {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
         let mut reg_list = sim.registers.push_pop_register_asc(self.reg_list.clone());
         reg_list.reverse();
         let mut sp = sim.registers.read_by_id(SP);
@@ -31,6 +31,5 @@ impl Instruction for PUSH {
             sim.memory.write().unwrap().write_bytes(sp, &register_value);
         }
         changes.register_change(SP, sp);
-        return false;
     }
 }

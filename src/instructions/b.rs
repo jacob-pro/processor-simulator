@@ -1,4 +1,4 @@
-use super::{Instruction, ShouldTerminate};
+use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
@@ -18,7 +18,7 @@ impl B {
 }
 
 impl Instruction for B {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
         let cur = sim.decoded_instruction.as_ref().unwrap();
         if self.with_link {
             // copy the address of the next instruction into LR
@@ -27,6 +27,5 @@ impl Instruction for B {
             changes.register_change(LR, cur.address + cur.length);
         }
         changes.register_change(PC, (cur.address as i64 + self.jump as i64) as u32);
-        false
     }
 }

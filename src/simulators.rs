@@ -90,3 +90,8 @@ impl Simulator for PipelinedSimulator {
         "3 stage pipelined scalar simulator"
     }
 }
+
+pub struct SimulationResult {
+    instructions_executed: u64,
+    total_cycles: u64,
+}

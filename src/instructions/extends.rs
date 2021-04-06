@@ -1,4 +1,4 @@
-use super::{Instruction, ShouldTerminate};
+use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
@@ -27,7 +27,7 @@ impl EXTENDS {
 }
 
 impl Instruction for EXTENDS {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
         let value = sim.registers.read_by_id(self.src);
         match self.mode {
             Mode::SXTB => {
@@ -53,6 +53,5 @@ impl Instruction for EXTENDS {
                 changes.register_change(self.dest, smol as u32);
             }
         }
-        false
     }
 }

@@ -1,4 +1,4 @@
-use super::{Instruction, ShouldTerminate};
+use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
@@ -21,7 +21,7 @@ impl POP {
 }
 
 impl Instruction for POP {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
         let reg_list = sim.registers.push_pop_register_asc(self.reg_list.clone());
         let mut sp = sim.registers.read_by_id(SP);
         for r in &reg_list {
@@ -30,6 +30,5 @@ impl Instruction for POP {
             sp = sp + 4;
         }
         changes.register_change(SP, sp);
-        return false;
     }
 }

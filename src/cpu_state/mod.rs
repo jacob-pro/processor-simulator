@@ -2,7 +2,7 @@ pub mod decode;
 pub mod execute;
 pub mod fetch;
 
-use crate::instructions::{Instruction, ShouldTerminate};
+use crate::instructions::Instruction;
 use crate::memory::Memory;
 use crate::registers::RegisterFile;
 use capstone::arch::arm::ArmCC;
@@ -14,7 +14,7 @@ pub struct CpuState {
     pub next_instr_addr: u32, // Address of instruction waiting to be fetched
     pub fetched_instruction: Option<FetchedInstruction>, // Instruction waiting to be decoded
     pub decoded_instruction: Option<DecodedInstruction>, // Instruction waiting to be executed
-    pub should_terminate: ShouldTerminate,
+    pub should_terminate: bool,
 }
 
 impl CpuState {

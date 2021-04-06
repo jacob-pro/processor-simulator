@@ -1,4 +1,4 @@
-use super::{Instruction, ShouldTerminate};
+use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 
@@ -11,7 +11,5 @@ impl NOP {
 }
 
 impl Instruction for NOP {
-    fn execute(&self, _: &CpuState, _: &mut ExecuteChanges) -> ShouldTerminate {
-        false
-    }
+    fn execute(&self, _: &CpuState, _: &mut ExecuteChanges) {}
 }

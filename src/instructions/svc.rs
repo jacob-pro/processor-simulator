@@ -1,4 +1,4 @@
-use super::{Instruction, ShouldTerminate};
+use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
@@ -18,14 +18,14 @@ impl SVC {
 }
 
 impl Instruction for SVC {
-    fn execute(&self, sim: &CpuState, _changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
         match self.id {
             1 => {
                 println!(
                     "\nProgram exited with code: {}\n",
                     sim.registers.read_by_id(R0) as i32
                 );
-                return true;
+                changes.should_terminate = true;
             }
             2 => {
                 let buffer_addr = sim.registers.read_by_id(R0);
@@ -39,9 +39,8 @@ impl Instruction for SVC {
             }
             _ => {
                 println!("\nUnknown SVC ID: {}", self.id);
-                return true;
+                changes.should_terminate = true;
             }
         }
-        false
     }
 }

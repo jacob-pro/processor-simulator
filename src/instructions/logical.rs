@@ -1,4 +1,4 @@
-use super::{Instruction, ShouldTerminate};
+use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
@@ -28,7 +28,7 @@ impl LOGICAL {
 }
 
 impl Instruction for LOGICAL {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
         let first_val = sim.registers.read_by_id(self.dest);
         let sec_val = sim.registers.read_by_id(self.second);
         let result = match self.mode {
@@ -40,6 +40,5 @@ impl Instruction for LOGICAL {
         changes.register_change(self.dest, result);
         changes.flag_change(ConditionFlag::N, (result as i32).is_negative());
         changes.flag_change(ConditionFlag::Z, result == 0);
-        false
     }
 }

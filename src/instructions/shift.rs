@@ -1,4 +1,4 @@
-use super::{Instruction, ShouldTerminate};
+use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
@@ -48,7 +48,7 @@ impl SHIFT {
 
 // https://developer.arm.com/documentation/dui0497/a/the-cortex-m0-instruction-set/about-the-instruction-descriptions/shift-operations?lang=en
 impl Instruction for SHIFT {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
         let value = sim.registers.read_by_id(self.first);
         let n = sim
             .registers
@@ -93,7 +93,6 @@ impl Instruction for SHIFT {
         changes.register_change(self.dest, result);
         changes.flag_change(ConditionFlag::N, (result as i32).is_negative());
         changes.flag_change(ConditionFlag::Z, result == 0);
-        false
     }
 }
 

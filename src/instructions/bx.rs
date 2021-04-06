@@ -1,4 +1,4 @@
-use super::{Instruction, ShouldTerminate};
+use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
@@ -22,7 +22,7 @@ impl BX {
 }
 
 impl Instruction for BX {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) -> ShouldTerminate {
+    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
         if self.with_link {
             // copy the address of the next instruction into LR
             // BL and BLX instructions also set bit[0] of the LR to 1
@@ -32,6 +32,5 @@ impl Instruction for BX {
         }
         let new_addr = sim.registers.read_by_id(self.register);
         changes.register_change(PC, new_addr);
-        false
     }
 }

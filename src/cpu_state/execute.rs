@@ -8,7 +8,7 @@ use capstone::prelude::*;
 pub struct ExecuteChanges {
     register_changes: Vec<(RegId, u32)>,
     flag_changes: Vec<(ConditionFlag, bool)>,
-    should_terminate: bool,
+    pub should_terminate: bool,
 }
 
 impl ExecuteChanges {
@@ -64,7 +64,7 @@ impl CpuState {
                     println!("{}", output);
                 }
                 if ex {
-                    changes.should_terminate = dec.imp.execute(self, &mut changes);
+                    dec.imp.execute(self, &mut changes);
                 }
             }
         }
