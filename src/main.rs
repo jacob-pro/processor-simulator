@@ -131,7 +131,7 @@ fn main() -> anyhow::Result<()> {
 
     println!("Starting {}...\n", sim.name());
     let start_time = Instant::now();
-    sim.run(state, &debug_level);
+    println!("{}", sim.run(state, &debug_level));
     println!(
         "Simulator ran for {} seconds",
         start_time.elapsed().as_millis() as f64 / 1000.0

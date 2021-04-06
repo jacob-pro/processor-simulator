@@ -33,4 +33,7 @@ impl Instruction for BX {
         let new_addr = sim.registers.read_by_id(self.register);
         changes.register_change(PC, new_addr);
     }
+    fn is_branch(&self) -> bool {
+        true
+    }
 }

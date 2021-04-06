@@ -28,4 +28,7 @@ impl Instruction for B {
         }
         changes.register_change(PC, (cur.address as i64 + self.jump as i64) as u32);
     }
+    fn is_branch(&self) -> bool {
+        true
+    }
 }

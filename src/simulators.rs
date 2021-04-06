@@ -1,34 +1,37 @@
+use crate::cpu_state::execute::ExecutionStageResult;
 use crate::cpu_state::CpuState;
 use crate::DebugLevel;
+use std::fmt::{Display, Formatter};
 
 pub trait Simulator {
-    fn run(&self, state: CpuState, debug_level: &DebugLevel);
+    fn run(&self, state: CpuState, debug_level: &DebugLevel) -> SimulationStats;
     fn name(&self) -> &'static str;
 }
 
 pub struct NonPipelinedSimulator {}
 
 impl Simulator for NonPipelinedSimulator {
-    fn run(&self, mut state: CpuState, debug_level: &DebugLevel) {
-        let mut cycle_counter = 0;
+    fn run(&self, mut state: CpuState, debug_level: &DebugLevel) -> SimulationStats {
+        let mut stats = SimulationStats::default();
         loop {
-            cycle_counter = cycle_counter + 1;
+            stats.total_cycles = stats.total_cycles + 1;
             let fetch = state.fetch();
             fetch.apply(&mut state);
 
-            cycle_counter = cycle_counter + 1;
+            stats.total_cycles = stats.total_cycles + 1;
             let decode = state.decode();
             decode.apply(&mut state);
 
-            cycle_counter = cycle_counter + 1;
+            stats.total_cycles = stats.total_cycles + 1;
             let execute = state.execute(&debug_level);
-            execute.apply(&mut state);
+            let res = execute.apply(&mut state);
+            stats.update(&res);
 
             if state.should_terminate {
                 break;
             }
         }
-        println!("Total cycles: {}", cycle_counter);
+        stats
     }
 
     fn name(&self) -> &'static str {
@@ -39,15 +42,22 @@ impl Simulator for NonPipelinedSimulator {
 pub struct PipelinedSimulator {}
 
 impl Simulator for PipelinedSimulator {
-    fn run(&self, mut state: CpuState, debug_level: &DebugLevel) {
-        let mut cycle_counter = 0;
-        let mut flushes = 0;
+    fn run(&self, mut state: CpuState, debug_level: &DebugLevel) -> SimulationStats {
+        let mut stats = SimulationStats::default();
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(3)
             .build()
             .unwrap();
+        /*
+        In ARM processors that have no PFU, the target of a branch is not known until the end of the
+         Execute stage. At the Execute stage it is known whether or not the branch is taken. In ARM
+         processors without a PFU, the best performance is obtained by predicting all branches as
+         not taken and filling the pipeline with the instructions that follow the branch in the
+         current sequential path. In this case an untaken branch requires one cycle and a taken
+         branch requires three or more cycles.
+         */
         loop {
-            cycle_counter = cycle_counter + 1;
+            stats.total_cycles = stats.total_cycles + 1;
 
             let mut fetch = None;
             let mut decode = None;
@@ -65,25 +75,17 @@ impl Simulator for PipelinedSimulator {
 
             fetch.unwrap().apply(&mut state);
             decode.unwrap().apply(&mut state);
-            if execute.unwrap().apply(&mut state) {
-                flushes = flushes + 1;
+            let res = execute.unwrap().apply(&mut state);
+            stats.update(&res);
+
+            if res.dirty_pc {
                 state.flush_pipeline();
             }
-
             if state.should_terminate {
                 break;
             }
         }
-        println!("Total cycles: {}", cycle_counter);
-        /*
-        In ARM processors that have no PFU, the target of a branch is not known until the end of the
-         Execute stage. At the Execute stage it is known whether or not the branch is taken. In ARM
-         processors without a PFU, the best performance is obtained by predicting all branches as
-         not taken and filling the pipeline with the instructions that follow the branch in the
-         current sequential path. In this case an untaken branch requires one cycle and a taken
-         branch requires three or more cycles.
-         */
-        println!("Flushes due to taken branch: {}", flushes);
+        stats
     }
 
     fn name(&self) -> &'static str {
@@ -91,7 +93,53 @@ impl Simulator for PipelinedSimulator {
     }
 }
 
-pub struct SimulationResult {
+#[derive(Default, Debug)]
+pub struct SimulationStats {
     instructions_executed: u64,
+    instructions_skipped: u64,
     total_cycles: u64,
+    branches_not_taken: u64,
+    branches_taken: u64,
+}
+
+impl SimulationStats {
+    fn update(&mut self, from: &ExecutionStageResult) {
+        if from.did_omit_instruction {
+            self.instructions_skipped = self.instructions_skipped + 1;
+        }
+        if from.did_execute_instruction {
+            self.instructions_executed = self.instructions_executed + 1;
+        }
+        if !from.did_execute_instruction && from.instruction_was_branch {
+            self.branches_not_taken = self.branches_not_taken + 1;
+        }
+        if from.dirty_pc {
+            self.branches_taken = self.branches_taken + 1;
+        }
+    }
+}
+
+impl Display for SimulationStats {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "Number of instructions executed: {} (+ {} skipped = {} total instructions)",
+            self.instructions_executed,
+            self.instructions_skipped,
+            self.instructions_executed + self.instructions_skipped
+        )?;
+        writeln!(f, "Number of cycles: {}", self.total_cycles)?;
+        writeln!(
+            f,
+            "Number of instructions per cycle: {}",
+            self.total_cycles as f64 / self.instructions_executed as f64
+        )?;
+        writeln!(f, "Number of branches taken: {}", self.branches_taken)?;
+        writeln!(
+            f,
+            "Number of branches not taken: {}",
+            self.branches_not_taken
+        )?;
+        Ok(())
+    }
 }
