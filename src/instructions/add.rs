@@ -2,6 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
+use crate::instructions::ExecutionComplete;
 use crate::registers::ConditionFlag;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
@@ -53,9 +54,9 @@ impl ADD {
 }
 
 impl Instruction for ADD {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
-        let first_val = sim.registers.read_by_id(self.first);
-        let sec_val = sim
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+        let first_val = state.registers.read_by_id(self.first);
+        let sec_val = state
             .registers
             .value_of_flexible_second_operand(&self.second, self.update_flags);
 
@@ -66,7 +67,7 @@ impl Instruction for ADD {
                 let (result_u, carry1) = first_val.overflowing_add(sec_val);
                 let (result_s, overflow1) = (first_val as i32).overflowing_add(sec_val as i32);
 
-                let carry = sim.registers.cond_flags.read_flag(ConditionFlag::C) as u8;
+                let carry = state.registers.cond_flags.read_flag(ConditionFlag::C) as u8;
                 let (result, carry2) = result_u.overflowing_add(carry as u32);
                 let (_, overflow2) = result_s.overflowing_add(carry as i32);
 
@@ -87,7 +88,7 @@ impl Instruction for ADD {
                 let (result_s, overflow1) = (first_val as i32).overflowing_sub(sec_val as i32);
 
                 // If the carry flag is clear, the result is reduced by one.
-                let carry = !sim.registers.cond_flags.read_flag(ConditionFlag::C) as u8;
+                let carry = !state.registers.cond_flags.read_flag(ConditionFlag::C) as u8;
                 let (result, carry2) = result_u.overflowing_sub(carry as u32);
                 let (_, overflow2) = result_s.overflowing_sub(carry as i32);
 
@@ -107,5 +108,6 @@ impl Instruction for ADD {
             changes.flag_change(ConditionFlag::C, carry);
             changes.flag_change(ConditionFlag::V, overflow);
         }
+        true
     }
 }

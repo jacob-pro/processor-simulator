@@ -2,6 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
+use crate::instructions::ExecutionComplete;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
@@ -26,12 +27,13 @@ impl STM {
 }
 
 impl Instruction for STM {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
-        let base_addr = sim.registers.read_by_id(self.base_register);
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+        let base_addr = state.registers.read_by_id(self.base_register);
         for (idx, reg) in self.reg_list.iter().enumerate() {
             let adj_addr = base_addr + (idx as u32 * 4);
-            let reg_val = sim.registers.read_by_id(*reg);
-            sim.memory
+            let reg_val = state.registers.read_by_id(*reg);
+            state
+                .memory
                 .write()
                 .unwrap()
                 .write_bytes(adj_addr, &reg_val.to_le_bytes());
@@ -40,5 +42,6 @@ impl Instruction for STM {
             let final_address = base_addr + (self.reg_list.len() as u32 * 4);
             changes.register_change(self.base_register, final_address);
         }
+        true
     }
 }

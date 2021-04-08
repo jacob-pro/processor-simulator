@@ -82,7 +82,7 @@ impl CpuState {
                     println!("{}", output);
                 }
                 if ex {
-                    dec.imp.execute(self, &mut changes);
+                    dec.imp.poll(self, &mut changes);
                 }
             }
         }

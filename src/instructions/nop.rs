@@ -1,6 +1,7 @@
 use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
+use crate::instructions::ExecutionComplete;
 
 pub struct NOP {}
 
@@ -11,5 +12,7 @@ impl NOP {
 }
 
 impl Instruction for NOP {
-    fn execute(&self, _: &CpuState, _: &mut ExecuteChanges) {}
+    fn poll(&self, _: &CpuState, _: &mut ExecuteChanges) -> ExecutionComplete {
+        true
+    }
 }

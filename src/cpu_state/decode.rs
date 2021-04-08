@@ -1,6 +1,6 @@
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::{CpuState, DecodedInstruction};
-use crate::instructions::{decode_instruction, Instruction};
+use crate::instructions::{decode_instruction, ExecutionComplete, Instruction};
 use crate::registers::ids::PC;
 use crate::CAPSTONE;
 use capstone::arch::arm::{ArmCC, ArmOperand};
@@ -84,7 +84,7 @@ impl CpuState {
 struct InvalidInstruction {}
 
 impl Instruction for InvalidInstruction {
-    fn execute(&self, _: &CpuState, _: &mut ExecuteChanges) {
+    fn poll(&self, _: &CpuState, _: &mut ExecuteChanges) -> ExecutionComplete {
         panic!()
     }
 }

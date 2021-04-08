@@ -2,6 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
+use crate::instructions::ExecutionComplete;
 use crate::registers::ids::PC;
 use crate::registers::ConditionFlag;
 use capstone::arch::arm::ArmOperand;
@@ -33,8 +34,8 @@ impl MOV {
 }
 
 impl Instruction for MOV {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
-        let mut val = sim
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+        let mut val = state
             .registers
             .value_of_flexible_second_operand(&self.src, self.update_flags);
         if self.dest == PC {
@@ -48,5 +49,6 @@ impl Instruction for MOV {
             changes.flag_change(ConditionFlag::N, (val as i32).is_negative());
             changes.flag_change(ConditionFlag::Z, val == 0);
         }
+        true
     }
 }

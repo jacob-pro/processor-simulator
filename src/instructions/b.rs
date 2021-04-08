@@ -2,6 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
+use crate::instructions::ExecutionComplete;
 use crate::registers::ids::{LR, PC};
 use capstone::arch::arm::ArmOperand;
 
@@ -18,8 +19,8 @@ impl B {
 }
 
 impl Instruction for B {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
-        let cur = sim.decoded_instruction.as_ref().unwrap();
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+        let cur = state.decoded_instruction.as_ref().unwrap();
         if self.with_link {
             // copy the address of the next instruction into LR
             // BL and BLX instructions also set bit[0] of the LR to 1
@@ -27,6 +28,7 @@ impl Instruction for B {
             changes.register_change(LR, cur.address + cur.length);
         }
         changes.register_change(PC, (cur.address as i64 + self.jump as i64) as u32);
+        true
     }
     fn is_branch(&self) -> bool {
         true

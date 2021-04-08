@@ -2,6 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
+use crate::instructions::ExecutionComplete;
 use crate::registers::ids::SP;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
@@ -21,14 +22,15 @@ impl POP {
 }
 
 impl Instruction for POP {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
-        let reg_list = sim.registers.push_pop_register_asc(self.reg_list.clone());
-        let mut sp = sim.registers.read_by_id(SP);
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+        let reg_list = state.registers.push_pop_register_asc(self.reg_list.clone());
+        let mut sp = state.registers.read_by_id(SP);
         for r in &reg_list {
-            let read_from_stack = sim.memory.read().unwrap().read_u32(sp);
+            let read_from_stack = state.memory.read().unwrap().read_u32(sp);
             changes.register_change(*r, read_from_stack);
             sp = sp + 4;
         }
         changes.register_change(SP, sp);
+        true
     }
 }

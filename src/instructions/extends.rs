@@ -2,6 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
+use crate::instructions::ExecutionComplete;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
@@ -27,8 +28,8 @@ impl EXTENDS {
 }
 
 impl Instruction for EXTENDS {
-    fn execute(&self, sim: &CpuState, changes: &mut ExecuteChanges) {
-        let value = sim.registers.read_by_id(self.src);
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+        let value = state.registers.read_by_id(self.src);
         match self.mode {
             Mode::SXTB => {
                 // extracts bits[7:0] and sign extends to 32 bits
@@ -53,5 +54,6 @@ impl Instruction for EXTENDS {
                 changes.register_change(self.dest, smol as u32);
             }
         }
+        true
     }
 }

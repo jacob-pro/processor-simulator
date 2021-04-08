@@ -129,7 +129,7 @@ fn main() -> anyhow::Result<()> {
         Box::new(PipelinedSimulator {})
     };
 
-    println!("Starting {}...\n", sim.name());
+    println!("Using: {}\n", sim.name());
     let start_time = Instant::now();
     println!("{}", sim.run(state, &debug_level));
     println!(
