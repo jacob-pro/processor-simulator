@@ -1,5 +1,4 @@
-use crate::cpu_state::execute::ExecutionStageResult;
-use crate::cpu_state::CpuState;
+use crate::cpu_state::{CpuState, UpdateResult};
 use crate::DebugLevel;
 use std::fmt::{Display, Formatter};
 
@@ -25,11 +24,9 @@ impl Simulator for NonPipelinedSimulator {
             while state.decoded_instruction.is_some() {
                 stats.total_cycles = stats.total_cycles + 1;
                 let execute = state.execute(&debug_level);
-                state.update(None, None, execute);
+                let result = state.update(None, None, execute);
+                stats.update(&result);
             }
-
-            // let res = execute.apply(&mut state);
-            //stats.update(&res);
 
             if state.should_terminate {
                 break;
@@ -77,13 +74,10 @@ impl Simulator for PipelinedSimulator {
                 s.spawn(|_| execute = Some(state.execute(&debug_level)));
             });
 
-            let dirty_pc = state.update(fetch.unwrap(), decode.unwrap(), execute.unwrap());
-            // fetch.unwrap().apply(&mut state);
-            // decode.unwrap().apply(&mut state);
-            // let res = execute.unwrap().apply(&mut state);
-            // stats.update(&res);
+            let result = state.update(fetch.unwrap(), decode.unwrap(), execute.unwrap());
+            stats.update(&result);
 
-            if dirty_pc {
+            if result.pc_changed {
                 state.flush_pipeline();
             }
             if state.should_terminate {
@@ -108,19 +102,11 @@ pub struct SimulationStats {
 }
 
 impl SimulationStats {
-    fn update(&mut self, from: &ExecutionStageResult) {
-        if from.did_omit_instruction {
-            self.instructions_skipped = self.instructions_skipped + 1;
-        }
-        if from.did_execute_instruction {
-            self.instructions_executed = self.instructions_executed + 1;
-        }
-        if !from.did_execute_instruction && from.instruction_was_branch {
-            self.branches_not_taken = self.branches_not_taken + 1;
-        }
-        if from.dirty_pc {
-            self.branches_taken = self.branches_taken + 1;
-        }
+    fn update(&mut self, from: &UpdateResult) {
+        self.instructions_executed = self.instructions_executed + from.instructions_executed as u64;
+        self.instructions_skipped = self.instructions_skipped + from.instructions_skipped as u64;
+        self.branches_taken = self.branches_taken + from.branches_taken as u64;
+        self.branches_not_taken = self.branches_not_taken + from.branches_not_taken as u64;
     }
 }
 

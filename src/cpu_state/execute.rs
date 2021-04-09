@@ -10,16 +10,9 @@ pub struct ExecuteChanges {
     pub flag_changes: Vec<(ConditionFlag, bool)>,
     pub should_terminate: bool,
     pub did_execute_instruction: bool,
-    pub did_omit_instruction: bool,
-    pub instruction_was_branch: bool,
+    pub did_skip_instruction: bool,
+    pub instruction_is_branch: bool,
     pub next_state: NextInstructionState,
-}
-
-pub struct ExecutionStageResult {
-    pub dirty_pc: bool,
-    pub did_execute_instruction: bool,
-    pub did_omit_instruction: bool,
-    pub instruction_was_branch: bool,
 }
 
 impl ExecuteChanges {
@@ -37,9 +30,7 @@ impl CpuState {
         self.decoded_instruction.as_ref().map(|dec| {
             let mut changes = ExecuteChanges::default();
             let ex = self.registers.cond_flags.should_execute(&dec.cc);
-            changes.did_execute_instruction = ex;
-            changes.did_omit_instruction = !ex;
-            changes.instruction_was_branch = dec.imp.is_branch();
+            changes.instruction_is_branch = dec.imp.is_branch();
             if *debug_level >= DebugLevel::Minimal {
                 let mut output = String::new();
                 if ex {
@@ -55,6 +46,11 @@ impl CpuState {
             }
             if ex {
                 changes.next_state = dec.imp.poll(self, &mut changes);
+                if changes.next_state.is_none() {
+                    changes.did_execute_instruction = true;
+                }
+            } else {
+                changes.did_skip_instruction = true;
             }
             changes
         })

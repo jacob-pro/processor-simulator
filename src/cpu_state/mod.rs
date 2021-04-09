@@ -59,7 +59,8 @@ impl CpuState {
         fetch: Option<FetchChanges>,
         decode: Option<DecodeChanges>,
         execute: Option<ExecuteChanges>,
-    ) -> bool {
+    ) -> UpdateResult {
+        let mut result = UpdateResult::default();
         // If we finished an instruction remove it from decoded
         match &execute {
             None => {}
@@ -99,8 +100,6 @@ impl CpuState {
             }
         }
 
-        let mut changed_pc = false;
-
         match execute {
             None => {}
             Some(execute) => {
@@ -109,7 +108,7 @@ impl CpuState {
                     if reg_id == PC {
                         // If the PC is changed we must ensure the next fetch uses the updated PC
                         self.next_instr_addr = value;
-                        changed_pc = true;
+                        result.pc_changed = true;
                     }
                 }
                 for (flag, value) in execute.flag_changes {
@@ -120,9 +119,26 @@ impl CpuState {
                     Some(c) => self.decoded_instruction.as_mut().unwrap().imp = c,
                 }
                 self.should_terminate = execute.should_terminate;
+                if execute.did_execute_instruction {
+                    result.instructions_executed = result.instructions_executed + 1;
+                }
+                if execute.did_skip_instruction {
+                    result.instructions_skipped = result.instructions_skipped + 1;
+                }
+                if execute.did_execute_instruction && execute.instruction_is_branch {
+                    result.branches_taken = result.branches_taken + 1;
+                }
+                if execute.did_skip_instruction && execute.instruction_is_branch {
+                    result.branches_not_taken = result.branches_not_taken + 1;
+                }
             }
         }
-        changed_pc
+
+        if result.pc_changed {
+            assert!(result.branches_taken >= 1);
+        }
+
+        result
     }
 }
 
@@ -137,4 +153,13 @@ pub struct DecodedInstruction {
 pub struct FetchedInstruction {
     pub bytes: Vec<u8>,
     pub address: u32,
+}
+
+#[derive(Default)]
+pub struct UpdateResult {
+    pub pc_changed: bool,
+    pub instructions_executed: u8,
+    pub instructions_skipped: u8,
+    pub branches_taken: u8,
+    pub branches_not_taken: u8,
 }
