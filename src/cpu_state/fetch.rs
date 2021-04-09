@@ -1,22 +1,16 @@
-use crate::cpu_state::{CpuState, FetchedInstruction};
+use crate::cpu_state::CpuState;
 
 pub struct FetchChanges {
-    next_addr: u32,
-    instruction: Vec<u8>,
-}
-
-impl FetchChanges {
-    pub fn apply(self, state: &mut CpuState) {
-        state.fetched_instruction = Some(FetchedInstruction {
-            bytes: self.instruction,
-            address: state.next_instr_addr,
-        });
-        state.next_instr_addr = self.next_addr;
-    }
+    pub next_addr: u32,
+    pub instruction: Vec<u8>,
 }
 
 impl CpuState {
-    pub fn fetch(&self) -> FetchChanges {
+    pub fn fetch(&self) -> Option<FetchChanges> {
+        // Only if we have space to fetch into
+        if self.fetched_instruction.is_some() && !self.decoded_space() {
+            return None;
+        }
         /*  The Thumb instruction stream is a sequence of halfword-aligned halfwords.
            Each Thumb instruction is either a single 16-bit halfword in that stream,
            or a 32-bit instruction consisting of two consecutive halfwords in that stream.
@@ -37,9 +31,9 @@ impl CpuState {
             _ => 2,
         };
         assert!(instr_len == 2 || instr_len == 4);
-        FetchChanges {
+        Some(FetchChanges {
             next_addr: self.next_instr_addr + instr_len,
             instruction: code[0..instr_len as usize].to_vec(),
-        }
+        })
     }
 }

@@ -2,7 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::ExecutionComplete;
+use crate::instructions::NextInstructionState;
 use crate::registers::ConditionFlag;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
@@ -31,7 +31,7 @@ impl LOGICAL {
 }
 
 impl Instruction for LOGICAL {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
         let first_val = state.registers.read_by_id(self.dest);
         let sec_val = state.registers.read_by_id(self.second);
         let result = match self.mode {

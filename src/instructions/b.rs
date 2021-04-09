@@ -2,7 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::ExecutionComplete;
+use crate::instructions::NextInstructionState;
 use crate::registers::ids::{LR, PC};
 use capstone::arch::arm::ArmOperand;
 
@@ -20,7 +20,7 @@ impl B {
 }
 
 impl Instruction for B {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
         let cur = state.decoded_instruction.as_ref().unwrap();
         if self.with_link {
             // copy the address of the next instruction into LR

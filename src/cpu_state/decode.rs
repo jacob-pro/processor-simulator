@@ -1,30 +1,21 @@
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::{CpuState, DecodedInstruction};
-use crate::instructions::{decode_instruction, ExecutionComplete, Instruction};
-use crate::registers::ids::PC;
+use crate::instructions::{decode_instruction, Instruction, NextInstructionState};
 use crate::CAPSTONE;
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
 use capstone::InsnDetail;
 
 pub struct DecodeChanges {
-    instr: Option<DecodedInstruction>,
-}
-
-impl DecodeChanges {
-    pub fn apply(self, state: &mut CpuState) {
-        match self.instr.as_ref() {
-            None => {}
-            Some(x) => {
-                state.registers.write_by_id(PC, x.address);
-            }
-        }
-        state.decoded_instruction = self.instr;
-    }
+    pub instr: DecodedInstruction,
 }
 
 impl CpuState {
-    pub fn decode(&self) -> DecodeChanges {
+    pub fn decode(&self) -> Option<DecodeChanges> {
+        // Only if we have space to decode into
+        if !self.decoded_space() {
+            return None;
+        }
         let instr = self
             .fetched_instruction
             .as_ref()
@@ -77,7 +68,7 @@ impl CpuState {
                     }
                 })
             });
-        DecodeChanges { instr }
+        instr.map(|i| DecodeChanges { instr: i })
     }
 }
 
@@ -85,7 +76,7 @@ impl CpuState {
 struct InvalidInstruction {}
 
 impl Instruction for InvalidInstruction {
-    fn poll(&self, _: &CpuState, _: &mut ExecuteChanges) -> ExecutionComplete {
+    fn poll(&self, _: &CpuState, _: &mut ExecuteChanges) -> NextInstructionState {
         panic!()
     }
 }

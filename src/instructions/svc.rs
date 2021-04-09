@@ -2,7 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::ExecutionComplete;
+use crate::instructions::NextInstructionState;
 use crate::registers::ids::{R0, R1};
 use capstone::arch::arm::ArmOperand;
 use std::io::Write;
@@ -20,7 +20,7 @@ impl SVC {
 }
 
 impl Instruction for SVC {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
         match self.id {
             1 => {
                 println!(

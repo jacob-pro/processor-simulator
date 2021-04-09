@@ -2,7 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::ExecutionComplete;
+use crate::instructions::NextInstructionState;
 use crate::registers::ids::PC;
 use crate::registers::ConditionFlag;
 use capstone::arch::arm::ArmOperand;
@@ -57,7 +57,7 @@ impl ADD {
 }
 
 impl Instruction for ADD {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
         let first_val = state.registers.read_by_id(self.first);
         let sec_val = state
             .registers

@@ -2,7 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::ExecutionComplete;
+use crate::instructions::NextInstructionState;
 use capstone::arch::arm::{ArmOpMem, ArmOperand};
 use capstone::prelude::*;
 
@@ -31,7 +31,7 @@ impl STR {
 }
 
 impl Instruction for STR {
-    fn poll(&self, state: &CpuState, _changes: &mut ExecuteChanges) -> ExecutionComplete {
+    fn poll(&self, state: &CpuState, _changes: &mut ExecuteChanges) -> NextInstructionState {
         let mem_addr = state.registers.eval_ldr_str_op_mem(&self.mem);
         let reg_val = state.registers.read_by_id(self.reg);
         match self.mode {

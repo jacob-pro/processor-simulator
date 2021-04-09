@@ -23,13 +23,17 @@ use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 
-pub type ExecutionComplete = Option<Box<dyn Instruction>>;
+pub type NextInstructionState = Option<Box<dyn Instruction>>;
 
 pub trait Instruction: Send + Sync {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete;
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState;
 
     fn is_branch(&self) -> bool {
         false
+    }
+
+    fn will_complete_this_cycle(&self) -> bool {
+        true
     }
 }
 

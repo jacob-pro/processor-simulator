@@ -2,7 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::ExecutionComplete;
+use crate::instructions::NextInstructionState;
 use capstone::arch::arm::{ArmOpMem, ArmOperand};
 use capstone::prelude::*;
 
@@ -33,7 +33,7 @@ impl LDR {
 }
 
 impl Instruction for LDR {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
         let mem_addr = state.registers.eval_ldr_str_op_mem(&self.mem);
         let val_at_addr = match self.mode {
             Mode::Word => state.memory.read().unwrap().read_u32(mem_addr),

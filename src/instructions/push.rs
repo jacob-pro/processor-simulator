@@ -2,7 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::ExecutionComplete;
+use crate::instructions::NextInstructionState;
 use crate::registers::ids::SP;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
@@ -23,7 +23,7 @@ impl PUSH {
 }
 
 impl Instruction for PUSH {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
         let mut reg_list = state.registers.push_pop_register_asc(self.reg_list.clone());
         reg_list.reverse();
         let mut sp = state.registers.read_by_id(SP);

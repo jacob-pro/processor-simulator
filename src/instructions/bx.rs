@@ -2,7 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::ExecutionComplete;
+use crate::instructions::NextInstructionState;
 use crate::registers::ids::{LR, PC};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
@@ -24,7 +24,7 @@ impl BX {
 }
 
 impl Instruction for BX {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
         if self.with_link {
             // copy the address of the next instruction into LR
             // BL and BLX instructions also set bit[0] of the LR to 1

@@ -16,16 +16,20 @@ impl Simulator for NonPipelinedSimulator {
         loop {
             stats.total_cycles = stats.total_cycles + 1;
             let fetch = state.fetch();
-            fetch.apply(&mut state);
+            state.update(fetch, None, None);
 
             stats.total_cycles = stats.total_cycles + 1;
             let decode = state.decode();
-            decode.apply(&mut state);
+            state.update(None, decode, None);
 
-            stats.total_cycles = stats.total_cycles + 1;
-            let execute = state.execute(&debug_level);
-            let res = execute.apply(&mut state);
-            stats.update(&res);
+            while state.decoded_instruction.is_some() {
+                stats.total_cycles = stats.total_cycles + 1;
+                let execute = state.execute(&debug_level);
+                state.update(None, None, execute);
+            }
+
+            // let res = execute.apply(&mut state);
+            //stats.update(&res);
 
             if state.should_terminate {
                 break;
@@ -73,12 +77,13 @@ impl Simulator for PipelinedSimulator {
                 s.spawn(|_| execute = Some(state.execute(&debug_level)));
             });
 
-            fetch.unwrap().apply(&mut state);
-            decode.unwrap().apply(&mut state);
-            let res = execute.unwrap().apply(&mut state);
-            stats.update(&res);
+            let dirty_pc = state.update(fetch.unwrap(), decode.unwrap(), execute.unwrap());
+            // fetch.unwrap().apply(&mut state);
+            // decode.unwrap().apply(&mut state);
+            // let res = execute.unwrap().apply(&mut state);
+            // stats.update(&res);
 
-            if res.dirty_pc {
+            if dirty_pc {
                 state.flush_pipeline();
             }
             if state.should_terminate {

@@ -2,7 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::ExecutionComplete;
+use crate::instructions::NextInstructionState;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
@@ -28,7 +28,7 @@ impl STM {
 }
 
 impl Instruction for STM {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
         let base_addr = state.registers.read_by_id(self.base_register);
         for (idx, reg) in self.reg_list.iter().enumerate() {
             let adj_addr = base_addr + (idx as u32 * 4);

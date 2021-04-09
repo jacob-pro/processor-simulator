@@ -2,7 +2,7 @@ use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::ExecutionComplete;
+use crate::instructions::NextInstructionState;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
@@ -30,7 +30,7 @@ impl EXTENDS {
 }
 
 impl Instruction for EXTENDS {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete {
+    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
         let value = state.registers.read_by_id(self.src);
         match self.mode {
             Mode::SXTB => {
