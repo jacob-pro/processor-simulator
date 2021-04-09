@@ -7,6 +7,7 @@ use crate::registers::ConditionFlag;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub struct TST {
     first: RegId,
     second: ArmOperand,
@@ -29,6 +30,6 @@ impl Instruction for TST {
         let result = first_val & sec_val;
         changes.flag_change(ConditionFlag::N, (result as i32).is_negative());
         changes.flag_change(ConditionFlag::Z, result == 0);
-        true
+        None
     }
 }

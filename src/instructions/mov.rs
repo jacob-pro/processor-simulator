@@ -49,6 +49,10 @@ impl Instruction for MOV {
             changes.flag_change(ConditionFlag::N, (val as i32).is_negative());
             changes.flag_change(ConditionFlag::Z, val == 0);
         }
-        true
+        None
+    }
+
+    fn is_branch(&self) -> bool {
+        self.dest == PC
     }
 }

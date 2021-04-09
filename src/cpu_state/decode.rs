@@ -81,6 +81,7 @@ impl CpuState {
     }
 }
 
+#[derive(Clone)]
 struct InvalidInstruction {}
 
 impl Instruction for InvalidInstruction {

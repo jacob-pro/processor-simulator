@@ -6,12 +6,14 @@ use crate::instructions::ExecutionComplete;
 use capstone::arch::arm::{ArmOpMem, ArmOperand};
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub enum Mode {
     Word,
     HalfWord,
     Byte,
 }
 
+#[derive(Clone)]
 pub struct STR {
     reg: RegId,
     mem: ArmOpMem,
@@ -49,6 +51,6 @@ impl Instruction for STR {
                 .unwrap()
                 .write_bytes(mem_addr, &(reg_val as u8).to_le_bytes()),
         };
-        true
+        None
     }
 }

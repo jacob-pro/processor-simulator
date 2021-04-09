@@ -3,10 +3,11 @@ use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::ExecutionComplete;
-use crate::registers::ids::SP;
+use crate::registers::ids::{PC, SP};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub struct POP {
     reg_list: Vec<RegId>,
 }
@@ -31,6 +32,10 @@ impl Instruction for POP {
             sp = sp + 4;
         }
         changes.register_change(SP, sp);
-        true
+        None
+    }
+
+    fn is_branch(&self) -> bool {
+        self.reg_list.iter().find(|r| **r == PC).is_some()
     }
 }

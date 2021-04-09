@@ -6,6 +6,7 @@ use crate::instructions::ExecutionComplete;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub struct LDM {
     base_register: RegId,
     reg_list: Vec<RegId>,
@@ -39,6 +40,6 @@ impl Instruction for LDM {
             let final_address = base_addr + (self.reg_list.len() as u32 * 4);
             changes.register_change(self.base_register, final_address);
         }
-        true
+        None
     }
 }

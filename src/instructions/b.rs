@@ -6,6 +6,7 @@ use crate::instructions::ExecutionComplete;
 use crate::registers::ids::{LR, PC};
 use capstone::arch::arm::ArmOperand;
 
+#[derive(Clone)]
 pub struct B {
     jump: i32,
     with_link: bool,
@@ -28,7 +29,7 @@ impl Instruction for B {
             changes.register_change(LR, cur.address + cur.length);
         }
         changes.register_change(PC, (cur.address as i64 + self.jump as i64) as u32);
-        true
+        None
     }
     fn is_branch(&self) -> bool {
         true

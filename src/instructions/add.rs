@@ -3,11 +3,13 @@ use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::ExecutionComplete;
+use crate::registers::ids::PC;
 use crate::registers::ConditionFlag;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
 #[allow(unused)]
+#[derive(Clone)]
 pub enum Mode {
     ADC,
     ADD,
@@ -16,6 +18,7 @@ pub enum Mode {
     SUB,
 }
 
+#[derive(Clone)]
 pub struct ADD {
     update_flags: bool,
     mode: Mode,
@@ -108,6 +111,10 @@ impl Instruction for ADD {
             changes.flag_change(ConditionFlag::C, carry);
             changes.flag_change(ConditionFlag::V, overflow);
         }
-        true
+        None
+    }
+
+    fn is_branch(&self) -> bool {
+        self.dest == PC
     }
 }

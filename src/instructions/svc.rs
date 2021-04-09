@@ -7,6 +7,7 @@ use crate::registers::ids::{R0, R1};
 use capstone::arch::arm::ArmOperand;
 use std::io::Write;
 
+#[derive(Clone)]
 pub struct SVC {
     id: i32,
 }
@@ -43,6 +44,6 @@ impl Instruction for SVC {
                 changes.should_terminate = true;
             }
         }
-        true
+        None
     }
 }

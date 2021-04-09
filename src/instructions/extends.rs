@@ -6,6 +6,7 @@ use crate::instructions::ExecutionComplete;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub enum Mode {
     SXTB,
     UXTB,
@@ -13,6 +14,7 @@ pub enum Mode {
     UXTH,
 }
 
+#[derive(Clone)]
 pub struct EXTENDS {
     dest: RegId,
     src: RegId,
@@ -54,6 +56,6 @@ impl Instruction for EXTENDS {
                 changes.register_change(self.dest, smol as u32);
             }
         }
-        true
+        None
     }
 }

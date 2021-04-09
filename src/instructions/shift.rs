@@ -7,6 +7,7 @@ use crate::registers::ConditionFlag;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub enum Mode {
     ASR,
     LSL,
@@ -14,6 +15,7 @@ pub enum Mode {
     ROR,
 }
 
+#[derive(Clone)]
 pub struct SHIFT {
     mode: Mode,
     dest: RegId,
@@ -94,7 +96,7 @@ impl Instruction for SHIFT {
         changes.register_change(self.dest, result);
         changes.flag_change(ConditionFlag::N, (result as i32).is_negative());
         changes.flag_change(ConditionFlag::Z, result == 0);
-        true
+        None
     }
 }
 

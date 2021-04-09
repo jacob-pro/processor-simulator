@@ -3,6 +3,7 @@ use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::ExecutionComplete;
 
+#[derive(Clone)]
 pub struct NOP {}
 
 impl NOP {
@@ -13,6 +14,6 @@ impl NOP {
 
 impl Instruction for NOP {
     fn poll(&self, _: &CpuState, _: &mut ExecuteChanges) -> ExecutionComplete {
-        true
+        None
     }
 }

@@ -23,7 +23,7 @@ use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 
-pub type ExecutionComplete = bool;
+pub type ExecutionComplete = Option<Box<dyn Instruction>>;
 
 pub trait Instruction: Send + Sync {
     fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> ExecutionComplete;

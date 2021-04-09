@@ -7,6 +7,7 @@ use crate::registers::ids::SP;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub struct PUSH {
     reg_list: Vec<RegId>,
 }
@@ -36,6 +37,6 @@ impl Instruction for PUSH {
                 .write_bytes(sp, &register_value);
         }
         changes.register_change(SP, sp);
-        true
+        None
     }
 }

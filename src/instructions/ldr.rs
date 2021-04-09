@@ -6,6 +6,7 @@ use crate::instructions::ExecutionComplete;
 use capstone::arch::arm::{ArmOpMem, ArmOperand};
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub enum Mode {
     Word,
     HalfWord,
@@ -14,6 +15,7 @@ pub enum Mode {
     SignedByte,
 }
 
+#[derive(Clone)]
 pub struct LDR {
     reg: RegId,
     mem: ArmOpMem,
@@ -41,6 +43,6 @@ impl Instruction for LDR {
             Mode::SignedByte => state.memory.read().unwrap().read_byte(mem_addr) as i32 as u32,
         };
         changes.register_change(self.reg, val_at_addr);
-        true
+        None
     }
 }

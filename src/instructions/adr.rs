@@ -6,6 +6,7 @@ use crate::instructions::ExecutionComplete;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub struct ADR {
     dest: RegId,
     pc_rel: i32,
@@ -26,6 +27,6 @@ impl Instruction for ADR {
         let pc = (state.registers.arm_adjusted_pc() & 0xFFFFFFFC) as i64;
         let relative = pc + self.pc_rel as i64;
         changes.register_change(self.dest, relative as u32);
-        true
+        None
     }
 }

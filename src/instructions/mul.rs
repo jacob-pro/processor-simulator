@@ -7,6 +7,7 @@ use crate::registers::ConditionFlag;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub struct MUL {
     dest: RegId,
     val: RegId,
@@ -31,6 +32,6 @@ impl Instruction for MUL {
         changes.flag_change(ConditionFlag::Z, result == 0);
         changes.flag_change(ConditionFlag::C, unsigned_overflow);
         changes.flag_change(ConditionFlag::V, signed_overflow);
-        true
+        None
     }
 }

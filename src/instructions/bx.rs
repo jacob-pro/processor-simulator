@@ -7,6 +7,7 @@ use crate::registers::ids::{LR, PC};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub struct BX {
     register: RegId,
     with_link: bool,
@@ -33,7 +34,7 @@ impl Instruction for BX {
         }
         let new_addr = state.registers.read_by_id(self.register);
         changes.register_change(PC, new_addr);
-        true
+        None
     }
     fn is_branch(&self) -> bool {
         true

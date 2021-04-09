@@ -7,11 +7,13 @@ use crate::registers::ConditionFlag;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub enum Mode {
     CMP,
     CMN,
 }
 
+#[derive(Clone)]
 pub struct CMP {
     mode: Mode,
     first: RegId,
@@ -54,6 +56,6 @@ impl Instruction for CMP {
         changes.flag_change(ConditionFlag::Z, result == 0);
         changes.flag_change(ConditionFlag::C, carry);
         changes.flag_change(ConditionFlag::V, overflow);
-        true
+        None
     }
 }

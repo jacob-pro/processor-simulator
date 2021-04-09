@@ -7,6 +7,7 @@ use crate::registers::ConditionFlag;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
+#[derive(Clone)]
 pub enum Mode {
     AND,
     ORR,
@@ -14,6 +15,7 @@ pub enum Mode {
     BIC,
 }
 
+#[derive(Clone)]
 pub struct LOGICAL {
     dest: RegId,
     second: RegId,
@@ -41,6 +43,6 @@ impl Instruction for LOGICAL {
         changes.register_change(self.dest, result);
         changes.flag_change(ConditionFlag::N, (result as i32).is_negative());
         changes.flag_change(ConditionFlag::Z, result == 0);
-        true
+        None
     }
 }
