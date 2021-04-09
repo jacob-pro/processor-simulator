@@ -7,6 +7,10 @@ if ! command -v rustup &>/dev/null; then
   source $HOME/.cargo/env
 fi
 
-cargo run --release -- programs/test.elf
-cargo run --release -- programs/fibonacci.elf
-cargo run --release -- programs/factorial.elf
+for sim in scalar pipelined
+do
+  cargo run --release -- -s ${sim} programs/test.elf
+  cargo run --release -- -s ${sim} programs/fibonacci.elf
+  cargo run --release -- -s ${sim} programs/factorial.elf
+done
+
