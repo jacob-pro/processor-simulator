@@ -9,7 +9,8 @@ fi
 
 for sim in scalar pipelined
 do
-  cargo run --release -- -s ${sim} programs/test.elf
+  cargo run --release -- -s ${sim} programs/test1.elf
+  cargo run --release -- -s ${sim} programs/test2.elf
   cargo run --release -- -s ${sim} programs/fibonacci.elf
   cargo run --release -- -s ${sim} programs/factorial.elf
 done

@@ -14,4 +14,9 @@ void _assert_impl(bool x, char *file, int line);
 
 #define assert(x) _assert_impl((x), __FILE__, __LINE__)
 
+#ifdef NOSTDLIB
+void _exit(int status);
+#define exit _exit
+#endif
+
 #endif /* SIM_H */
