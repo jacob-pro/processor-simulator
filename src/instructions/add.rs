@@ -1,7 +1,7 @@
 use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::NextInstructionState;
+use crate::instructions::{PollResult};
 use crate::registers::ids::{CPSR};
 use crate::registers::ConditionFlag;
 use crate::station::ReservationStation;
@@ -58,7 +58,7 @@ impl ADD {
 }
 
 impl Instruction for ADD {
-    fn poll(&self, station: &ReservationStation) -> NextInstructionState {
+    fn poll(&self, station: &ReservationStation) -> PollResult {
         let mut reg_changes = HashMap::new();
         let first_val = station.read_by_id(self.first);
         let sec_val = station.value_of_flexible_second_operand(&self.second);
@@ -113,7 +113,8 @@ impl Instruction for ADD {
             cpsr = ConditionFlag::V.write_flag(cpsr, overflow);
             reg_changes.insert(CPSR, cpsr);
         }
-        (None, reg_changes)
+
+        PollResult::Complete(reg_changes)
     }
 
     fn source_registers(&self) -> HashSet<RegId> {

@@ -1,5 +1,5 @@
 use crate::cpu_state::{CpuState, DecodedInstruction};
-use crate::instructions::{decode_instruction, Instruction, NextInstructionState};
+use crate::instructions::{decode_instruction, Instruction, PollResult};
 use crate::station::ReservationStation;
 use crate::CAPSTONE;
 use capstone::arch::arm::{ArmCC, ArmOperand};
@@ -78,7 +78,7 @@ impl CpuState {
 struct InvalidInstruction {}
 
 impl Instruction for InvalidInstruction {
-    fn poll(&self, _: &ReservationStation) -> NextInstructionState {
+    fn poll(&self, _: &ReservationStation) -> PollResult {
         panic!()
     }
 

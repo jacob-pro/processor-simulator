@@ -11,7 +11,7 @@ mod add;
 // mod mul;
 // mod nop;
 // mod pop;
-// mod push;
+mod push;
 // mod shift;
 // mod stm;
 // mod str;
@@ -25,10 +25,13 @@ use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 use capstone::RegId;
 use std::collections::{HashMap, HashSet};
 
-pub type NextInstructionState = (Option<Box<dyn Instruction>>, HashMap<RegId, u32>);
+pub enum PollResult {
+    Complete(HashMap<RegId, u32>),
+    Again(Box<dyn Instruction>)
+}
 
 pub trait Instruction: Send + Sync {
-    fn poll(&self, station: &ReservationStation) -> NextInstructionState;
+    fn poll(&self, station: &ReservationStation) -> PollResult;
 
     fn source_registers(&self) -> HashSet<RegId>;
 
@@ -81,7 +84,7 @@ pub fn decode_instruction(
         // "NOP" => Box::new(nop::NOP::new()),
         // "ORR" => Box::new(logical::LOGICAL::new(operands, logical::Mode::ORR)),
         // "POP" => Box::new(pop::POP::new(operands)),
-        // "PUSH" => Box::new(push::PUSH::new(operands)),
+        "PUSH" => Box::new(push::PUSH::new(operands)),
         // "REV" => panic!("{} not yet implemented", name),
         // "REV16" => panic!("{} not yet implemented", name),
         // "REVSH" => panic!("{} not yet implemented", name),

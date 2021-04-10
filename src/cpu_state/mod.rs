@@ -107,7 +107,7 @@ impl CpuState {
                 for r in decode.instr.source_registers() {
                     source_registers.insert(r, Register::Ready(self.registers.read_by_id(r)));
                 }
-                station.issue(decode.instr, Default::default());
+                station.issue(decode.instr, source_registers);
             }
         }
         //
