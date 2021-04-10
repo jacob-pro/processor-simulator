@@ -1,11 +1,15 @@
 COMPILE = arm-none-eabi-gcc -mthumb -mcpu=cortex-m0 -ffreestanding sim.c
 DUMP = arm-none-eabi-objdump -m cortex-m0 -d
 
-all : test fibonacci factorial
+all : test1 test2 fibonacci factorial
 
-test : test.c sim.c
-	${COMPILE} test.c -O0 -o test.elf
-	${DUMP} test.elf > test.dump
+test1 : test1.c sim.c
+	${COMPILE} test1.c  -nostdlib -DNOSTDLIB --entry=start -o test1.elf
+	${DUMP} test1.elf > test1.dump
+
+test2 : test2.c sim.c
+	${COMPILE} test2.c -o test2.elf
+	${DUMP} test2.elf > test2.dump
 
 fibonacci : fibonacci.c sim.c
 	${COMPILE} fibonacci.c -o fibonacci.elf
@@ -17,6 +21,7 @@ factorial : factorial.c sim.c
 
 clean :
 	rm -f *.elf
+	rm -f *.dump
 
 ide :
 	compiledb -n -o - make > compile_commands.json

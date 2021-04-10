@@ -1,6 +1,22 @@
 #include "sim.h"
+
+#ifdef NOSTDLIB
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wincompatible-library-redeclaration"
+int strlen(const char * str) {
+    int counter = 0;
+    while (str[counter] != '\0') {
+        counter++;
+    }
+    return counter;
+}
+#pragma clang diagnostic pop
+
+#else
 #include <sys/stat.h>
 #include <string.h>
+#endif
 
 #define SYS_EXIT  1
 #define SYS_WRITE 2
@@ -34,6 +50,8 @@ inline void write_str(char *str) {
 inline void write(char *buf, int count) {
     _write(0, buf, count);
 }
+
+#ifndef NOSTDLIB
 
 int _read (int fd, char *buf, int count) {
     write_str("Error: _read unimplemented\n");
@@ -94,3 +112,9 @@ void _assert_impl(bool x, char *file, int line) {
         exit(EXIT_FAILURE);
     }
 }
+
+#endif
+
+
+
+
