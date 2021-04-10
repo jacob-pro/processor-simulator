@@ -1,14 +1,13 @@
 use super::Instruction;
 use crate::cpu_state::execute::ExecuteChanges;
-use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::NextInstructionState;
-use crate::registers::ids::{PC, CPSR};
+use crate::registers::ids::{CPSR};
 use crate::registers::ConditionFlag;
+use crate::station::ReservationStation;
 use capstone::arch::arm::{ArmOperand, ArmOperandType};
 use capstone::prelude::*;
-use crate::station::ReservationStation;
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 
 #[allow(unused)]
 #[derive(Clone)]
@@ -62,8 +61,7 @@ impl Instruction for ADD {
     fn poll(&self, station: &ReservationStation) -> NextInstructionState {
         let mut reg_changes = HashMap::new();
         let first_val = station.read_by_id(self.first);
-        let sec_val = station
-            .value_of_flexible_second_operand(&self.second);
+        let sec_val = station.value_of_flexible_second_operand(&self.second);
         let mut cpsr = station.read_by_id(CPSR);
 
         // NOTE! ARM uses an inverted carry flag for borrow (i.e. subtraction)
@@ -109,7 +107,7 @@ impl Instruction for ADD {
 
         reg_changes.insert(self.dest, result);
         if self.update_flags {
-            cpsr = ConditionFlag::N.write_flag (cpsr, (result as i32).is_negative());
+            cpsr = ConditionFlag::N.write_flag(cpsr, (result as i32).is_negative());
             cpsr = ConditionFlag::Z.write_flag(cpsr, result == 0);
             cpsr = ConditionFlag::C.write_flag(cpsr, carry);
             cpsr = ConditionFlag::V.write_flag(cpsr, overflow);
@@ -135,5 +133,4 @@ impl Instruction for ADD {
         }
         set
     }
-
 }

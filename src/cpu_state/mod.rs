@@ -5,20 +5,20 @@ pub mod fetch;
 use crate::cpu_state::decode::DecodeChanges;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::fetch::FetchChanges;
+use crate::decoded::DecodedInstruction;
 use crate::instructions::Instruction;
 use crate::memory::Memory;
 use crate::registers::ids::PC;
 use crate::registers::RegisterFile;
+use crate::station::{ReservationStation, Register};
+use std::collections::{HashMap};
 use std::sync::{Arc, RwLock};
-use crate::decoded::DecodedInstruction;
-use crate::station::ReservationStation;
 
 pub struct CpuState {
     pub memory: Arc<RwLock<Memory>>,
     pub registers: RegisterFile,
     pub next_instr_addr: u32, // Address of instruction waiting to be fetched
     pub fetched_instruction: Option<FetchedInstruction>, // Instruction waiting to be decoded
-    pub decoded_instructions: Vec<DecodedInstruction>, // Instruction queued to be executed
     pub reservation_stations: Vec<ReservationStation>,
     pub should_terminate: bool,
 }
@@ -26,37 +26,33 @@ pub struct CpuState {
 impl CpuState {
     pub fn new(memory: Arc<RwLock<Memory>>, entry: u32, stations: usize) -> Self {
         let registers = RegisterFile::new();
-        let stations = (0..stations).map(|i| {
-            ReservationStation::new(i, memory.clone())
-        }).collect();
+        let stations = (0..stations)
+            .map(|i| ReservationStation::new(i, memory.clone()))
+            .collect();
         Self {
             memory,
             registers,
             fetched_instruction: None,
-            decoded_instructions: vec![],
             should_terminate: false,
             next_instr_addr: entry,
-            reservation_stations: stations
+            reservation_stations: stations,
         }
     }
 
     pub fn flush_pipeline(&mut self) {
         self.fetched_instruction = None;
-        self.decoded_instructions.clear();
+        for i in &mut self.reservation_stations {
+            i.clear();
+        }
     }
 
     // If there will be space for another decoded instruction
     // Depends on if the current instruction will complete this cycle or not
     pub fn decoded_space(&self) -> bool {
-        // match &self.decoded_instruction {
-        //     None => {}
-        //     Some(i) => {
-        //         // if !i.imp.will_complete_this_cycle() {
-        //         //     return false;
-        //         // }
-        //     }
-        // }
-        true
+        self.reservation_stations
+            .iter()
+            .find(|r| r.instruction.is_none())
+            .is_some()
     }
 
     // Transition the state to the new state
@@ -64,10 +60,10 @@ impl CpuState {
         &mut self,
         fetch: Option<FetchChanges>,
         decode: Option<DecodeChanges>,
-        execute: Option<ExecuteChanges>,
+        executes: Vec<ExecuteChanges>,
     ) -> UpdateResult {
         let mut result = UpdateResult::default();
-        // If we finished an instruction remove it from decoded
+        // If we finished an instruction remove it from reservation station
         // match &execute {
         //     None => {}
         //     Some(execute) => {
@@ -77,34 +73,43 @@ impl CpuState {
         //     }
         // }
         //
-        // // If we decoded an instruction remove it from fetched
-        // match &decode {
-        //     None => {}
-        //     Some(_) => {
-        //         self.fetched_instruction = None;
-        //     }
-        // }
-        //
-        // match fetch {
-        //     None => {}
-        //     Some(fetch) => {
-        //         assert!(self.fetched_instruction.is_none());
-        //         self.fetched_instruction = Some(FetchedInstruction {
-        //             bytes: fetch.instruction,
-        //             address: self.next_instr_addr,
-        //         });
-        //         self.next_instr_addr = fetch.next_addr;
-        //     }
-        // }
-        //
-        // match decode {
-        //     None => {}
-        //     Some(decode) => {
-        //         assert!(self.decoded_instruction.is_none());
-        //         self.registers.write_by_id(PC, decode.instr.address);
-        //         self.decoded_instruction = Some(decode.instr);
-        //     }
-        // }
+        // If we decoded an instruction remove it from fetched
+        match &decode {
+            None => {}
+            Some(_) => {
+                self.fetched_instruction = None;
+            }
+        }
+
+        match fetch {
+            None => {}
+            Some(fetch) => {
+                assert!(self.fetched_instruction.is_none());
+                self.fetched_instruction = Some(FetchedInstruction {
+                    bytes: fetch.instruction,
+                    address: self.next_instr_addr,
+                });
+                self.next_instr_addr = fetch.next_addr;
+            }
+        }
+
+        match decode {
+            None => {}
+            Some(decode) => {
+                // Find an empty reservation station
+                let station = self
+                    .reservation_stations
+                    .iter_mut()
+                    .find(|r| r.instruction.is_none())
+                    .unwrap();
+                let mut source_registers = HashMap::new();
+                source_registers.insert(PC, Register::Ready(decode.instr.address));
+                for r in decode.instr.source_registers() {
+                    source_registers.insert(r, Register::Ready(self.registers.read_by_id(r)));
+                }
+                station.issue(decode.instr, Default::default());
+            }
+        }
         //
         // match execute {
         //     None => {}

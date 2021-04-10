@@ -20,11 +20,10 @@ mod add;
 mod util;
 
 use crate::cpu_state::execute::ExecuteChanges;
-use crate::cpu_state::CpuState;
-use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 use crate::station::ReservationStation;
-use std::collections::{HashMap, HashSet};
+use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 use capstone::RegId;
+use std::collections::{HashMap, HashSet};
 
 pub type NextInstructionState = (Option<Box<dyn Instruction>>, HashMap<RegId, u32>);
 

@@ -1,13 +1,15 @@
 mod cpu_state;
+mod decoded;
 mod instructions;
 mod memory;
 mod registers;
 mod simulators;
 mod station;
-mod decoded;
 
 use crate::cpu_state::CpuState;
-use crate::simulators::{NonPipelinedSimulator, PipelinedSimulator, Simulator, OutOfOrderSimulator};
+use crate::simulators::{
+    NonPipelinedSimulator, OutOfOrderSimulator, PipelinedSimulator, Simulator,
+};
 use anyhow::{anyhow, Context};
 use capstone::prelude::*;
 use clap::Clap;
