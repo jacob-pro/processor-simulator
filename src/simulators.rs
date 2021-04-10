@@ -92,7 +92,6 @@ impl Simulator for PipelinedSimulator {
     }
 }
 
-
 pub struct OutOfOrderSimulator {}
 
 impl Simulator for OutOfOrderSimulator {
@@ -108,19 +107,17 @@ impl Simulator for OutOfOrderSimulator {
 
             let mut fetch = None;
             let mut decode = None;
-            let mut execute = None;
+            let mut executes = Vec::new();
 
-            // These operations are stateless, they can take place in any order / concurrently
-            // However because they are not actually computationally demanding it is actually slower
-            // running in parallel (overhead of threading library)!
-            // But is still here to demonstrate the ability to do it.
             pool.scope(|s| {
                 s.spawn(|_| fetch = Some(state.fetch()));
                 s.spawn(|_| decode = Some(state.decode()));
-                s.spawn(|_| execute = Some(state.execute(&debug_level)));
             });
+            for station in state.reservation_stations.iter().filter(|r| r.ready()) {
+                executes.push(state.execute(&debug_level, station));
+            }
 
-            let result = state.update(fetch.unwrap(), decode.unwrap(), execute.unwrap());
+            let result = state.update(fetch.unwrap(), decode.unwrap(), executes);
             stats.update(&result);
 
             if result.pc_changed {
@@ -137,7 +134,6 @@ impl Simulator for OutOfOrderSimulator {
         "out-of-order superscalar simulator"
     }
 }
-
 
 #[derive(Default, Debug)]
 pub struct SimulationStats {

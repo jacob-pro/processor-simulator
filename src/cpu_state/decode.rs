@@ -1,13 +1,12 @@
-use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::{CpuState, DecodedInstruction};
 use crate::instructions::{decode_instruction, Instruction, NextInstructionState};
+use crate::station::ReservationStation;
 use crate::CAPSTONE;
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
 use capstone::{InsnDetail, RegId};
 use std::collections::hash_map::RandomState;
 use std::collections::HashSet;
-use crate::station::ReservationStation;
 
 pub struct DecodeChanges {
     pub instr: DecodedInstruction,

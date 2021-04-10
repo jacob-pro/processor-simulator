@@ -34,13 +34,12 @@ pub enum ConditionFlag {
 }
 
 impl ConditionFlag {
-
     fn pos(&self) -> u32 {
         match self {
-            ConditionFlag::N => {31}
-            ConditionFlag::Z => {30}
-            ConditionFlag::C => {29}
-            ConditionFlag::V => {28}
+            ConditionFlag::N => 31,
+            ConditionFlag::Z => 30,
+            ConditionFlag::C => 29,
+            ConditionFlag::V => 28,
         }
     }
 
@@ -57,7 +56,6 @@ impl ConditionFlag {
     pub fn read_flag(&self, cpsr: u32) -> bool {
         cpsr & (1 << self.pos()) > 0
     }
-
 }
 
 #[derive(Default, Debug, Clone)]
@@ -68,55 +66,13 @@ pub struct ConditionFlags {
     v: bool, // Overflow
 }
 
-impl ConditionFlags {
-    pub fn write_flag(&mut self, flag: ConditionFlag, value: bool) {
-        match flag {
-            ConditionFlag::N => self.n = value,
-            ConditionFlag::Z => self.z = value,
-            ConditionFlag::C => self.c = value,
-            ConditionFlag::V => self.v = value,
-        }
-    }
-
-    pub fn read_flag(&self, flag: ConditionFlag) -> bool {
-        match flag {
-            ConditionFlag::N => self.n,
-            ConditionFlag::Z => self.z,
-            ConditionFlag::C => self.c,
-            ConditionFlag::V => self.v,
-        }
-    }
-
-    // https://community.arm.com/developer/ip-products/processors/b/processors-ip-blog/posts/condition-codes-1-condition-flags-and-codes
-    pub fn should_execute(&self, cc: &ArmCC) -> bool {
-        return match cc {
-            ArmCC::ARM_CC_INVALID => panic!("CC Invalid"),
-            ArmCC::ARM_CC_EQ => self.z == true,
-            ArmCC::ARM_CC_NE => self.z == false,
-            ArmCC::ARM_CC_HS => self.c == true,
-            ArmCC::ARM_CC_LO => self.c == false,
-            ArmCC::ARM_CC_MI => self.n == true,
-            ArmCC::ARM_CC_PL => self.n == false,
-            ArmCC::ARM_CC_VS => self.v == true,
-            ArmCC::ARM_CC_VC => self.v == false,
-            ArmCC::ARM_CC_HI => self.c == true && self.z == false,
-            ArmCC::ARM_CC_LS => self.c == false || self.z == true,
-            ArmCC::ARM_CC_GE => self.n == self.v,
-            ArmCC::ARM_CC_LT => self.n != self.v,
-            ArmCC::ARM_CC_GT => self.z == false && self.n == self.v,
-            ArmCC::ARM_CC_LE => self.z == true || self.n != self.v,
-            ArmCC::ARM_CC_AL => true,
-        };
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct RegisterFile {
     gprs: [u32; 13],
     sp: u32,
     lr: u32,
     pc: u32,
-    pub cond_flags: ConditionFlags,
+    cpsr: u32,
 }
 
 impl RegisterFile {
@@ -126,7 +82,7 @@ impl RegisterFile {
             sp: crate::_STACK,
             lr: 0,
             pc: 0,
-            cond_flags: Default::default(),
+            cpsr: 0
         }
     }
 
@@ -149,6 +105,7 @@ impl RegisterFile {
             "IP" => self.gprs[12], // Synonym
             "SP" => self.sp,
             "LR" => self.lr,
+            "CPSR" => self.cpsr,
             _ => panic!("Unknown register {}", name),
         };
     }
@@ -167,7 +124,8 @@ impl RegisterFile {
             "IP" => self.gprs[12] = value, // Synonym
             "SP" => self.sp = value,
             "LR" => self.lr = value,
-            "PC" => self.pc = value, // When an instruction updates the PC - write to the real PC!
+            "PC" => self.pc = value,
+            "CPSR" => self.cpsr = value,
             _ => panic!("Unknown register {}", name),
         }
     }
@@ -238,10 +196,10 @@ impl RegisterFile {
         output.push_str(&format!("LR {:08X} ", self.lr));
         output.push_str(&format!("PC {:08X} ", self.pc & 0xFFFFFFFE));
         output.push_str(&format!("SP {:08X} ", self.sp));
-        output.push_str(&format!("N{}", self.cond_flags.n as u8));
-        output.push_str(&format!("Z{}", self.cond_flags.z as u8));
-        output.push_str(&format!("C{}", self.cond_flags.c as u8));
-        output.push_str(&format!("V{}", self.cond_flags.v as u8));
+        output.push_str(&format!("N{}", ConditionFlag::N.read_flag(self.cpsr) as u8));
+        output.push_str(&format!("Z{}", ConditionFlag::Z.read_flag(self.cpsr) as u8));
+        output.push_str(&format!("C{}", ConditionFlag::C.read_flag(self.cpsr) as u8));
+        output.push_str(&format!("V{}", ConditionFlag::V.read_flag(self.cpsr) as u8));
         output
     }
 
