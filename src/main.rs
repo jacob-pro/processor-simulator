@@ -3,6 +3,8 @@ mod instructions;
 mod memory;
 mod registers;
 mod simulators;
+mod reservation;
+mod decoded;
 
 use crate::cpu_state::CpuState;
 use crate::simulators::{NonPipelinedSimulator, PipelinedSimulator, Simulator};

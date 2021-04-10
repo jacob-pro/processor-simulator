@@ -4,7 +4,10 @@ use crate::instructions::{decode_instruction, Instruction, NextInstructionState}
 use crate::CAPSTONE;
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
-use capstone::InsnDetail;
+use capstone::{InsnDetail, RegId};
+use std::collections::hash_map::RandomState;
+use std::collections::HashSet;
+use crate::reservation::ReservationStation;
 
 pub struct DecodeChanges {
     pub instr: DecodedInstruction,
@@ -76,7 +79,15 @@ impl CpuState {
 struct InvalidInstruction {}
 
 impl Instruction for InvalidInstruction {
-    fn poll(&self, _: &CpuState, _: &mut ExecuteChanges) -> NextInstructionState {
+    fn poll(&self, _: &ReservationStation) -> NextInstructionState {
+        panic!()
+    }
+
+    fn source_registers(&self) -> HashSet<RegId, RandomState> {
+        panic!()
+    }
+
+    fn dest_registers(&self) -> HashSet<RegId, RandomState> {
         panic!()
     }
 }
