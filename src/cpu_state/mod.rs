@@ -9,8 +9,8 @@ use crate::instructions::Instruction;
 use crate::memory::Memory;
 use crate::registers::ids::PC;
 use crate::registers::RegisterFile;
-use capstone::arch::arm::ArmCC;
 use std::sync::{Arc, RwLock};
+use crate::decoded::DecodedInstruction;
 
 pub struct CpuState {
     pub memory: Arc<RwLock<Memory>>,
@@ -45,9 +45,9 @@ impl CpuState {
         match &self.decoded_instruction {
             None => {}
             Some(i) => {
-                if !i.imp.will_complete_this_cycle() {
-                    return false;
-                }
+                // if !i.imp.will_complete_this_cycle() {
+                //     return false;
+                // }
             }
         }
         true
@@ -65,9 +65,9 @@ impl CpuState {
         match &execute {
             None => {}
             Some(execute) => {
-                if execute.next_state.is_none() {
-                    self.decoded_instruction = None;
-                }
+                // if execute.next_state.is_none() {
+                //     self.decoded_instruction = None;
+                // }
             }
         }
 
@@ -114,10 +114,10 @@ impl CpuState {
                 for (flag, value) in execute.flag_changes {
                     self.registers.cond_flags.write_flag(flag, value);
                 }
-                match execute.next_state {
-                    None => {}
-                    Some(c) => self.decoded_instruction.as_mut().unwrap().imp = c,
-                }
+                // match execute.next_state {
+                //     None => {}
+                //     Some(c) => self.decoded_instruction.as_mut().unwrap().imp = c,
+                // }
                 self.should_terminate = execute.should_terminate;
                 if execute.did_execute_instruction {
                     result.instructions_executed = result.instructions_executed + 1;
@@ -140,14 +140,6 @@ impl CpuState {
 
         result
     }
-}
-
-pub struct DecodedInstruction {
-    pub imp: Box<dyn Instruction>,
-    pub cc: ArmCC,
-    pub string: String,
-    pub length: u32,
-    pub address: u32,
 }
 
 pub struct FetchedInstruction {

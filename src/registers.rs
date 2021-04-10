@@ -23,6 +23,7 @@ pub mod ids {
     pub const SL: RegId = RegId(76);
     pub const FP: RegId = RegId(77);
     pub const IP: RegId = RegId(78);
+    pub const CPSR: RegId = RegId(3);
 }
 
 pub enum ConditionFlag {
@@ -30,6 +31,33 @@ pub enum ConditionFlag {
     Z,
     C,
     V,
+}
+
+impl ConditionFlag {
+
+    fn pos(&self) -> u32 {
+        match self {
+            ConditionFlag::N => {31}
+            ConditionFlag::Z => {30}
+            ConditionFlag::C => {29}
+            ConditionFlag::V => {28}
+        }
+    }
+
+    pub fn write_flag(&self, cpsr: u32, value: bool) -> u32 {
+        if value {
+            let mask = 1 << self.pos();
+            cpsr | mask
+        } else {
+            let mask = !(1 << self.pos());
+            cpsr & mask
+        }
+    }
+
+    pub fn read_flag(&self, cpsr: u32) -> bool {
+        cpsr & (1 << self.pos()) > 0
+    }
+
 }
 
 #[derive(Default, Debug, Clone)]
@@ -249,5 +277,23 @@ mod tests {
         assert_eq!(RegisterFile::reg_name(LR), "LR");
         assert_eq!(RegisterFile::reg_name(PC), "PC");
         assert_eq!(RegisterFile::reg_name(SP), "SP");
+        assert_eq!(RegisterFile::reg_name(CPSR), "CPSR");
+    }
+
+    #[test]
+    fn flags() {
+        let cpsr = 0b1010_0000 << 24;
+        assert!(ConditionFlag::N.read_flag(cpsr));
+        assert!(!ConditionFlag::Z.read_flag(cpsr));
+        assert!(ConditionFlag::C.read_flag(cpsr));
+        assert!(!ConditionFlag::V.read_flag(cpsr));
+
+        let mut cpsr = 0;
+        cpsr = ConditionFlag::N.write_flag(cpsr, false);
+        assert!(!ConditionFlag::N.read_flag(cpsr));
+        cpsr = ConditionFlag::N.write_flag(cpsr, true);
+        assert!(ConditionFlag::N.read_flag(cpsr));
+        cpsr = ConditionFlag::N.write_flag(cpsr, false);
+        assert!(!ConditionFlag::N.read_flag(cpsr));
     }
 }
