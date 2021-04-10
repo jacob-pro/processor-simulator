@@ -1,33 +1,29 @@
 use crate::cpu_state::CpuState;
-use crate::instructions::NextInstructionState;
 use crate::registers::ConditionFlag;
 use crate::DebugLevel;
 use capstone::prelude::*;
 use crate::station::ReservationStation;
+use crate::instructions::{Instruction, PollResult};
 
 #[derive(Default)]
 pub struct ExecuteChanges {
     pub register_changes: Vec<(RegId, u32)>,
-    pub flag_changes: Vec<(ConditionFlag, bool)>,
     pub should_terminate: bool,
     pub did_execute_instruction: bool,
     pub did_skip_instruction: bool,
     pub instruction_is_branch: bool,
-    pub next_state: NextInstructionState,
+    pub next_state: Option<Box<dyn Instruction>>,
 }
 
 impl ExecuteChanges {
     pub fn register_change(&mut self, reg_id: RegId, value: u32) {
         self.register_changes.push((reg_id, value));
     }
-
-    pub fn flag_change(&mut self, flag: ConditionFlag, value: bool) {
-        self.flag_changes.push((flag, value));
-    }
 }
 
 impl CpuState {
     pub fn execute(&self, debug_level: &DebugLevel, station: &ReservationStation) -> ExecuteChanges {
+        let instr = station.instruction.as_ref().unwrap();
         let mut changes = ExecuteChanges::default();
         let ex = station.should_execute();
         // changes.instruction_is_branch = dec.imp.is_branch();
@@ -45,10 +41,13 @@ impl CpuState {
         //     println!("{}", output);
         // }
         if ex {
-            // changes.next_state = dec.imp.poll(self, &mut changes);
-            // if changes.next_state.is_none() {
-            //     changes.did_execute_instruction = true;
+            // match instr.imp.poll(&station, &mut changes) {
+            //     PollResult::Complete(_) => {}
+            //     PollResult::Again(_) => {}
             // }
+            if changes.next_state.is_none() {
+                changes.did_execute_instruction = true;
+            }
         } else {
             changes.did_skip_instruction = true;
         }
