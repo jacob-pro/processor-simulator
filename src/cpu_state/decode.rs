@@ -7,7 +7,7 @@ use capstone::arch::ArchOperand;
 use capstone::{InsnDetail, RegId};
 use std::collections::hash_map::RandomState;
 use std::collections::HashSet;
-use crate::reservation::ReservationStation;
+use crate::station::ReservationStation;
 
 pub struct DecodeChanges {
     pub instr: DecodedInstruction,

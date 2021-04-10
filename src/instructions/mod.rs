@@ -22,7 +22,7 @@ mod util;
 use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
-use crate::reservation::ReservationStation;
+use crate::station::ReservationStation;
 use std::collections::{HashMap, HashSet};
 use capstone::RegId;
 

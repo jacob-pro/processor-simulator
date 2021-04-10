@@ -7,7 +7,7 @@ use crate::registers::ids::{PC, CPSR};
 use crate::registers::ConditionFlag;
 use capstone::arch::arm::{ArmOperand, ArmOperandType};
 use capstone::prelude::*;
-use crate::reservation::ReservationStation;
+use crate::station::ReservationStation;
 use std::collections::{HashSet, HashMap};
 
 #[allow(unused)]
@@ -59,24 +59,6 @@ impl ADD {
 }
 
 impl Instruction for ADD {
-    fn source_registers(&self) -> HashSet<RegId> {
-        let mut set = HashSet::new();
-        set.insert(self.first);
-        if let ArmOperandType::Reg(reg_id) = self.second.op_type {
-            set.insert(reg_id);
-        }
-        set
-    }
-
-    fn dest_registers(&self) -> HashSet<RegId> {
-        let mut set = HashSet::new();
-        set.insert(self.dest);
-        if self.update_flags {
-            set.insert(CPSR);
-        }
-        set
-    }
-
     fn poll(&self, station: &ReservationStation) -> NextInstructionState {
         let mut reg_changes = HashMap::new();
         let first_val = station.read_by_id(self.first);
@@ -134,6 +116,24 @@ impl Instruction for ADD {
             reg_changes.insert(CPSR, cpsr);
         }
         (None, reg_changes)
+    }
+
+    fn source_registers(&self) -> HashSet<RegId> {
+        let mut set = HashSet::new();
+        set.insert(self.first);
+        if let ArmOperandType::Reg(reg_id) = self.second.op_type {
+            set.insert(reg_id);
+        }
+        set
+    }
+
+    fn dest_registers(&self) -> HashSet<RegId> {
+        let mut set = HashSet::new();
+        set.insert(self.dest);
+        if self.update_flags {
+            set.insert(CPSR);
+        }
+        set
     }
 
 }

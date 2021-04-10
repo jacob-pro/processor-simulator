@@ -3,11 +3,11 @@ mod instructions;
 mod memory;
 mod registers;
 mod simulators;
-mod reservation;
+mod station;
 mod decoded;
 
 use crate::cpu_state::CpuState;
-use crate::simulators::{NonPipelinedSimulator, PipelinedSimulator, Simulator};
+use crate::simulators::{NonPipelinedSimulator, PipelinedSimulator, Simulator, OutOfOrderSimulator};
 use anyhow::{anyhow, Context};
 use capstone::prelude::*;
 use clap::Clap;
@@ -119,12 +119,12 @@ fn main() -> anyhow::Result<()> {
     }
 
     let memory = Arc::new(RwLock::new(memory));
-    let state = CpuState::new(memory, entry);
+    let state = CpuState::new(memory, entry, 1);
 
-    let sim: Box<dyn Simulator> = match matches.sim.unwrap_or(SimulatorType::Pipelined) {
+    let sim: Box<dyn Simulator> = match matches.sim.unwrap_or(SimulatorType::OutOfOrder) {
         SimulatorType::Scalar => Box::new(NonPipelinedSimulator {}),
         SimulatorType::Pipelined => Box::new(PipelinedSimulator {}),
-        SimulatorType::OutOfOrder => unimplemented!(),
+        SimulatorType::OutOfOrder => Box::new(OutOfOrderSimulator {}),
     };
 
     println!("Using: {}\n", sim.name());
