@@ -35,17 +35,17 @@ impl Simulator for PipelinedSimulator {
             pool.scope(|s| {
                 s.spawn(|_| fetch = Some(state.fetch()));
                 s.spawn(|_| decode = Some(state.decode()));
-                if state.reservation_stations.first().unwrap().ready() {
-                    s.spawn(|_| {
-                        execute = Some(state.execute_station(
+                s.spawn(|_| {
+                    execute =
+                        Some(state.execute_station(
                             &debug_level,
                             state.reservation_stations.first().unwrap(),
                         ))
-                    });
-                }
+                });
             });
 
-            let result = state.apply_stages(fetch.unwrap(), decode.unwrap(), vec![execute]);
+            let result =
+                state.apply_stages(fetch.unwrap(), decode.unwrap(), vec![execute.unwrap()]);
             stats.update(&result);
 
             if result.pc_changed {

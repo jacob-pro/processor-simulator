@@ -26,11 +26,7 @@ impl Simulator for OutOfOrderSimulator {
                 s.spawn(|_| decode = Some(state.decode()));
             });
             for station in state.reservation_stations.iter() {
-                executes.push(if station.ready() {
-                    Some(state.execute_station(&debug_level, station))
-                } else {
-                    None
-                });
+                executes.push(state.execute_station(&debug_level, station));
             }
 
             let result = state.apply_stages(fetch.unwrap(), decode.unwrap(), executes);

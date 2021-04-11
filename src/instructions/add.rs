@@ -1,10 +1,11 @@
 use super::Instruction;
 use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
+use crate::instructions::util::RegisterSet;
 use crate::instructions::PollResult;
 use crate::registers::ids::CPSR;
 use crate::registers::ConditionFlag;
-use capstone::arch::arm::{ArmOperand, ArmOperandType};
+use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 use std::collections::HashSet;
 
@@ -118,9 +119,7 @@ impl Instruction for ADD {
 
     fn source_registers(&self) -> HashSet<RegId> {
         let mut set = hashset![self.first, CPSR];
-        if let ArmOperandType::Reg(reg_id) = self.second.op_type {
-            set.insert(reg_id);
-        }
+        set.extend(self.second.registers());
         set
     }
 

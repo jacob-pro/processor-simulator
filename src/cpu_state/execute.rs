@@ -20,8 +20,10 @@ impl CpuState {
         &self,
         debug_level: &DebugLevel,
         station: &ReservationStation,
-    ) -> StationResults {
-        assert!(station.ready());
+    ) -> Option<StationResults> {
+        if !station.ready() {
+            return None;
+        }
         let instr = station.instruction.as_ref().unwrap();
         let mut changes = StationResults::default();
         let should_execute = station.evaluate_condition_code();
@@ -64,6 +66,6 @@ impl CpuState {
             print_debug();
         }
 
-        changes
+        Some(changes)
     }
 }
