@@ -109,7 +109,7 @@ impl ReservationStation {
         for (_, reg) in &mut self.source_registers {
             if let Register::Pending(station_id, id) = reg {
                 if *station_id == source_id {
-                    let val = changes.iter().find(|(a, b)| a == id).unwrap().1;
+                    let val = changes.iter().find(|(a, _)| a == id).unwrap().1;
                     *reg = Register::Ready(val);
                 }
             }

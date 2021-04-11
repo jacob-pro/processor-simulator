@@ -1,11 +1,11 @@
 use super::Instruction;
 use crate::instructions::util::ArmOperandExt;
+use crate::instructions::PollResult;
+use crate::registers::ids::CPSR;
 use crate::registers::ConditionFlag;
+use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
-use crate::instructions::PollResult;
-use crate::station::ReservationStation;
-use crate::registers::ids::CPSR;
 
 // Make the Multiply require extra cycles to complete
 const EXTRA_CYCLES: u8 = 4;

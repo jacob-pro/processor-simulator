@@ -23,7 +23,8 @@ pub struct CpuState {
 }
 
 impl CpuState {
-    pub fn new(memory: Arc<RwLock<Memory>>, entry: u32, stations: usize) -> Self {
+    pub fn new(memory: Memory, entry: u32, stations: usize) -> Self {
+        let memory = Arc::new(RwLock::new(memory));
         let registers = RegisterFile::new();
         let stations = (0..stations)
             .map(|i| ReservationStation::new(i, memory.clone()))

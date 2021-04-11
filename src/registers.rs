@@ -1,6 +1,5 @@
 use crate::CAPSTONE;
 use capstone::prelude::*;
-use ids::*;
 
 #[allow(unused)]
 pub mod ids {
@@ -173,6 +172,7 @@ impl RegisterFile {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::ids::*;
     #[test]
     fn reg_names() {
         assert_eq!(RegisterFile::reg_name(R0), "R0");

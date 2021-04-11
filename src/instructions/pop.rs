@@ -1,11 +1,11 @@
 use super::Instruction;
 use crate::instructions::util::ArmOperandExt;
-use crate::registers::ids::{PC, SP};
+use crate::instructions::PollResult;
+use crate::registers::ids::SP;
+use crate::registers::RegisterFile;
+use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
-use crate::station::ReservationStation;
-use crate::instructions::PollResult;
-use crate::registers::RegisterFile;
 
 #[derive(Clone)]
 pub struct POP {

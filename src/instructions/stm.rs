@@ -1,9 +1,9 @@
 use super::Instruction;
 use crate::instructions::util::ArmOperandExt;
+use crate::instructions::PollResult;
+use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
-use crate::station::ReservationStation;
-use crate::instructions::PollResult;
 
 #[derive(Clone)]
 pub struct STM {
@@ -54,7 +54,7 @@ impl Instruction for STM {
 
     fn dest_registers(&self) -> Vec<RegId> {
         if self.writeback {
-            return vec![self.base_register]
+            return vec![self.base_register];
         }
         vec![]
     }
