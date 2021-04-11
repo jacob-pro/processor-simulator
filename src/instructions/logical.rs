@@ -1,9 +1,10 @@
 use super::Instruction;
-use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::NextInstructionState;
+use crate::instructions::PollResult;
+use crate::registers::ids::CPSR;
 use crate::registers::ConditionFlag;
+use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
@@ -31,18 +32,28 @@ impl LOGICAL {
 }
 
 impl Instruction for LOGICAL {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
-        let first_val = state.registers.read_by_id(self.dest);
-        let sec_val = state.registers.read_by_id(self.second);
+    fn poll(&self, station: &ReservationStation) -> PollResult {
+        let first_val = station.read_by_id(self.dest);
+        let sec_val = station.read_by_id(self.second);
         let result = match self.mode {
             Mode::AND => first_val & sec_val,
             Mode::ORR => first_val | sec_val,
             Mode::EOR => first_val ^ sec_val,
             Mode::BIC => first_val & (!sec_val),
         };
-        changes.register_change(self.dest, result);
-        changes.flag_change(ConditionFlag::N, (result as i32).is_negative());
-        changes.flag_change(ConditionFlag::Z, result == 0);
-        None
+        let mut changes = vec![(self.dest, result)];
+        let mut cpsr = station.read_by_id(CPSR);
+        ConditionFlag::N.write_flag(cpsr, (result as i32).is_negative());
+        ConditionFlag::Z.write_flag(cpsr, result == 0);
+        changes.push((CPSR, cpsr));
+        PollResult::Complete(changes)
+    }
+
+    fn source_registers(&self) -> Vec<RegId> {
+        vec![self.dest, self.second]
+    }
+
+    fn dest_registers(&self) -> Vec<RegId> {
+        vec![self.dest, CPSR]
     }
 }

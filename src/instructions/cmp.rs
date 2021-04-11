@@ -1,10 +1,11 @@
 use super::Instruction;
-use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::NextInstructionState;
+use crate::instructions::PollResult;
+use crate::registers::ids::CPSR;
 use crate::registers::ConditionFlag;
-use capstone::arch::arm::ArmOperand;
+use crate::station::ReservationStation;
+use capstone::arch::arm::{ArmOperand, ArmOperandType};
 use capstone::prelude::*;
 
 #[derive(Clone)]
@@ -31,11 +32,9 @@ impl CMP {
 }
 
 impl Instruction for CMP {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
-        let first_val = state.registers.read_by_id(self.first);
-        let sec_val = state
-            .registers
-            .value_of_flexible_second_operand(&self.second, false);
+    fn poll(&self, station: &ReservationStation) -> PollResult {
+        let first_val = station.read_by_id(self.first);
+        let sec_val = station.value_of_flexible_second_operand(&self.second);
 
         let (result, carry, overflow) = match self.mode {
             Mode::CMN => {
@@ -52,10 +51,23 @@ impl Instruction for CMP {
             }
         };
 
-        changes.flag_change(ConditionFlag::N, (result as i32).is_negative());
-        changes.flag_change(ConditionFlag::Z, result == 0);
-        changes.flag_change(ConditionFlag::C, carry);
-        changes.flag_change(ConditionFlag::V, overflow);
-        None
+        let mut cpsr = station.read_by_id(CPSR);
+        ConditionFlag::N.write_flag(cpsr, (result as i32).is_negative());
+        ConditionFlag::Z.write_flag(cpsr, result == 0);
+        ConditionFlag::C.write_flag(cpsr, carry);
+        ConditionFlag::V.write_flag(cpsr, overflow);
+        PollResult::Complete(vec![(CPSR, cpsr)])
+    }
+
+    fn source_registers(&self) -> Vec<RegId> {
+        let mut set = vec![self.first];
+        if let ArmOperandType::Reg(reg_id) = self.second.op_type {
+            set.push(reg_id);
+        }
+        set
+    }
+
+    fn dest_registers(&self) -> Vec<RegId> {
+        vec![CPSR]
     }
 }

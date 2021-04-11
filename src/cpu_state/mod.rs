@@ -117,7 +117,9 @@ impl CpuState {
                 let mut source_registers = HashMap::new();
                 source_registers.insert(PC, Register::Ready(decode.instr.address));
                 for r in decode.instr.source_registers() {
-                    source_registers.insert(r, Register::Ready(self.registers.read_by_id(r)));
+                    if r != PC {
+                        source_registers.insert(r, Register::Ready(self.registers.read_by_id(r)));
+                    }
                 }
                 station.issue(decode.instr, source_registers);
             }
