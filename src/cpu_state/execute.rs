@@ -1,6 +1,5 @@
 use crate::cpu_state::CpuState;
 use crate::instructions::{Instruction, PollResult};
-use crate::registers::ConditionFlag;
 use crate::station::ReservationStation;
 use crate::DebugLevel;
 use capstone::prelude::*;
@@ -13,12 +12,6 @@ pub struct StationChanges {
     pub did_skip_instruction: bool,
     pub instruction_is_branch: bool,
     pub next_state: Option<Box<dyn Instruction>>,
-}
-
-impl StationChanges {
-    pub fn register_change(&mut self, reg_id: RegId, value: u32) {
-        self.register_changes.push((reg_id, value));
-    }
 }
 
 impl CpuState {
@@ -53,6 +46,10 @@ impl CpuState {
                 }
                 PollResult::Again(s) => {
                     changes.next_state = Some(s);
+                }
+                PollResult::Exception => {
+                    changes.should_terminate = true;
+                    changes.did_execute_instruction = true;
                 }
             }
         } else {

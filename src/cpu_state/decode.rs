@@ -5,7 +5,6 @@ use crate::CAPSTONE;
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
 use capstone::{InsnDetail, RegId};
-use std::collections::HashSet;
 
 pub struct DecodeChanges {
     pub instr: DecodedInstruction,

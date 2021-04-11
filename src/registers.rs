@@ -1,4 +1,3 @@
-use crate::registers::ids::*;
 use crate::CAPSTONE;
 use capstone::arch::arm::ArmCC;
 use capstone::arch::arm::{ArmOpMem, ArmOperand, ArmOperandType, ArmShift};
@@ -121,19 +120,6 @@ impl RegisterFile {
             "PC" => self.pc = value,
             "CPSR" => self.cpsr = value,
             _ => panic!("Unknown register {}", name),
-        }
-    }
-
-    // Can potentially update flags during computation of shift
-    // https://www.keil.com/support/man/docs/armasm/armasm_dom1361289851539.htm
-    pub fn value_of_flexible_second_operand(&self, op: &ArmOperand, _update_c_flag: bool) -> u32 {
-        match op.op_type {
-            ArmOperandType::Reg(reg_id) => {
-                assert!(op.shift == ArmShift::Invalid, "Shift not supported");
-                self.read_by_id(reg_id)
-            }
-            ArmOperandType::Imm(value) => value as u32,
-            _ => panic!("Unsupported type"),
         }
     }
 

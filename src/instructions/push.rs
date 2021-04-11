@@ -1,6 +1,5 @@
 use super::Instruction;
 use crate::cpu_state::execute::StationChanges;
-use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::SP;
@@ -8,7 +7,6 @@ use crate::registers::RegisterFile;
 use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
-use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct PUSH {

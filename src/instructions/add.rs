@@ -1,5 +1,4 @@
 use super::Instruction;
-use crate::cpu_state::execute::StationChanges;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::CPSR;
@@ -7,7 +6,6 @@ use crate::registers::ConditionFlag;
 use crate::station::ReservationStation;
 use capstone::arch::arm::{ArmOperand, ArmOperandType};
 use capstone::prelude::*;
-use std::collections::{HashMap, HashSet};
 
 #[allow(unused)]
 #[derive(Clone)]

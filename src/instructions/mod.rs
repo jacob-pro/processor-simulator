@@ -5,7 +5,7 @@ mod b;
 // mod cmp;
 // mod extends;
 // mod ldm;
-// mod ldr;
+mod ldr;
 // mod logical;
 mod mov;
 // mod mul;
@@ -15,19 +15,18 @@ mod push;
 // mod shift;
 // mod stm;
 mod str;
-// mod svc;
+mod svc;
 // mod tst;
 mod util;
 
-use crate::cpu_state::execute::StationChanges;
 use crate::station::ReservationStation;
 use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 use capstone::RegId;
-use std::collections::{HashMap, HashSet};
 
 pub enum PollResult {
     Complete(Vec<(RegId, u32)>),
     Again(Box<dyn Instruction>),
+    Exception,
 }
 
 pub trait Instruction: Send + Sync {
@@ -52,13 +51,13 @@ pub fn decode_instruction(
     return match name.to_ascii_uppercase().as_str() {
         "ADC" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADC)),
         "ADD" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADD)),
-        // "ADR" => Box::new(adr::ADR::new(operands)),
+        "ADR" => Box::new(adr::ADR::new(operands)),
         // "AND" => Box::new(logical::LOGICAL::new(operands, logical::Mode::AND)),
         // "ASR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ASR)),
-        // "B" => Box::new(b::B::new(operands, false)),
+        "B" => Box::new(b::B::new(operands, false)),
         // "BIC" => Box::new(logical::LOGICAL::new(operands, logical::Mode::BIC)),
         // "BKPT" => panic!("{} not yet implemented", name),
-        // "BL" => Box::new(b::B::new(operands, true)),
+        "BL" => Box::new(b::B::new(operands, true)),
         // "BLX" => Box::new(bx::BX::new(operands, true)),
         // "BX" => Box::new(bx::BX::new(operands, false)),
         // "CMN" => Box::new(cmp::CMP::new(operands, cmp::Mode::CMN)),
@@ -69,11 +68,11 @@ pub fn decode_instruction(
         // "EOR" => Box::new(logical::LOGICAL::new(operands, logical::Mode::EOR)),
         // "ISB" => panic!("{} not yet implemented", name),
         // "LDM" => Box::new(ldm::LDM::new(operands, writeback)),
-        // "LDR" => Box::new(ldr::LDR::new(operands, ldr::Mode::Word)),
-        // "LDRB" => Box::new(ldr::LDR::new(operands, ldr::Mode::Byte)),
-        // "LDRH" => Box::new(ldr::LDR::new(operands, ldr::Mode::HalfWord)),
-        // "LDRSB" => Box::new(ldr::LDR::new(operands, ldr::Mode::SignedByte)),
-        // "LDRSH" => Box::new(ldr::LDR::new(operands, ldr::Mode::SignedHalfWord)),
+        "LDR" => Box::new(ldr::LDR::new(operands, ldr::Mode::Word)),
+        "LDRB" => Box::new(ldr::LDR::new(operands, ldr::Mode::Byte)),
+        "LDRH" => Box::new(ldr::LDR::new(operands, ldr::Mode::HalfWord)),
+        "LDRSB" => Box::new(ldr::LDR::new(operands, ldr::Mode::SignedByte)),
+        "LDRSH" => Box::new(ldr::LDR::new(operands, ldr::Mode::SignedHalfWord)),
         // "LSL" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSL)),
         // "LSR" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSR)),
         "MOV" => Box::new(mov::MOV::new(operands, mov::Mode::MOV, update_flags)),
@@ -94,10 +93,10 @@ pub fn decode_instruction(
         // "SEV" => panic!("{} not yet implemented", name),
         // "STM" => Box::new(stm::STM::new(operands, writeback)),
         "STR" => Box::new(str::STR::new(operands, str::Mode::Word)),
-        // "STRB" => Box::new(str::STR::new(operands, str::Mode::Byte)),
-        // "STRH" => Box::new(str::STR::new(operands, str::Mode::HalfWord)),
+        "STRB" => Box::new(str::STR::new(operands, str::Mode::Byte)),
+        "STRH" => Box::new(str::STR::new(operands, str::Mode::HalfWord)),
         "SUB" => Box::new(add::ADD::new(operands, update_flags, add::Mode::SUB)),
-        // "SVC" => Box::new(svc::SVC::new(operands)),
+        "SVC" => Box::new(svc::SVC::new(operands)),
         // "SXTB" => Box::new(extends::EXTENDS::new(operands, extends::Mode::SXTB)),
         // "SXTH" => Box::new(extends::EXTENDS::new(operands, extends::Mode::SXTH)),
         // "TST" => Box::new(tst::TST::new(operands)),
