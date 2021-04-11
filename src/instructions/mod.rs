@@ -1,18 +1,18 @@
 mod add;
 mod adr;
 mod b;
-// mod bx;
-// mod cmp;
+mod bx;
+mod cmp;
 // mod extends;
 // mod ldm;
 mod ldr;
-// mod logical;
+mod logical;
 mod mov;
 // mod mul;
-// mod nop;
+mod nop;
 // mod pop;
 mod push;
-// mod shift;
+mod shift;
 // mod stm;
 mod str;
 mod svc;
@@ -52,20 +52,20 @@ pub fn decode_instruction(
         "ADC" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADC)),
         "ADD" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADD)),
         "ADR" => Box::new(adr::ADR::new(operands)),
-        // "AND" => Box::new(logical::LOGICAL::new(operands, logical::Mode::AND)),
-        // "ASR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ASR)),
+        "AND" => Box::new(logical::LOGICAL::new(operands, logical::Mode::AND)),
+        "ASR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ASR)),
         "B" => Box::new(b::B::new(operands, false)),
-        // "BIC" => Box::new(logical::LOGICAL::new(operands, logical::Mode::BIC)),
+        "BIC" => Box::new(logical::LOGICAL::new(operands, logical::Mode::BIC)),
         // "BKPT" => panic!("{} not yet implemented", name),
         "BL" => Box::new(b::B::new(operands, true)),
-        // "BLX" => Box::new(bx::BX::new(operands, true)),
-        // "BX" => Box::new(bx::BX::new(operands, false)),
-        // "CMN" => Box::new(cmp::CMP::new(operands, cmp::Mode::CMN)),
-        // "CMP" => Box::new(cmp::CMP::new(operands, cmp::Mode::CMP)),
+        "BLX" => Box::new(bx::BX::new(operands, true)),
+        "BX" => Box::new(bx::BX::new(operands, false)),
+        "CMN" => Box::new(cmp::CMP::new(operands, cmp::Mode::CMN)),
+        "CMP" => Box::new(cmp::CMP::new(operands, cmp::Mode::CMP)),
         // "CPS" => panic!("{} not yet implemented", name),
         // "DMB" => panic!("{} not yet implemented", name),
         // "DSB" => panic!("{} not yet implemented", name),
-        // "EOR" => Box::new(logical::LOGICAL::new(operands, logical::Mode::EOR)),
+        "EOR" => Box::new(logical::LOGICAL::new(operands, logical::Mode::EOR)),
         // "ISB" => panic!("{} not yet implemented", name),
         // "LDM" => Box::new(ldm::LDM::new(operands, writeback)),
         "LDR" => Box::new(ldr::LDR::new(operands, ldr::Mode::Word)),
@@ -73,21 +73,21 @@ pub fn decode_instruction(
         "LDRH" => Box::new(ldr::LDR::new(operands, ldr::Mode::HalfWord)),
         "LDRSB" => Box::new(ldr::LDR::new(operands, ldr::Mode::SignedByte)),
         "LDRSH" => Box::new(ldr::LDR::new(operands, ldr::Mode::SignedHalfWord)),
-        // "LSL" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSL)),
-        // "LSR" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSR)),
+        "LSL" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSL)),
+        "LSR" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSR)),
         "MOV" => Box::new(mov::MOV::new(operands, mov::Mode::MOV, update_flags)),
         // "MRS" => panic!("{} not yet implemented", name),
         // "MSR" => panic!("{} not yet implemented", name),
         // "MUL" => Box::new(mul::MUL::new(operands)),
         // "MVN" => Box::new(mov::MOV::new(operands, mov::Mode::MVN, update_flags)),
-        // "NOP" => Box::new(nop::NOP::new()),
-        // "ORR" => Box::new(logical::LOGICAL::new(operands, logical::Mode::ORR)),
+        "NOP" => Box::new(nop::NOP::new()),
+        "ORR" => Box::new(logical::LOGICAL::new(operands, logical::Mode::ORR)),
         // "POP" => Box::new(pop::POP::new(operands)),
         "PUSH" => Box::new(push::PUSH::new(operands)),
         // "REV" => panic!("{} not yet implemented", name),
         // "REV16" => panic!("{} not yet implemented", name),
         // "REVSH" => panic!("{} not yet implemented", name),
-        // "ROR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ROR)),
+        "ROR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ROR)),
         "RSB" => Box::new(add::ADD::new(operands, update_flags, add::Mode::RSB)),
         "SBC" => Box::new(add::ADD::new(operands, update_flags, add::Mode::SBC)),
         // "SEV" => panic!("{} not yet implemented", name),

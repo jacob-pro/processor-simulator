@@ -1,12 +1,12 @@
 use super::Instruction;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::registers::ids::{R0, R1};
-use capstone::arch::arm::ArmOperand;
-use std::io::Write;
 use crate::instructions::PollResult;
+use crate::registers::ids::{R0, R1};
 use crate::station::ReservationStation;
+use capstone::arch::arm::ArmOperand;
 use capstone::RegId;
+use std::io::Write;
 
 #[derive(Clone)]
 pub struct SVC {
