@@ -30,15 +30,15 @@ impl Memory {
         });
     }
 
-    pub fn read_byte(&self, address: u32) -> u8 {
+    pub fn read_byte(&self, address: u32) -> Result<u8, String> {
         for p in &self.pages {
             let p_end_addr = p.vaddr + p.data.len() as u32;
             if address >= p.vaddr && address < p_end_addr {
                 let adj_addr = address - p.vaddr;
-                return p.data[adj_addr as usize];
+                return Ok(p.data[adj_addr as usize]);
             }
         }
-        panic!("Invalid memory address {:#X}", address)
+        Err(format!("Invalid memory address {:#X}", address))
     }
 
     pub fn write_byte(&mut self, address: u32, byte: u8) {
@@ -60,21 +60,21 @@ impl Memory {
         panic!("Invalid memory address {:#X}", address)
     }
 
-    pub fn read_bytes(&self, base_address: u32, length: u32) -> Vec<u8> {
+    pub fn read_bytes(&self, base_address: u32, length: u32) -> Result<Vec<u8>, String>{
         let mut ret = Vec::with_capacity(length as usize);
         for i in 0..length {
-            ret.push(self.read_byte(base_address + i))
+            ret.push(self.read_byte(base_address + i)?)
         }
-        ret
+        Ok(ret)
     }
 
     pub fn read_u32(&self, address: u32) -> u32 {
-        let bytes = self.read_bytes(address, 4);
+        let bytes = self.read_bytes(address, 4).unwrap();
         u32::from_le_bytes(bytes.as_slice().try_into().unwrap())
     }
 
     pub fn read_u16(&self, address: u32) -> u16 {
-        let bytes = self.read_bytes(address, 2);
+        let bytes = self.read_bytes(address, 2).unwrap();
         u16::from_le_bytes(bytes.as_slice().try_into().unwrap())
     }
 
