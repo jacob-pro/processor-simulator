@@ -1,11 +1,11 @@
 use super::Instruction;
-use crate::cpu_state::execute::ExecuteChanges;
-use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::NextInstructionState;
 use crate::registers::ConditionFlag;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use crate::instructions::PollResult;
+use crate::station::ReservationStation;
+use crate::registers::ids::CPSR;
 
 // Make the Multiply require extra cycles to complete
 const EXTRA_CYCLES: u8 = 4;
@@ -30,24 +30,31 @@ impl MUL {
 }
 
 impl Instruction for MUL {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
+    fn poll(&self, station: &ReservationStation) -> PollResult {
         if self.cycles < EXTRA_CYCLES {
             let mut cloned = self.clone();
             cloned.cycles = cloned.cycles + 1;
-            return Some(Box::new(cloned));
+            return PollResult::Again(Box::new(cloned));
         }
-        let dest_val = state.registers.read_by_id(self.dest);
-        let sec_val = state.registers.read_by_id(self.val);
+        let dest_val = station.read_by_id(self.dest);
+        let sec_val = station.read_by_id(self.val);
         let (result, unsigned_overflow) = dest_val.overflowing_mul(sec_val);
         let (_, signed_overflow) = (dest_val as i32).overflowing_mul(sec_val as i32);
-        changes.register_change(self.dest, result);
-        changes.flag_change(ConditionFlag::N, (result as i32).is_negative());
-        changes.flag_change(ConditionFlag::Z, result == 0);
-        changes.flag_change(ConditionFlag::C, unsigned_overflow);
-        changes.flag_change(ConditionFlag::V, signed_overflow);
-        None
+        let mut changes = vec![(self.dest, result)];
+        let mut cpsr = station.read_by_id(CPSR);
+        ConditionFlag::N.write_flag(&mut cpsr, (result as i32).is_negative());
+        ConditionFlag::Z.write_flag(&mut cpsr, result == 0);
+        ConditionFlag::C.write_flag(&mut cpsr, unsigned_overflow);
+        ConditionFlag::V.write_flag(&mut cpsr, signed_overflow);
+        changes.push((CPSR, cpsr));
+        PollResult::Complete(changes)
     }
-    fn will_complete_this_cycle(&self) -> bool {
-        self.cycles == EXTRA_CYCLES
+
+    fn source_registers(&self) -> Vec<RegId> {
+        vec![self.val, self.dest]
+    }
+
+    fn dest_registers(&self) -> Vec<RegId> {
+        vec![self.dest, CPSR]
     }
 }

@@ -27,7 +27,7 @@ impl Instruction for SVC {
                     "\nProgram exited with code: {}\n",
                     station.read_by_id(R0) as i32
                 );
-                //changes.should_terminate = true;
+                return PollResult::Exception
             }
             2 => {
                 let buffer_addr = station.read_by_id(R0);
@@ -41,10 +41,10 @@ impl Instruction for SVC {
             }
             _ => {
                 println!("\nUnknown SVC ID: {}", self.id);
-                //changes.should_terminate = true;
+                return PollResult::Exception
             }
         }
-        PollResult::Exception
+        PollResult::Complete(vec![])
     }
 
     fn source_registers(&self) -> Vec<RegId> {

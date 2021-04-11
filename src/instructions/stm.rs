@@ -1,10 +1,9 @@
 use super::Instruction;
-use crate::cpu_state::execute::ExecuteChanges;
-use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::NextInstructionState;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use crate::station::ReservationStation;
+use crate::instructions::PollResult;
 
 #[derive(Clone)]
 pub struct STM {
@@ -28,21 +27,35 @@ impl STM {
 }
 
 impl Instruction for STM {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
-        let base_addr = state.registers.read_by_id(self.base_register);
+    fn poll(&self, station: &ReservationStation) -> PollResult {
+        let base_addr = station.read_by_id(self.base_register);
         for (idx, reg) in self.reg_list.iter().enumerate() {
             let adj_addr = base_addr + (idx as u32 * 4);
-            let reg_val = state.registers.read_by_id(*reg);
-            state
+            let reg_val = station.read_by_id(*reg);
+            station
                 .memory
                 .write()
                 .unwrap()
                 .write_bytes(adj_addr, &reg_val.to_le_bytes());
         }
+        let mut changes = vec![];
         if self.writeback {
             let final_address = base_addr + (self.reg_list.len() as u32 * 4);
-            changes.register_change(self.base_register, final_address);
+            changes.push((self.base_register, final_address));
         }
-        None
+        PollResult::Complete(changes)
+    }
+
+    fn source_registers(&self) -> Vec<RegId> {
+        let mut list = self.reg_list.clone();
+        list.push(self.base_register);
+        list
+    }
+
+    fn dest_registers(&self) -> Vec<RegId> {
+        if self.writeback {
+            return vec![self.base_register]
+        }
+        vec![]
     }
 }

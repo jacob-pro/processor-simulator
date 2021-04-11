@@ -1,11 +1,11 @@
 use super::Instruction;
-use crate::cpu_state::execute::ExecuteChanges;
-use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::NextInstructionState;
 use crate::registers::ids::{PC, SP};
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use crate::station::ReservationStation;
+use crate::instructions::PollResult;
+use crate::registers::RegisterFile;
 
 #[derive(Clone)]
 pub struct POP {
@@ -23,19 +23,26 @@ impl POP {
 }
 
 impl Instruction for POP {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
-        let reg_list = state.registers.push_pop_register_asc(self.reg_list.clone());
-        let mut sp = state.registers.read_by_id(SP);
+    fn poll(&self, station: &ReservationStation) -> PollResult {
+        let mut changes = vec![];
+        let reg_list = RegisterFile::push_pop_register_asc(self.reg_list.clone());
+        let mut sp = station.read_by_id(SP);
         for r in &reg_list {
-            let read_from_stack = state.memory.read().unwrap().read_u32(sp);
-            changes.register_change(*r, read_from_stack);
+            let read_from_stack = station.memory.read().unwrap().read_u32(sp);
+            changes.push((*r, read_from_stack));
             sp = sp + 4;
         }
-        changes.register_change(SP, sp);
-        None
+        changes.push((SP, sp));
+        PollResult::Complete(changes)
     }
 
-    fn is_branch(&self) -> bool {
-        self.reg_list.iter().find(|r| **r == PC).is_some()
+    fn source_registers(&self) -> Vec<RegId> {
+        vec![SP]
+    }
+
+    fn dest_registers(&self) -> Vec<RegId> {
+        let mut list = self.reg_list.clone();
+        list.push(SP);
+        list
     }
 }

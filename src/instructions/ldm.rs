@@ -1,10 +1,9 @@
 use super::Instruction;
-use crate::cpu_state::execute::ExecuteChanges;
-use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::NextInstructionState;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use crate::station::ReservationStation;
+use crate::instructions::PollResult;
 
 #[derive(Clone)]
 pub struct LDM {
@@ -29,17 +28,30 @@ impl LDM {
 
 impl Instruction for LDM {
     // https://keleshev.com/ldm-my-favorite-arm-instruction/
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
-        let base_addr = state.registers.read_by_id(self.base_register);
+    fn poll(&self, station: &ReservationStation) -> PollResult {
+        let mut changes = vec![];
+        let base_addr = station.read_by_id(self.base_register);
         for (idx, reg) in self.reg_list.iter().enumerate() {
             let adj_addr = base_addr + (idx as u32 * 4);
-            let val = state.memory.read().unwrap().read_u32(adj_addr);
-            changes.register_change(*reg, val);
+            let val = station.memory.read().unwrap().read_u32(adj_addr);
+            changes.push((*reg, val));
         }
         if self.writeback {
             let final_address = base_addr + (self.reg_list.len() as u32 * 4);
-            changes.register_change(self.base_register, final_address);
+            changes.push((self.base_register, final_address));
         }
-        None
+        PollResult::Complete(changes)
+    }
+
+    fn source_registers(&self) -> Vec<RegId> {
+        vec![self.base_register]
+    }
+
+    fn dest_registers(&self) -> Vec<RegId> {
+        let mut list = self.reg_list.clone();
+        if self.writeback {
+            list.push(self.base_register);
+        }
+        list
     }
 }

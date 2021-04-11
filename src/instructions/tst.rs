@@ -1,11 +1,11 @@
 use super::Instruction;
-use crate::cpu_state::execute::ExecuteChanges;
-use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::NextInstructionState;
 use crate::registers::ConditionFlag;
-use capstone::arch::arm::ArmOperand;
+use capstone::arch::arm::{ArmOperand, ArmOperandType};
 use capstone::prelude::*;
+use crate::station::ReservationStation;
+use crate::instructions::PollResult;
+use crate::registers::ids::CPSR;
 
 #[derive(Clone)]
 pub struct TST {
@@ -22,14 +22,26 @@ impl TST {
 }
 
 impl Instruction for TST {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
-        let first_val = state.registers.read_by_id(self.first);
-        let sec_val = state
-            .registers
-            .value_of_flexible_second_operand(&self.second, true);
+    fn poll(&self, station: &ReservationStation) -> PollResult {
+        let first_val = station.read_by_id(self.first);
+        let sec_val = station
+            .value_of_flexible_second_operand(&self.second);
         let result = first_val & sec_val;
-        changes.flag_change(ConditionFlag::N, (result as i32).is_negative());
-        changes.flag_change(ConditionFlag::Z, result == 0);
-        None
+        let mut cpsr = station.read_by_id(CPSR);
+        ConditionFlag::N.write_flag(&mut cpsr, (result as i32).is_negative());
+        ConditionFlag::Z.write_flag(&mut cpsr, result == 0);
+        PollResult::Complete(vec![(CPSR, cpsr)])
+    }
+
+    fn source_registers(&self) -> Vec<RegId> {
+        let mut set = vec![self.first];
+        if let ArmOperandType::Reg(reg_id) = self.second.op_type {
+            set.push(reg_id);
+        }
+        set
+    }
+
+    fn dest_registers(&self) -> Vec<RegId> {
+        vec![CPSR]
     }
 }
