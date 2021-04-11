@@ -48,9 +48,9 @@ impl Instruction for LDR {
         let val_at_addr = match self.mode {
             Mode::Word => station.memory.read().unwrap().read_u32(mem_addr),
             Mode::HalfWord => station.memory.read().unwrap().read_u16(mem_addr) as u32,
-            Mode::Byte => station.memory.read().unwrap().read_byte(mem_addr) as u32,
+            Mode::Byte => station.memory.read().unwrap().read_byte(mem_addr).unwrap() as u32,
             Mode::SignedHalfWord => station.memory.read().unwrap().read_u16(mem_addr) as i32 as u32,
-            Mode::SignedByte => station.memory.read().unwrap().read_byte(mem_addr) as i32 as u32,
+            Mode::SignedByte => station.memory.read().unwrap().read_byte(mem_addr).unwrap() as i32 as u32,
         };
         PollResult::Complete(vec![(self.reg, val_at_addr)])
     }

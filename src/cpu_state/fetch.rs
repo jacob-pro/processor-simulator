@@ -25,15 +25,22 @@ impl CpuState {
         );
         let addr = self.next_instr_addr & 0xFFFFFFFE; // Ignore the last bit for actual address
         let code = self.memory.read().unwrap().read_bytes(addr, 4);
-        let bits_15_11 = code[1] >> 3;
-        let instr_len = match bits_15_11 {
-            0b11101 | 0b11110 | 0b11111 => 4,
-            _ => 2,
-        };
-        assert!(instr_len == 2 || instr_len == 4);
-        Some(FetchResults {
-            next_addr: self.next_instr_addr + instr_len,
-            instruction: code[0..instr_len as usize].to_vec(),
-        })
+        match code {
+            Ok(code) => {
+                let bits_15_11 = code[1] >> 3;
+                let instr_len = match bits_15_11 {
+                    0b11101 | 0b11110 | 0b11111 => 4,
+                    _ => 2,
+                };
+                assert!(instr_len == 2 || instr_len == 4);
+                Some(FetchResults {
+                    next_addr: self.next_instr_addr + instr_len,
+                    instruction: code[0..instr_len as usize].to_vec(),
+                })
+            }
+            Err(_) => {
+                return None // Read may fail when speculating
+            }
+        }
     }
 }
