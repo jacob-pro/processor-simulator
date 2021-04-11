@@ -1,10 +1,9 @@
 use super::Instruction;
-use crate::cpu_state::execute::ExecuteChanges;
-use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::NextInstructionState;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use crate::station::ReservationStation;
+use crate::instructions::PollResult;
 
 #[derive(Clone)]
 pub enum Mode {
@@ -30,32 +29,41 @@ impl EXTENDS {
 }
 
 impl Instruction for EXTENDS {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
-        let value = state.registers.read_by_id(self.src);
+    fn poll(&self, station: &ReservationStation) -> PollResult {
+        let mut changes = vec![];
+        let value = station.read_by_id(self.src);
         match self.mode {
             Mode::SXTB => {
                 // extracts bits[7:0] and sign extends to 32 bits
                 let smol = value as i8;
                 let big = smol as i32;
-                changes.register_change(self.dest, big as u32);
+                changes.push((self.dest, big as u32));
             }
             Mode::UXTB => {
                 // extracts bits[7:0] and zero extends to 32 bits
                 let smol = value as u8;
-                changes.register_change(self.dest, smol as u32);
+                changes.push((self.dest, smol as u32));
             }
             Mode::SXTH => {
                 // extracts bits[15:0] and sign extends to 32 bits
                 let smol = value as i16;
                 let big = smol as i32;
-                changes.register_change(self.dest, big as u32);
+                changes.push((self.dest, big as u32));
             }
             Mode::UXTH => {
                 // extracts bits[15:0] and zero extends to 32 bits.
                 let smol = value as u16;
-                changes.register_change(self.dest, smol as u32);
+                changes.push((self.dest, smol as u32));
             }
         }
-        None
+        PollResult::Complete(changes)
+    }
+
+    fn source_registers(&self) -> Vec<RegId> {
+        vec![self.src]
+    }
+
+    fn dest_registers(&self) -> Vec<RegId> {
+        vec![self.dest]
     }
 }
