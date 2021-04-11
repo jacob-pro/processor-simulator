@@ -16,7 +16,6 @@ pub struct ReservationStation {
     pub id: usize,
     pub instruction: Option<DecodedInstruction>,
     source_registers: HashMap<RegId, Register>,
-    output_registers: HashSet<RegId>,
     pub memory: Arc<RwLock<Memory>>,
 }
 
@@ -26,7 +25,6 @@ impl ReservationStation {
             id,
             instruction: None,
             source_registers: Default::default(),
-            output_registers: Default::default(),
             memory,
         }
     }
@@ -34,7 +32,6 @@ impl ReservationStation {
     pub fn clear(&mut self) {
         self.instruction = None;
         self.source_registers.clear();
-        self.output_registers.clear();
     }
 
     pub fn issue(
