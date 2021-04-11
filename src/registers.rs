@@ -1,7 +1,6 @@
 use crate::CAPSTONE;
-use capstone::arch::arm::ArmCC;
-use capstone::arch::arm::{ArmOpMem, ArmOperand, ArmOperandType, ArmShift};
 use capstone::prelude::*;
+use ids::*;
 
 #[allow(unused)]
 pub mod ids {
@@ -42,13 +41,13 @@ impl ConditionFlag {
         }
     }
 
-    pub fn write_flag(&self, cpsr: u32, value: bool) -> u32 {
+    pub fn write_flag(&self, cpsr: &mut u32, value: bool) {
         if value {
             let mask = 1 << self.pos();
-            cpsr | mask
+            *cpsr = *cpsr | mask;
         } else {
             let mask = !(1 << self.pos());
-            cpsr & mask
+            *cpsr = *cpsr & mask;
         }
     }
 
@@ -204,11 +203,11 @@ mod tests {
         assert!(!ConditionFlag::V.read_flag(cpsr));
 
         let mut cpsr = 0;
-        cpsr = ConditionFlag::N.write_flag(cpsr, false);
+        ConditionFlag::N.write_flag(&mut cpsr, false);
         assert!(!ConditionFlag::N.read_flag(cpsr));
-        cpsr = ConditionFlag::N.write_flag(cpsr, true);
+        ConditionFlag::N.write_flag(&mut cpsr, true);
         assert!(ConditionFlag::N.read_flag(cpsr));
-        cpsr = ConditionFlag::N.write_flag(cpsr, false);
+        ConditionFlag::N.write_flag(&mut cpsr, false);
         assert!(!ConditionFlag::N.read_flag(cpsr));
     }
 }

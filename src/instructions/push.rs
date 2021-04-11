@@ -1,5 +1,4 @@
 use super::Instruction;
-use crate::cpu_state::execute::StationChanges;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::SP;

@@ -6,7 +6,6 @@ use crate::cpu_state::decode::DecodeChanges;
 use crate::cpu_state::execute::StationChanges;
 use crate::cpu_state::fetch::FetchChanges;
 use crate::decoded::DecodedInstruction;
-use crate::instructions::Instruction;
 use crate::memory::Memory;
 use crate::registers::ids::PC;
 use crate::registers::RegisterFile;

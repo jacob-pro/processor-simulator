@@ -105,10 +105,10 @@ impl Instruction for ADD {
 
         reg_changes.push((self.dest, result));
         if self.update_flags {
-            cpsr = ConditionFlag::N.write_flag(cpsr, (result as i32).is_negative());
-            cpsr = ConditionFlag::Z.write_flag(cpsr, result == 0);
-            cpsr = ConditionFlag::C.write_flag(cpsr, carry);
-            cpsr = ConditionFlag::V.write_flag(cpsr, overflow);
+            ConditionFlag::N.write_flag(&mut cpsr, (result as i32).is_negative());
+            ConditionFlag::Z.write_flag(&mut cpsr, result == 0);
+            ConditionFlag::C.write_flag(&mut cpsr, carry);
+            ConditionFlag::V.write_flag(&mut cpsr, overflow);
             reg_changes.push((CPSR, cpsr));
         }
 
