@@ -90,10 +90,10 @@ impl Instruction for InvalidInstruction {
     }
 
     fn source_registers(&self) -> HashSet<RegId> {
-        panic!()
+        hashset!()
     }
 
     fn dest_registers(&self) -> HashSet<RegId> {
-        panic!()
+        hashset!()
     }
 }

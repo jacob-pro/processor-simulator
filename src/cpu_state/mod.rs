@@ -3,7 +3,7 @@ pub mod execute;
 pub mod fetch;
 pub mod station;
 
-use crate::cpu_state::decode::DecodeResults;
+use crate::cpu_state::decode::{DecodeResults, DecodedInstruction};
 use crate::cpu_state::execute::StationResults;
 use crate::cpu_state::fetch::FetchResults;
 use crate::memory::Memory;
@@ -11,7 +11,7 @@ use crate::registers::ids::{CPSR, PC};
 use crate::registers::RegisterFile;
 use capstone::arch::arm::ArmCC;
 use station::{Register, ReservationStation};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, RwLock};
 
 pub struct CpuState {
@@ -19,6 +19,7 @@ pub struct CpuState {
     pub registers: RegisterFile,
     pub next_instr_addr: u32, // Address of instruction waiting to be fetched
     pub fetched_instruction: Option<FetchedInstruction>, // Instruction waiting to be decoded
+    pub decoded_instructions: VecDeque<DecodedInstruction>,
     pub reservation_stations: Vec<ReservationStation>,
     pub should_terminate: bool,
 }
@@ -37,6 +38,8 @@ pub struct UpdateResult {
     pub branches_not_taken: u8,
 }
 
+const DECODED_QUEUE_CAPACITY: usize = 4;
+
 impl CpuState {
     pub fn new(memory: Memory, entry: u32, stations: usize) -> Self {
         let memory = Arc::new(RwLock::new(memory));
@@ -51,19 +54,23 @@ impl CpuState {
             should_terminate: false,
             next_instr_addr: entry,
             reservation_stations: stations,
+            decoded_instructions: Default::default(),
         }
     }
 
     pub fn flush_pipeline(&mut self) {
         self.fetched_instruction = None;
+        self.decoded_instructions.clear();
         for i in &mut self.reservation_stations {
             i.clear();
         }
     }
 
     // If there will be space for another decoded instruction
-    // Depends on if the current instruction will complete this cycle or not
     pub fn decoded_space(&self) -> bool {
+        if self.decoded_instructions.len() < DECODED_QUEUE_CAPACITY {
+            return true;
+        }
         self.reservation_stations
             .iter()
             .find(|r| r.instruction.is_none())
@@ -120,31 +127,9 @@ impl CpuState {
             }
         }
 
-        match decode_results {
-            None => {}
-            Some(decode) => {
-                // Find an empty reservation station
-                let station = self
-                    .reservation_stations
-                    .iter_mut()
-                    .find(|r| r.instruction.is_none())
-                    .unwrap();
-                let mut source_registers = HashMap::new();
-                let mut required_registers = decode.instr.imp.source_registers();
-                required_registers.insert(PC);
-                if let ArmCC::ARM_CC_AL = decode.instr.cc {
-                } else {
-                    required_registers.insert(CPSR);
-                }
-                for r in required_registers {
-                    if r == PC {
-                        source_registers.insert(PC, Register::Ready(decode.instr.address));
-                    } else {
-                        source_registers.insert(r, Register::Ready(self.registers.read_by_id(r)));
-                    }
-                }
-                station.issue(decode.instr, source_registers);
-            }
+        if let Some(decode_results) = decode_results {
+            assert!(self.decoded_instructions.len() <= DECODED_QUEUE_CAPACITY);
+            self.decoded_instructions.push_back(decode_results.instr);
         }
 
         for (i, execute) in station_results.iter().enumerate() {
@@ -176,6 +161,32 @@ impl CpuState {
                         result.branches_not_taken = result.branches_not_taken + 1;
                     }
                 }
+            }
+        }
+
+        // Find an empty reservation station
+        if let Some(available_station) = self
+            .reservation_stations
+            .iter_mut()
+            .find(|r| r.instruction.is_none())
+        {
+            // Issue an instruction
+            if let Some(instr) = self.decoded_instructions.pop_front() {
+                let mut source_registers = HashMap::new();
+                let mut required_registers = instr.imp.source_registers();
+                required_registers.insert(PC);
+                if let ArmCC::ARM_CC_AL = instr.cc {
+                } else {
+                    required_registers.insert(CPSR);
+                }
+                for r in required_registers {
+                    if r == PC {
+                        source_registers.insert(PC, Register::Ready(instr.address));
+                    } else {
+                        source_registers.insert(r, Register::Ready(self.registers.read_by_id(r)));
+                    }
+                }
+                available_station.issue(instr, source_registers);
             }
         }
 
