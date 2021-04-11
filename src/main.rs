@@ -4,7 +4,9 @@ mod instructions;
 mod memory;
 mod registers;
 mod simulators;
-mod station;
+
+#[macro_use]
+extern crate maplit;
 
 use crate::simulators::non_pipelined::NonPipelinedSimulator;
 use crate::simulators::out_of_order::OutOfOrderSimulator;

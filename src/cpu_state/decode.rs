@@ -1,10 +1,11 @@
+use crate::cpu_state::station::ReservationStation;
 use crate::cpu_state::{CpuState, DecodedInstruction};
 use crate::instructions::{decode_instruction, Instruction, PollResult};
-use crate::station::ReservationStation;
 use crate::CAPSTONE;
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
 use capstone::{InsnDetail, RegId};
+use std::collections::HashSet;
 
 pub struct DecodeChanges {
     pub instr: DecodedInstruction,
@@ -80,11 +81,11 @@ impl Instruction for InvalidInstruction {
         panic!()
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
+    fn source_registers(&self) -> HashSet<RegId> {
         panic!()
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
+    fn dest_registers(&self) -> HashSet<RegId> {
         panic!()
     }
 }

@@ -1,10 +1,11 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::{R0, R1};
-use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::RegId;
+use std::collections::HashSet;
 use std::io::Write;
 
 #[derive(Clone)]
@@ -47,11 +48,11 @@ impl Instruction for SVC {
         PollResult::Complete(vec![])
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        vec![R0, R1]
+    fn source_registers(&self) -> HashSet<RegId> {
+        hashset![R0, R1]
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        vec![]
+    fn dest_registers(&self) -> HashSet<RegId> {
+        hashset![]
     }
 }

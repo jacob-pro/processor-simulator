@@ -1,11 +1,12 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::CPSR;
 use crate::registers::ConditionFlag;
-use crate::station::ReservationStation;
 use capstone::arch::arm::{ArmOperand, ArmOperandType};
 use capstone::prelude::*;
+use std::collections::HashSet;
 
 #[allow(unused)]
 #[derive(Clone)]
@@ -115,18 +116,18 @@ impl Instruction for ADD {
         PollResult::Complete(reg_changes)
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        let mut set = vec![self.first];
+    fn source_registers(&self) -> HashSet<RegId> {
+        let mut set = hashset![self.first, CPSR];
         if let ArmOperandType::Reg(reg_id) = self.second.op_type {
-            set.push(reg_id);
+            set.insert(reg_id);
         }
         set
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        let mut set = vec![self.dest];
+    fn dest_registers(&self) -> HashSet<RegId> {
+        let mut set = hashset![self.dest];
         if self.update_flags {
-            set.push(CPSR);
+            set.insert(CPSR);
         }
         set
     }

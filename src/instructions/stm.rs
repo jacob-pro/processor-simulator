@@ -1,9 +1,11 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
-use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use std::collections::HashSet;
+use std::iter::FromIterator;
 
 #[derive(Clone)]
 pub struct STM {
@@ -46,16 +48,16 @@ impl Instruction for STM {
         PollResult::Complete(changes)
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        let mut list = self.reg_list.clone();
-        list.push(self.base_register);
-        list
+    fn source_registers(&self) -> HashSet<RegId> {
+        let mut set = HashSet::from_iter(self.reg_list.clone());
+        set.insert(self.base_register);
+        set
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
+    fn dest_registers(&self) -> HashSet<RegId> {
         if self.writeback {
-            return vec![self.base_register];
+            return hashset![self.base_register];
         }
-        vec![]
+        hashset![]
     }
 }

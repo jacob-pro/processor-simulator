@@ -1,15 +1,17 @@
 pub mod decode;
 pub mod execute;
 pub mod fetch;
+pub mod station;
 
 use crate::cpu_state::decode::DecodeChanges;
 use crate::cpu_state::execute::StationChanges;
 use crate::cpu_state::fetch::FetchChanges;
 use crate::decoded::DecodedInstruction;
 use crate::memory::Memory;
-use crate::registers::ids::PC;
+use crate::registers::ids::{CPSR, PC};
 use crate::registers::RegisterFile;
-use crate::station::{Register, ReservationStation};
+use capstone::arch::arm::ArmCC;
+use station::{Register, ReservationStation};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
@@ -58,15 +60,15 @@ impl CpuState {
     // Transition the state to the new state
     pub fn update(
         &mut self,
-        fetch: Option<FetchChanges>,
-        decode: Option<DecodeChanges>,
-        mut stations: Vec<Option<StationChanges>>,
+        fetch_results: Option<FetchChanges>,
+        decode_results: Option<DecodeChanges>,
+        mut station_results: Vec<Option<StationChanges>>,
     ) -> UpdateResult {
-        assert_eq!(stations.len(), self.reservation_stations.len());
+        assert_eq!(station_results.len(), self.reservation_stations.len());
         let mut result = UpdateResult::default();
 
         // If we finished executing an instruction remove it from reservation station
-        for (i, s) in stations.iter_mut().enumerate() {
+        for (i, s) in station_results.iter_mut().enumerate() {
             match s {
                 None => {}
                 Some(s) => {
@@ -86,14 +88,14 @@ impl CpuState {
         }
 
         // If we decoded an instruction remove it from fetched
-        match &decode {
+        match &decode_results {
             None => {}
             Some(_) => {
                 self.fetched_instruction = None;
             }
         }
 
-        match fetch {
+        match fetch_results {
             None => {}
             Some(fetch) => {
                 assert!(self.fetched_instruction.is_none());
@@ -105,7 +107,7 @@ impl CpuState {
             }
         }
 
-        match decode {
+        match decode_results {
             None => {}
             Some(decode) => {
                 // Find an empty reservation station
@@ -115,9 +117,16 @@ impl CpuState {
                     .find(|r| r.instruction.is_none())
                     .unwrap();
                 let mut source_registers = HashMap::new();
-                source_registers.insert(PC, Register::Ready(decode.instr.address));
-                for r in decode.instr.source_registers() {
-                    if r != PC {
+                let mut required_registers = decode.instr.imp.source_registers();
+                required_registers.insert(PC);
+                if let ArmCC::ARM_CC_AL = decode.instr.cc {
+                } else {
+                    required_registers.insert(CPSR);
+                }
+                for r in required_registers {
+                    if r == PC {
+                        source_registers.insert(PC, Register::Ready(decode.instr.address));
+                    } else {
                         source_registers.insert(r, Register::Ready(self.registers.read_by_id(r)));
                     }
                 }
@@ -125,7 +134,7 @@ impl CpuState {
             }
         }
 
-        for (i, execute) in stations.iter().enumerate() {
+        for (i, execute) in station_results.iter().enumerate() {
             match execute {
                 None => {}
                 Some(execute) => {

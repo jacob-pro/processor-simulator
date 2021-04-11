@@ -1,9 +1,10 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
-use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use std::collections::HashSet;
 
 #[derive(Clone)]
 pub enum Mode {
@@ -59,11 +60,11 @@ impl Instruction for EXTENDS {
         PollResult::Complete(changes)
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        vec![self.src]
+    fn source_registers(&self) -> HashSet<RegId> {
+        hashset![self.src]
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        vec![self.dest]
+    fn dest_registers(&self) -> HashSet<RegId> {
+        hashset![self.dest]
     }
 }

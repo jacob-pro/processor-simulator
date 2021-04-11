@@ -1,9 +1,10 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::{arm_op_mem_regs, ArmOperandExt};
 use crate::instructions::PollResult;
-use crate::station::ReservationStation;
 use capstone::arch::arm::{ArmOpMem, ArmOperand};
 use capstone::prelude::*;
+use std::collections::HashSet;
 
 #[derive(Clone)]
 pub enum Mode {
@@ -53,13 +54,13 @@ impl Instruction for STR {
         PollResult::Complete(vec![])
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        let mut src = vec![self.reg];
-        src.append(&mut arm_op_mem_regs(&self.mem));
+    fn source_registers(&self) -> HashSet<RegId> {
+        let mut src = arm_op_mem_regs(&self.mem);
+        src.insert(self.reg);
         src
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        vec![]
+    fn dest_registers(&self) -> HashSet<RegId> {
+        hashset![]
     }
 }

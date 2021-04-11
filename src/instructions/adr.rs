@@ -1,10 +1,11 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::PC;
-use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use std::collections::HashSet;
 
 #[derive(Clone)]
 pub struct ADR {
@@ -30,11 +31,11 @@ impl Instruction for ADR {
         PollResult::Complete(vec![(self.dest, relative as u32)])
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        vec![]
+    fn source_registers(&self) -> HashSet<RegId> {
+        hashset![]
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        vec![self.dest]
+    fn dest_registers(&self) -> HashSet<RegId> {
+        hashset![self.dest]
     }
 }

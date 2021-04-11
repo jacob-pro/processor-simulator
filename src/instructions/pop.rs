@@ -1,11 +1,13 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::SP;
 use crate::registers::RegisterFile;
-use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use std::collections::HashSet;
+use std::iter::FromIterator;
 
 #[derive(Clone)]
 pub struct POP {
@@ -36,13 +38,13 @@ impl Instruction for POP {
         PollResult::Complete(changes)
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        vec![SP]
+    fn source_registers(&self) -> HashSet<RegId> {
+        hashset![SP]
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        let mut list = self.reg_list.clone();
-        list.push(SP);
+    fn dest_registers(&self) -> HashSet<RegId> {
+        let mut list = HashSet::from_iter(self.reg_list.clone());
+        list.insert(SP);
         list
     }
 }
