@@ -1,9 +1,9 @@
 use super::Instruction;
 use crate::instructions::util::ArmOperandExt;
+use crate::instructions::PollResult;
+use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
-use crate::station::ReservationStation;
-use crate::instructions::PollResult;
 
 #[derive(Clone)]
 pub enum Mode {

@@ -1,11 +1,11 @@
 use super::Instruction;
 use crate::instructions::util::ArmOperandExt;
-use crate::registers::ConditionFlag;
-use capstone::arch::arm::{ArmOperand, ArmOperandType};
-use capstone::prelude::*;
-use crate::station::ReservationStation;
 use crate::instructions::PollResult;
 use crate::registers::ids::CPSR;
+use crate::registers::ConditionFlag;
+use crate::station::ReservationStation;
+use capstone::arch::arm::{ArmOperand, ArmOperandType};
+use capstone::prelude::*;
 
 #[derive(Clone)]
 pub struct TST {
@@ -24,8 +24,7 @@ impl TST {
 impl Instruction for TST {
     fn poll(&self, station: &ReservationStation) -> PollResult {
         let first_val = station.read_by_id(self.first);
-        let sec_val = station
-            .value_of_flexible_second_operand(&self.second);
+        let sec_val = station.value_of_flexible_second_operand(&self.second);
         let result = first_val & sec_val;
         let mut cpsr = station.read_by_id(CPSR);
         ConditionFlag::N.write_flag(&mut cpsr, (result as i32).is_negative());

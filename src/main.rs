@@ -6,10 +6,10 @@ mod registers;
 mod simulators;
 mod station;
 
-use crate::cpu_state::CpuState;
-use crate::simulators::{
-    NonPipelinedSimulator, OutOfOrderSimulator, PipelinedSimulator, Simulator,
-};
+use crate::simulators::non_pipelined::NonPipelinedSimulator;
+use crate::simulators::out_of_order::OutOfOrderSimulator;
+use crate::simulators::pipelined::PipelinedSimulator;
+use crate::simulators::Simulator;
 use anyhow::{anyhow, Context};
 use capstone::prelude::*;
 use clap::Clap;
@@ -21,7 +21,6 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::sync::{Arc, RwLock};
 use std::time::Instant;
 
 #[derive(FromPrimitive, PartialEq, PartialOrd, Debug)]
@@ -120,10 +119,7 @@ fn main() -> anyhow::Result<()> {
         println!("Entry point at {:#X}", entry & 0xFFFFFFFE);
     }
 
-    let memory = Arc::new(RwLock::new(memory));
-    let state = CpuState::new(memory, entry, 1);
-
-    let sim: Box<dyn Simulator> = match matches.sim.unwrap_or(SimulatorType::OutOfOrder) {
+    let sim: Box<dyn Simulator> = match matches.sim.unwrap_or(SimulatorType::Pipelined) {
         SimulatorType::Scalar => Box::new(NonPipelinedSimulator {}),
         SimulatorType::Pipelined => Box::new(PipelinedSimulator {}),
         SimulatorType::OutOfOrder => Box::new(OutOfOrderSimulator {}),
@@ -131,7 +127,7 @@ fn main() -> anyhow::Result<()> {
 
     println!("Using: {}\n", sim.name());
     let start_time = Instant::now();
-    println!("{}", sim.run(state, &debug_level));
+    println!("{}", sim.run(memory, entry, &debug_level));
     println!(
         "Simulator ran for {} seconds",
         start_time.elapsed().as_millis() as f64 / 1000.0
