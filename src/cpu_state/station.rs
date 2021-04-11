@@ -4,7 +4,7 @@ use crate::registers::ids::{CPSR, PC};
 use crate::registers::{ConditionFlag, RegisterFile};
 use capstone::arch::arm::{ArmCC, ArmOpMem, ArmOperand, ArmOperandType, ArmShift};
 use capstone::RegId;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 pub enum Register {
