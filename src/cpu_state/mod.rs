@@ -3,15 +3,15 @@ pub mod execute;
 pub mod fetch;
 
 use crate::cpu_state::decode::DecodeChanges;
-use crate::cpu_state::execute::ExecuteChanges;
+use crate::cpu_state::execute::StationChanges;
 use crate::cpu_state::fetch::FetchChanges;
 use crate::decoded::DecodedInstruction;
 use crate::instructions::Instruction;
 use crate::memory::Memory;
 use crate::registers::ids::PC;
 use crate::registers::RegisterFile;
-use crate::station::{ReservationStation, Register};
-use std::collections::{HashMap};
+use crate::station::{Register, ReservationStation};
+use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 pub struct CpuState {
@@ -60,19 +60,31 @@ impl CpuState {
         &mut self,
         fetch: Option<FetchChanges>,
         decode: Option<DecodeChanges>,
-        executes: Vec<ExecuteChanges>,
+        mut stations: Vec<Option<StationChanges>>,
     ) -> UpdateResult {
+        assert_eq!(stations.len(), self.reservation_stations.len());
         let mut result = UpdateResult::default();
-        // If we finished an instruction remove it from reservation station
-        // match &execute {
-        //     None => {}
-        //     Some(execute) => {
-        //         // if execute.next_state.is_none() {
-        //         //     self.decoded_instruction = None;
-        //         // }
-        //     }
-        // }
-        //
+
+        // If we finished executing an instruction remove it from reservation station
+        for (i, s) in stations.iter_mut().enumerate() {
+            match s {
+                None => {}
+                Some(s) => {
+                    let next_state = std::mem::take(&mut s.next_state);
+                    match next_state {
+                        None => self.reservation_stations[i].clear(),
+                        Some(n) => {
+                            self.reservation_stations[i]
+                                .instruction
+                                .as_mut()
+                                .unwrap()
+                                .imp = n
+                        }
+                    }
+                }
+            }
+        }
+
         // If we decoded an instruction remove it from fetched
         match &decode {
             None => {}
@@ -110,41 +122,39 @@ impl CpuState {
                 station.issue(decode.instr, source_registers);
             }
         }
-        //
-        // match execute {
-        //     None => {}
-        //     Some(execute) => {
-        //         for (reg_id, value) in execute.register_changes {
-        //             self.registers.write_by_id(reg_id, value);
-        //             if reg_id == PC {
-        //                 // If the PC is changed we must ensure the next fetch uses the updated PC
-        //                 self.next_instr_addr = value;
-        //                 result.pc_changed = true;
-        //             }
-        //         }
-        //         for (flag, value) in execute.flag_changes {
-        //             self.registers.cond_flags.write_flag(flag, value);
-        //         }
-        //         // match execute.next_state {
-        //         //     None => {}
-        //         //     Some(c) => self.decoded_instruction.as_mut().unwrap().imp = c,
-        //         // }
-        //         self.should_terminate = execute.should_terminate;
-        //         if execute.did_execute_instruction {
-        //             result.instructions_executed = result.instructions_executed + 1;
-        //         }
-        //         if execute.did_skip_instruction {
-        //             result.instructions_skipped = result.instructions_skipped + 1;
-        //         }
-        //         if execute.did_execute_instruction && execute.instruction_is_branch {
-        //             result.branches_taken = result.branches_taken + 1;
-        //         }
-        //         if execute.did_skip_instruction && execute.instruction_is_branch {
-        //             result.branches_not_taken = result.branches_not_taken + 1;
-        //         }
-        //     }
-        // }
-        //
+
+        for (i, execute) in stations.iter().enumerate() {
+            match execute {
+                None => {}
+                Some(execute) => {
+                    for (reg_id, value) in &execute.register_changes {
+                        self.registers.write_by_id(*reg_id, *value);
+                        if *reg_id == PC {
+                            // If the PC is changed we must ensure the next fetch uses the updated PC
+                            self.next_instr_addr = *value;
+                            result.pc_changed = true;
+                        }
+                    }
+                    for s in &mut self.reservation_stations {
+                        s.receive_broadcast(i, &execute.register_changes);
+                    }
+                    self.should_terminate = execute.should_terminate;
+                    if execute.did_execute_instruction {
+                        result.instructions_executed = result.instructions_executed + 1;
+                    }
+                    if execute.did_skip_instruction {
+                        result.instructions_skipped = result.instructions_skipped + 1;
+                    }
+                    if execute.did_execute_instruction && execute.instruction_is_branch {
+                        result.branches_taken = result.branches_taken + 1;
+                    }
+                    if execute.did_skip_instruction && execute.instruction_is_branch {
+                        result.branches_not_taken = result.branches_not_taken + 1;
+                    }
+                }
+            }
+        }
+
         // if result.pc_changed {
         //     assert!(result.branches_taken >= 1);
         // }

@@ -5,7 +5,6 @@ use crate::CAPSTONE;
 use capstone::arch::arm::{ArmCC, ArmOperand};
 use capstone::arch::ArchOperand;
 use capstone::{InsnDetail, RegId};
-use std::collections::hash_map::RandomState;
 use std::collections::HashSet;
 
 pub struct DecodeChanges {
@@ -82,11 +81,11 @@ impl Instruction for InvalidInstruction {
         panic!()
     }
 
-    fn source_registers(&self) -> HashSet<RegId, RandomState> {
+    fn source_registers(&self) -> Vec<RegId> {
         panic!()
     }
 
-    fn dest_registers(&self) -> HashSet<RegId, RandomState> {
+    fn dest_registers(&self) -> Vec<RegId> {
         panic!()
     }
 }

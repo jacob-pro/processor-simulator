@@ -1,8 +1,8 @@
 use super::Instruction;
-use crate::cpu_state::execute::ExecuteChanges;
+use crate::cpu_state::execute::StationChanges;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::{PollResult};
-use crate::registers::ids::{CPSR};
+use crate::instructions::PollResult;
+use crate::registers::ids::CPSR;
 use crate::registers::ConditionFlag;
 use crate::station::ReservationStation;
 use capstone::arch::arm::{ArmOperand, ArmOperandType};
@@ -59,7 +59,7 @@ impl ADD {
 
 impl Instruction for ADD {
     fn poll(&self, station: &ReservationStation) -> PollResult {
-        let mut reg_changes = HashMap::new();
+        let mut reg_changes = Vec::new();
         let first_val = station.read_by_id(self.first);
         let sec_val = station.value_of_flexible_second_operand(&self.second);
         let mut cpsr = station.read_by_id(CPSR);
@@ -105,32 +105,30 @@ impl Instruction for ADD {
             }
         };
 
-        reg_changes.insert(self.dest, result);
+        reg_changes.push((self.dest, result));
         if self.update_flags {
             cpsr = ConditionFlag::N.write_flag(cpsr, (result as i32).is_negative());
             cpsr = ConditionFlag::Z.write_flag(cpsr, result == 0);
             cpsr = ConditionFlag::C.write_flag(cpsr, carry);
             cpsr = ConditionFlag::V.write_flag(cpsr, overflow);
-            reg_changes.insert(CPSR, cpsr);
+            reg_changes.push((CPSR, cpsr));
         }
 
         PollResult::Complete(reg_changes)
     }
 
-    fn source_registers(&self) -> HashSet<RegId> {
-        let mut set = HashSet::new();
-        set.insert(self.first);
+    fn source_registers(&self) -> Vec<RegId> {
+        let mut set = vec![self.first];
         if let ArmOperandType::Reg(reg_id) = self.second.op_type {
-            set.insert(reg_id);
+            set.push(reg_id);
         }
         set
     }
 
-    fn dest_registers(&self) -> HashSet<RegId> {
-        let mut set = HashSet::new();
-        set.insert(self.dest);
+    fn dest_registers(&self) -> Vec<RegId> {
+        let mut set = vec![self.dest];
         if self.update_flags {
-            set.insert(CPSR);
+            set.push(CPSR);
         }
         set
     }

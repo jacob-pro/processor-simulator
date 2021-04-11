@@ -19,23 +19,23 @@ mod push;
 // mod tst;
 mod util;
 
-use crate::cpu_state::execute::ExecuteChanges;
+use crate::cpu_state::execute::StationChanges;
 use crate::station::ReservationStation;
 use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 use capstone::RegId;
 use std::collections::{HashMap, HashSet};
 
 pub enum PollResult {
-    Complete(HashMap<RegId, u32>),
-    Again(Box<dyn Instruction>)
+    Complete(Vec<(RegId, u32)>),
+    Again(Box<dyn Instruction>),
 }
 
 pub trait Instruction: Send + Sync {
     fn poll(&self, station: &ReservationStation) -> PollResult;
 
-    fn source_registers(&self) -> HashSet<RegId>;
+    fn source_registers(&self) -> Vec<RegId>;
 
-    fn dest_registers(&self) -> HashSet<RegId>;
+    fn dest_registers(&self) -> Vec<RegId>;
 }
 
 /*

@@ -1,15 +1,14 @@
 use super::Instruction;
-use crate::cpu_state::execute::ExecuteChanges;
+use crate::cpu_state::execute::StationChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::{PollResult};
+use crate::instructions::PollResult;
 use crate::registers::ids::SP;
+use crate::registers::RegisterFile;
+use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
-use std::collections::hash_map::RandomState;
-use std::collections::{HashSet, HashMap};
-use crate::station::ReservationStation;
-use crate::registers::RegisterFile;
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct PUSH {
@@ -28,7 +27,6 @@ impl PUSH {
 
 impl Instruction for PUSH {
     fn poll(&self, station: &ReservationStation) -> PollResult {
-        let mut reg_changes = HashMap::new();
         let mut reg_list = RegisterFile::push_pop_register_asc(self.reg_list.clone());
         reg_list.reverse();
         let mut sp = station.read_by_id(SP);
@@ -41,22 +39,18 @@ impl Instruction for PUSH {
                 .unwrap()
                 .write_bytes(sp, &register_value);
         }
-        reg_changes.insert(SP, sp);
-        PollResult::Complete(reg_changes)
+        PollResult::Complete(vec![(SP, sp)])
     }
 
-    fn source_registers(&self) -> HashSet<RegId, RandomState> {
-        let mut set = HashSet::new();
-        set.insert(SP);
+    fn source_registers(&self) -> Vec<RegId> {
+        let mut set = vec![SP];
         for i in &self.reg_list {
-            set.insert(*i);
+            set.push(*i);
         }
         set
     }
 
-    fn dest_registers(&self) -> HashSet<RegId, RandomState> {
-        let mut set = HashSet::new();
-        set.insert(SP);
-        set
+    fn dest_registers(&self) -> Vec<RegId> {
+        vec![SP]
     }
 }
