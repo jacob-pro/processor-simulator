@@ -60,7 +60,7 @@ impl Memory {
         panic!("Invalid memory address {:#X}", address)
     }
 
-    pub fn read_bytes(&self, base_address: u32, length: u32) -> Result<Vec<u8>, String>{
+    pub fn read_bytes(&self, base_address: u32, length: u32) -> Result<Vec<u8>, String> {
         let mut ret = Vec::with_capacity(length as usize);
         for i in 0..length {
             ret.push(self.read_byte(base_address + i)?)

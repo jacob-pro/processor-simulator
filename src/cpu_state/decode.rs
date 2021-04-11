@@ -34,6 +34,8 @@ impl CpuState {
                         .disasm_all(&fetched_instruction.bytes, 0x0)
                         .expect("Invalid instruction");
                     match list.iter().next() {
+                        // We may not get a valid instruction when speculating
+                        // An InvalidInstruction is used as a placeholder
                         None => DecodedInstruction {
                             imp: Box::new(InvalidInstruction {}),
                             cc: ArmCC::ARM_CC_INVALID,

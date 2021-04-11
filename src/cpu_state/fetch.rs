@@ -39,7 +39,8 @@ impl CpuState {
                 })
             }
             Err(_) => {
-                return None // Read may fail when speculating
+                // Fetch may fail when reading ahead speculatively into an invalid address
+                return None;
             }
         }
     }

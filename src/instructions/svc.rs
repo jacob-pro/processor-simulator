@@ -37,7 +37,8 @@ impl Instruction for SVC {
                     .memory
                     .read()
                     .unwrap()
-                    .read_bytes(buffer_addr, buffer_len).unwrap();
+                    .read_bytes(buffer_addr, buffer_len)
+                    .unwrap();
                 std::io::stdout().write_all(&data).expect("Failed to write");
             }
             _ => {
