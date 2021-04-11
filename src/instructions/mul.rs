@@ -9,7 +9,7 @@ use capstone::prelude::*;
 use std::collections::HashSet;
 
 // Make the Multiply require extra cycles to complete
-const EXTRA_CYCLES: u8 = 4;
+const EXTRA_CYCLES: u8 = 7;
 
 #[derive(Clone)]
 pub struct MUL {

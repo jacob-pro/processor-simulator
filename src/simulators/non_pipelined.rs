@@ -28,7 +28,7 @@ impl Simulator for NonPipelinedSimulator {
                 stats.total_cycles = stats.total_cycles + 1;
                 let execute = state
                     .execute_station(&debug_level, state.reservation_stations.first().unwrap());
-                let result = state.apply_stages(None, None, vec![Some(execute)]);
+                let result = state.apply_stages(None, None, vec![execute]);
                 stats.update(&result);
             }
 

@@ -33,10 +33,25 @@ impl ArmOperandExt for ArmOperand {
     }
 }
 
-pub fn arm_op_mem_regs(op: &ArmOpMem) -> HashSet<RegId> {
-    let mut set = hashset![op.base()];
-    if op.index().0 != 0 {
-        set.insert(op.index());
+pub trait RegisterSet {
+    fn registers(&self) -> HashSet<RegId>;
+}
+
+impl RegisterSet for ArmOpMem {
+    fn registers(&self) -> HashSet<RegId> {
+        let mut set = hashset![self.base()];
+        if self.index().0 != 0 {
+            set.insert(self.index());
+        }
+        set
     }
-    set
+}
+
+impl RegisterSet for ArmOperand {
+    fn registers(&self) -> HashSet<RegId> {
+        if let ArmOperandType::Reg(reg_id) = self.op_type {
+            return hashset![reg_id];
+        }
+        hashset![]
+    }
 }

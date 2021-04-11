@@ -1,6 +1,7 @@
 use super::Instruction;
 use crate::cpu_state::station::ReservationStation;
-use crate::instructions::util::{arm_op_mem_regs, ArmOperandExt};
+use crate::instructions::util::ArmOperandExt;
+use crate::instructions::util::RegisterSet;
 use crate::instructions::PollResult;
 use capstone::arch::arm::{ArmOpMem, ArmOperand};
 use capstone::prelude::*;
@@ -18,6 +19,7 @@ pub struct STR {
     reg: RegId,
     mem: ArmOpMem,
     mode: Mode,
+    waited: bool,
 }
 
 impl STR {
@@ -26,12 +28,20 @@ impl STR {
             reg: operands[0].reg_id().unwrap(),
             mem: operands[1].op_mem_value().unwrap(),
             mode,
+            waited: false,
         }
     }
 }
 
 impl Instruction for STR {
     fn poll(&self, station: &ReservationStation) -> PollResult {
+        if !self.waited {
+            // Takes 2 cycles
+            let mut cloned = self.clone();
+            cloned.waited = true;
+            return PollResult::Again(Box::new(cloned));
+        }
+
         let mem_addr = station.eval_ldr_str_op_mem(&self.mem);
         let reg_val = station.read_by_id(self.reg);
         match self.mode {
@@ -55,7 +65,7 @@ impl Instruction for STR {
     }
 
     fn source_registers(&self) -> HashSet<RegId> {
-        let mut src = arm_op_mem_regs(&self.mem);
+        let mut src = self.mem.registers();
         src.insert(self.reg);
         src
     }
