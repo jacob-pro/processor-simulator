@@ -44,8 +44,8 @@ impl Instruction for MOV {
         let mut changes = vec![(self.dest, val)];
         if self.update_flags {
             let mut cpsr = station.read_by_id(CPSR);
-            ConditionFlag::N.write_flag(cpsr, (val as i32).is_negative());
-            ConditionFlag::Z.write_flag(cpsr, val == 0);
+            ConditionFlag::N.write_flag(&mut cpsr, (val as i32).is_negative());
+            ConditionFlag::Z.write_flag(&mut cpsr, val == 0);
             changes.push((CPSR, cpsr));
         }
         PollResult::Complete(changes)

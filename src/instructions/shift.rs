@@ -1,5 +1,4 @@
 use super::Instruction;
-use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::CPSR;
@@ -61,16 +60,16 @@ impl Instruction for SHIFT {
         let result = match self.mode {
             Mode::ASR => {
                 assert!(n >= 1 && n <= 32);
-                ConditionFlag::C.write_flag(cpsr, get_bit_at(value, n - 1));
+                ConditionFlag::C.write_flag(&mut cpsr, get_bit_at(value, n - 1));
                 (value as i32 >> n) as u32
             }
             Mode::LSL => {
                 if n > 0 {
                     // These instructions do not affect the carry flag when used with LSL #0
                     if n >= 33 {
-                        ConditionFlag::C.write_flag(cpsr, false); // If n is 33 it is updated to 0.
+                        ConditionFlag::C.write_flag(&mut cpsr, false); // If n is 33 it is updated to 0.
                     } else {
-                        ConditionFlag::C.write_flag(cpsr, get_bit_at(value, 32 - n));
+                        ConditionFlag::C.write_flag(&mut cpsr, get_bit_at(value, 32 - n));
                         // carry flag is updated to the last bit shifted out, bit[32-n]
                     }
                 }
@@ -78,7 +77,7 @@ impl Instruction for SHIFT {
             }
             Mode::LSR => {
                 ConditionFlag::C.write_flag(
-                    cpsr,
+                    &mut cpsr,
                     if n <= 32 {
                         get_bit_at(value, n - 1)
                     } else {
@@ -89,13 +88,13 @@ impl Instruction for SHIFT {
             }
             Mode::ROR => {
                 assert!(n >= 1 && n <= 31);
-                ConditionFlag::C.write_flag(cpsr, get_bit_at(value, n - 1));
+                ConditionFlag::C.write_flag(&mut cpsr, get_bit_at(value, n - 1));
                 value.rotate_right(n as u32)
             }
         };
         let mut changes = vec![(self.dest, result)];
-        ConditionFlag::N.write_flag(cpsr, (result as i32).is_negative());
-        ConditionFlag::Z.write_flag(cpsr, result == 0);
+        ConditionFlag::N.write_flag(&mut cpsr, (result as i32).is_negative());
+        ConditionFlag::Z.write_flag(&mut cpsr, result == 0);
         changes.push((CPSR, cpsr));
         PollResult::Complete(changes)
     }

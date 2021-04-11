@@ -1,8 +1,7 @@
 use super::Instruction;
-use crate::cpu_state::CpuState;
-use capstone::RegId;
-use crate::station::ReservationStation;
 use crate::instructions::PollResult;
+use crate::station::ReservationStation;
+use capstone::RegId;
 
 #[derive(Clone)]
 pub struct NOP {}
@@ -14,7 +13,7 @@ impl NOP {
 }
 
 impl Instruction for NOP {
-    fn poll(&self, station: &ReservationStation) -> PollResult {
+    fn poll(&self, _station: &ReservationStation) -> PollResult {
         PollResult::Complete(vec![])
     }
 

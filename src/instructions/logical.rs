@@ -1,5 +1,4 @@
 use super::Instruction;
-use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::CPSR;
@@ -43,8 +42,8 @@ impl Instruction for LOGICAL {
         };
         let mut changes = vec![(self.dest, result)];
         let mut cpsr = station.read_by_id(CPSR);
-        ConditionFlag::N.write_flag(cpsr, (result as i32).is_negative());
-        ConditionFlag::Z.write_flag(cpsr, result == 0);
+        ConditionFlag::N.write_flag(&mut cpsr, (result as i32).is_negative());
+        ConditionFlag::Z.write_flag(&mut cpsr, result == 0);
         changes.push((CPSR, cpsr));
         PollResult::Complete(changes)
     }
