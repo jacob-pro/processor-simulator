@@ -159,7 +159,7 @@ impl RegisterFile {
     }
 
     #[inline]
-    fn reg_name(reg_id: RegId) -> String {
+    pub fn reg_name(reg_id: RegId) -> String {
         CAPSTONE.with(|capstone| {
             capstone
                 .reg_name(reg_id)
@@ -171,8 +171,8 @@ impl RegisterFile {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::ids::*;
+    use super::*;
     #[test]
     fn reg_names() {
         assert_eq!(RegisterFile::reg_name(R0), "R0");

@@ -1,5 +1,6 @@
 use capstone::arch::arm::{ArmOpMem, ArmOperand, ArmOperandType};
 use capstone::prelude::*;
+use std::collections::HashSet;
 
 pub trait ArmOperandExt {
     fn reg_id(&self) -> Option<RegId>;
@@ -32,10 +33,10 @@ impl ArmOperandExt for ArmOperand {
     }
 }
 
-pub fn arm_op_mem_regs(op: &ArmOpMem) -> Vec<RegId> {
-    let mut vec = vec![op.base()];
+pub fn arm_op_mem_regs(op: &ArmOpMem) -> HashSet<RegId> {
+    let mut set = hashset![op.base()];
     if op.index().0 != 0 {
-        vec.push(op.index());
+        set.insert(op.index());
     }
-    vec
+    set
 }

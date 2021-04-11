@@ -1,11 +1,12 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::{CPSR, PC};
 use crate::registers::ConditionFlag;
-use crate::station::ReservationStation;
 use capstone::arch::arm::{ArmOperand, ArmOperandType};
 use capstone::prelude::*;
+use std::collections::HashSet;
 
 #[derive(PartialEq)]
 pub enum Mode {
@@ -51,17 +52,21 @@ impl Instruction for MOV {
         PollResult::Complete(changes)
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
+    fn source_registers(&self) -> HashSet<RegId> {
+        let mut set = hashset![];
         if let ArmOperandType::Reg(reg_id) = self.src.op_type {
-            return vec![reg_id];
+            set.insert(reg_id);
         }
-        vec![]
+        if self.update_flags {
+            set.insert(CPSR);
+        }
+        set
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        let mut dest = vec![self.dest];
+    fn dest_registers(&self) -> HashSet<RegId> {
+        let mut dest = hashset![self.dest];
         if self.update_flags {
-            dest.push(CPSR);
+            dest.insert(CPSR);
         }
         dest
     }

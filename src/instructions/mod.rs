@@ -19,9 +19,10 @@ mod svc;
 mod tst;
 mod util;
 
-use crate::station::ReservationStation;
+use crate::cpu_state::station::ReservationStation;
 use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 use capstone::RegId;
+use std::collections::HashSet;
 
 pub enum PollResult {
     Complete(Vec<(RegId, u32)>),
@@ -32,9 +33,9 @@ pub enum PollResult {
 pub trait Instruction: Send + Sync {
     fn poll(&self, station: &ReservationStation) -> PollResult;
 
-    fn source_registers(&self) -> Vec<RegId>;
+    fn source_registers(&self) -> HashSet<RegId>;
 
-    fn dest_registers(&self) -> Vec<RegId>;
+    fn dest_registers(&self) -> HashSet<RegId>;
 }
 
 /*

@@ -1,10 +1,11 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::{LR, PC};
-use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::RegId;
+use std::collections::HashSet;
 
 #[derive(Clone)]
 pub struct B {
@@ -33,14 +34,14 @@ impl Instruction for B {
         PollResult::Complete(changes)
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        vec![]
+    fn source_registers(&self) -> HashSet<RegId> {
+        hashset![]
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        let mut dest = vec![PC];
+    fn dest_registers(&self) -> HashSet<RegId> {
+        let mut dest = hashset![PC];
         if self.with_link {
-            dest.push(LR);
+            dest.insert(LR);
         }
         dest
     }

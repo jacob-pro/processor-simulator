@@ -1,7 +1,8 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::PollResult;
-use crate::station::ReservationStation;
 use capstone::RegId;
+use std::collections::HashSet;
 
 #[derive(Clone)]
 pub struct NOP {}
@@ -17,11 +18,11 @@ impl Instruction for NOP {
         PollResult::Complete(vec![])
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        vec![]
+    fn source_registers(&self) -> HashSet<RegId> {
+        hashset![]
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        vec![]
+    fn dest_registers(&self) -> HashSet<RegId> {
+        hashset![]
     }
 }

@@ -1,11 +1,12 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::CPSR;
 use crate::registers::ConditionFlag;
-use crate::station::ReservationStation;
 use capstone::arch::arm::{ArmOperand, ArmOperandType};
 use capstone::prelude::*;
+use std::collections::HashSet;
 
 #[derive(Clone)]
 pub enum Mode {
@@ -99,16 +100,16 @@ impl Instruction for SHIFT {
         PollResult::Complete(changes)
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        let mut set = vec![self.first];
+    fn source_registers(&self) -> HashSet<RegId> {
+        let mut set = hashset![self.first, CPSR];
         if let ArmOperandType::Reg(reg_id) = self.second.op_type {
-            set.push(reg_id);
+            set.insert(reg_id);
         }
         set
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        vec![self.dest, CPSR]
+    fn dest_registers(&self) -> HashSet<RegId> {
+        hashset![self.dest, CPSR]
     }
 }
 

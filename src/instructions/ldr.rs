@@ -1,9 +1,10 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::{arm_op_mem_regs, ArmOperandExt};
 use crate::instructions::PollResult;
-use crate::station::ReservationStation;
 use capstone::arch::arm::{ArmOpMem, ArmOperand};
 use capstone::prelude::*;
+use std::collections::HashSet;
 
 #[derive(Clone)]
 pub enum Mode {
@@ -44,11 +45,11 @@ impl Instruction for LDR {
         PollResult::Complete(vec![(self.reg, val_at_addr)])
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
+    fn source_registers(&self) -> HashSet<RegId> {
         arm_op_mem_regs(&self.mem)
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        vec![self.reg]
+    fn dest_registers(&self) -> HashSet<RegId> {
+        hashset![self.reg]
     }
 }

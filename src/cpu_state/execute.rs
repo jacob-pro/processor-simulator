@@ -1,6 +1,6 @@
+use crate::cpu_state::station::ReservationStation;
 use crate::cpu_state::CpuState;
 use crate::instructions::{Instruction, PollResult};
-use crate::station::ReservationStation;
 use crate::DebugLevel;
 use capstone::prelude::*;
 
@@ -23,7 +23,7 @@ impl CpuState {
         assert!(station.ready());
         let instr = station.instruction.as_ref().unwrap();
         let mut changes = StationChanges::default();
-        let ex = station.should_execute();
+        let ex = station.evaluate_condition_code();
         // changes.instruction_is_branch = instr.imp.is_branch();
         if *debug_level >= DebugLevel::Minimal {
             let mut output = String::new();

@@ -1,9 +1,11 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
-use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use std::collections::HashSet;
+use std::iter::FromIterator;
 
 #[derive(Clone)]
 pub struct LDM {
@@ -43,14 +45,14 @@ impl Instruction for LDM {
         PollResult::Complete(changes)
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        vec![self.base_register]
+    fn source_registers(&self) -> HashSet<RegId> {
+        hashset![self.base_register]
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        let mut list = self.reg_list.clone();
+    fn dest_registers(&self) -> HashSet<RegId> {
+        let mut list = HashSet::from_iter(self.reg_list.clone());
         if self.writeback {
-            list.push(self.base_register);
+            list.insert(self.base_register);
         }
         list
     }

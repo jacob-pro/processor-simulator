@@ -1,11 +1,12 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::SP;
 use crate::registers::RegisterFile;
-use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use std::collections::HashSet;
 
 #[derive(Clone)]
 pub struct PUSH {
@@ -39,15 +40,15 @@ impl Instruction for PUSH {
         PollResult::Complete(vec![(SP, sp)])
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        let mut set = vec![SP];
+    fn source_registers(&self) -> HashSet<RegId> {
+        let mut set = hashset![SP];
         for i in &self.reg_list {
-            set.push(*i);
+            set.insert(*i);
         }
         set
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        vec![SP]
+    fn dest_registers(&self) -> HashSet<RegId> {
+        hashset![SP]
     }
 }

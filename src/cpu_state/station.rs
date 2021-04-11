@@ -1,7 +1,7 @@
 use crate::decoded::DecodedInstruction;
 use crate::memory::Memory;
 use crate::registers::ids::{CPSR, PC};
-use crate::registers::ConditionFlag;
+use crate::registers::{ConditionFlag, RegisterFile};
 use capstone::arch::arm::{ArmCC, ArmOpMem, ArmOperand, ArmOperandType, ArmShift};
 use capstone::RegId;
 use std::collections::{HashMap, HashSet};
@@ -47,8 +47,10 @@ impl ReservationStation {
     }
 
     pub fn read_by_id(&self, id: RegId) -> u32 {
-        let k = self.source_registers.get(&id)
-            .expect("Tried to read unknown register - did the instruction report source_registers() correctly?");
+        let gen_msg = || {
+            format!("Tried to read unknown register {} - did the instruction report source_registers() correctly?", RegisterFile::reg_name(id))
+        };
+        let k = self.source_registers.get(&id).expect(gen_msg().as_str());
         match k {
             Register::Ready(value) => *value,
             Register::Pending(_, _) => panic!(),
@@ -79,13 +81,17 @@ impl ReservationStation {
     }
 
     // https://community.arm.com/developer/ip-products/processors/b/processors-ip-blog/posts/condition-codes-1-condition-flags-and-codes
-    pub fn should_execute(&self) -> bool {
+    pub fn evaluate_condition_code(&self) -> bool {
+        let cc = self.instruction.as_ref().unwrap().cc;
+        if let ArmCC::ARM_CC_AL = cc {
+            return true;
+        }
         let cpsr = self.read_by_id(CPSR);
         let n = ConditionFlag::N.read_flag(cpsr);
         let c = ConditionFlag::C.read_flag(cpsr);
         let z = ConditionFlag::Z.read_flag(cpsr);
         let v = ConditionFlag::V.read_flag(cpsr);
-        return match &self.instruction.as_ref().unwrap().cc {
+        return match cc {
             ArmCC::ARM_CC_INVALID => panic!("CC Invalid"),
             ArmCC::ARM_CC_EQ => z == true,
             ArmCC::ARM_CC_NE => z == false,

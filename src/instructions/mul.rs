@@ -1,11 +1,12 @@
 use super::Instruction;
+use crate::cpu_state::station::ReservationStation;
 use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use crate::registers::ids::CPSR;
 use crate::registers::ConditionFlag;
-use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
+use std::collections::HashSet;
 
 // Make the Multiply require extra cycles to complete
 const EXTRA_CYCLES: u8 = 4;
@@ -50,11 +51,11 @@ impl Instruction for MUL {
         PollResult::Complete(changes)
     }
 
-    fn source_registers(&self) -> Vec<RegId> {
-        vec![self.val, self.dest]
+    fn source_registers(&self) -> HashSet<RegId> {
+        hashset![self.val, self.dest, CPSR]
     }
 
-    fn dest_registers(&self) -> Vec<RegId> {
-        vec![self.dest, CPSR]
+    fn dest_registers(&self) -> HashSet<RegId> {
+        hashset![self.dest, CPSR]
     }
 }
