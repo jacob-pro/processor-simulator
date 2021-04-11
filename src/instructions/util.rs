@@ -31,3 +31,11 @@ impl ArmOperandExt for ArmOperand {
         None
     }
 }
+
+pub fn arm_op_mem_regs(op: &ArmOpMem) -> Vec<RegId> {
+    let mut vec = vec![op.base()];
+    if op.index().0 != 0 {
+        vec.push(op.index());
+    }
+    vec
+}

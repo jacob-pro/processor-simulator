@@ -1,20 +1,20 @@
 mod add;
-// mod adr;
-// mod b;
+mod adr;
+mod b;
 // mod bx;
 // mod cmp;
 // mod extends;
 // mod ldm;
 // mod ldr;
 // mod logical;
-// mod mov;
+mod mov;
 // mod mul;
 // mod nop;
 // mod pop;
 mod push;
 // mod shift;
 // mod stm;
-// mod str;
+mod str;
 // mod svc;
 // mod tst;
 mod util;
@@ -50,8 +50,8 @@ pub fn decode_instruction(
     let update_flags = detail.update_flags();
     let writeback = detail.writeback();
     return match name.to_ascii_uppercase().as_str() {
-        // "ADC" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADC)),
-        // "ADD" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADD)),
+        "ADC" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADC)),
+        "ADD" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADD)),
         // "ADR" => Box::new(adr::ADR::new(operands)),
         // "AND" => Box::new(logical::LOGICAL::new(operands, logical::Mode::AND)),
         // "ASR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ASR)),
@@ -76,7 +76,7 @@ pub fn decode_instruction(
         // "LDRSH" => Box::new(ldr::LDR::new(operands, ldr::Mode::SignedHalfWord)),
         // "LSL" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSL)),
         // "LSR" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSR)),
-        // "MOV" => Box::new(mov::MOV::new(operands, mov::Mode::MOV, update_flags)),
+        "MOV" => Box::new(mov::MOV::new(operands, mov::Mode::MOV, update_flags)),
         // "MRS" => panic!("{} not yet implemented", name),
         // "MSR" => panic!("{} not yet implemented", name),
         // "MUL" => Box::new(mul::MUL::new(operands)),
@@ -89,14 +89,14 @@ pub fn decode_instruction(
         // "REV16" => panic!("{} not yet implemented", name),
         // "REVSH" => panic!("{} not yet implemented", name),
         // "ROR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ROR)),
-        // "RSB" => Box::new(add::ADD::new(operands, update_flags, add::Mode::RSB)),
-        // "SBC" => Box::new(add::ADD::new(operands, update_flags, add::Mode::SBC)),
+        "RSB" => Box::new(add::ADD::new(operands, update_flags, add::Mode::RSB)),
+        "SBC" => Box::new(add::ADD::new(operands, update_flags, add::Mode::SBC)),
         // "SEV" => panic!("{} not yet implemented", name),
         // "STM" => Box::new(stm::STM::new(operands, writeback)),
-        // "STR" => Box::new(str::STR::new(operands, str::Mode::Word)),
+        "STR" => Box::new(str::STR::new(operands, str::Mode::Word)),
         // "STRB" => Box::new(str::STR::new(operands, str::Mode::Byte)),
         // "STRH" => Box::new(str::STR::new(operands, str::Mode::HalfWord)),
-        // "SUB" => Box::new(add::ADD::new(operands, update_flags, add::Mode::SUB)),
+        "SUB" => Box::new(add::ADD::new(operands, update_flags, add::Mode::SUB)),
         // "SVC" => Box::new(svc::SVC::new(operands)),
         // "SXTB" => Box::new(extends::EXTENDS::new(operands, extends::Mode::SXTB)),
         // "SXTH" => Box::new(extends::EXTENDS::new(operands, extends::Mode::SXTH)),

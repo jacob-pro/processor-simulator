@@ -156,7 +156,7 @@ impl CpuState {
         }
 
         // if result.pc_changed {
-        //     assert!(result.branches_taken >= 1);
+        //     assert!(result.branches_taken == 1);
         // }
 
         result

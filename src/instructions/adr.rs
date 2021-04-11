@@ -1,8 +1,9 @@
 use super::Instruction;
-use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::NextInstructionState;
+use crate::instructions::PollResult;
+use crate::registers::ids::PC;
+use crate::station::ReservationStation;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 
@@ -23,10 +24,18 @@ impl ADR {
 }
 
 impl Instruction for ADR {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
-        let pc = (state.registers.arm_adjusted_pc() & 0xFFFFFFFC) as i64;
+    fn poll(&self, station: &ReservationStation) -> PollResult {
+        // PC always appears as the current instruction address + 4 bytes - even in Thumb state
+        let pc = ((station.read_by_id(PC) + 4) & 0xFFFFFFFC) as i64;
         let relative = pc + self.pc_rel as i64;
-        changes.register_change(self.dest, relative as u32);
-        None
+        PollResult::Complete(vec![(self.dest, relative as u32)])
+    }
+
+    fn source_registers(&self) -> Vec<RegId> {
+        vec![]
+    }
+
+    fn dest_registers(&self) -> Vec<RegId> {
+        vec![self.dest]
     }
 }

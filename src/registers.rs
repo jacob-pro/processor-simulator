@@ -86,12 +86,6 @@ impl RegisterFile {
         }
     }
 
-    // The PC is a liar (sometimes)!
-    // the PC always appears as the current instruction address + 4 bytes - even in Thumb state
-    pub fn arm_adjusted_pc(&self) -> u32 {
-        self.pc + 4
-    }
-
     pub fn read_by_id(&self, id: RegId) -> u32 {
         let name = Self::reg_name(id);
         if name.starts_with("R") {
@@ -141,29 +135,6 @@ impl RegisterFile {
             ArmOperandType::Imm(value) => value as u32,
             _ => panic!("Unsupported type"),
         }
-    }
-
-    pub fn eval_ldr_str_op_mem(&self, op_mem: &ArmOpMem) -> u32 {
-        /* PC appears WORD aligned to LDR/STR PC relative instructions
-         * https://community.arm.com/developer/ip-products/processors/f/cortex-m-forum/4541/real-value-of-pc-register/11430#11430
-         */
-        let base_reg_val = if op_mem.base() == PC {
-            let pc_val = self.arm_adjusted_pc() as i64;
-            pc_val & 0xFFFFFFFC
-        } else {
-            self.read_by_id(op_mem.base()) as i64
-        };
-
-        // Immediate offset
-        let displacement: i32 = if op_mem.index().0 == 0 {
-            op_mem.disp()
-        } else {
-            // Register offset
-            let index_val = self.read_by_id(op_mem.index());
-            (index_val as i32) * op_mem.scale() // Scale for index register (can be 1, or -1)
-        };
-        let result = base_reg_val + displacement as i64;
-        result as u32
     }
 
     /*

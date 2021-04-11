@@ -1,8 +1,8 @@
 use crate::decoded::DecodedInstruction;
 use crate::memory::Memory;
-use crate::registers::ids::CPSR;
+use crate::registers::ids::{CPSR, PC};
 use crate::registers::ConditionFlag;
-use capstone::arch::arm::{ArmCC, ArmOperand, ArmOperandType, ArmShift};
+use capstone::arch::arm::{ArmCC, ArmOpMem, ArmOperand, ArmOperandType, ArmShift};
 use capstone::RegId;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, RwLock};
@@ -47,7 +47,8 @@ impl ReservationStation {
     }
 
     pub fn read_by_id(&self, id: RegId) -> u32 {
-        let k = self.source_registers.get(&id).unwrap();
+        let k = self.source_registers.get(&id)
+            .expect("Tried to read unknown register - did the instruction report source_registers() correctly?");
         match k {
             Register::Ready(value) => *value,
             Register::Pending(_, _) => panic!(),
@@ -113,5 +114,29 @@ impl ReservationStation {
                 }
             }
         }
+    }
+
+    pub fn eval_ldr_str_op_mem(&self, op_mem: &ArmOpMem) -> u32 {
+        /* PC appears WORD aligned to LDR/STR PC relative instructions
+          PC always appears as the current instruction address + 4 bytes - even in Thumb state
+        * https://community.arm.com/developer/ip-products/processors/f/cortex-m-forum/4541/real-value-of-pc-register/11430#11430
+        */
+        let base_reg_val = if op_mem.base() == PC {
+            let pc_val = self.read_by_id(PC) as i64 + 4;
+            pc_val & 0xFFFFFFFC
+        } else {
+            self.read_by_id(op_mem.base()) as i64
+        };
+
+        // Immediate offset
+        let displacement: i32 = if op_mem.index().0 == 0 {
+            op_mem.disp()
+        } else {
+            // Register offset
+            let index_val = self.read_by_id(op_mem.index());
+            (index_val as i32) * op_mem.scale() // Scale for index register (can be 1, or -1)
+        };
+        let result = base_reg_val + displacement as i64;
+        result as u32
     }
 }
