@@ -1,5 +1,4 @@
 mod cpu_state;
-mod decoded;
 mod instructions;
 mod memory;
 mod registers;
@@ -121,7 +120,7 @@ fn main() -> anyhow::Result<()> {
         println!("Entry point at {:#X}", entry & 0xFFFFFFFE);
     }
 
-    let sim: Box<dyn Simulator> = match matches.sim.unwrap_or(SimulatorType::Pipelined) {
+    let sim: Box<dyn Simulator> = match matches.sim.unwrap_or(SimulatorType::OutOfOrder) {
         SimulatorType::Scalar => Box::new(NonPipelinedSimulator {}),
         SimulatorType::Pipelined => Box::new(PipelinedSimulator {}),
         SimulatorType::OutOfOrder => Box::new(OutOfOrderSimulator {}),

@@ -27,13 +27,13 @@ impl Simulator for OutOfOrderSimulator {
             });
             for station in state.reservation_stations.iter() {
                 executes.push(if station.ready() {
-                    Some(state.execute(&debug_level, station))
+                    Some(state.execute_station(&debug_level, station))
                 } else {
                     None
                 });
             }
 
-            let result = state.update(fetch.unwrap(), decode.unwrap(), executes);
+            let result = state.apply_stages(fetch.unwrap(), decode.unwrap(), executes);
             stats.update(&result);
 
             if result.pc_changed {
@@ -47,6 +47,6 @@ impl Simulator for OutOfOrderSimulator {
     }
 
     fn name(&self) -> &'static str {
-        "out-of-order superscalar simulator"
+        "Pipelined out-of-order superscalar simulator"
     }
 }

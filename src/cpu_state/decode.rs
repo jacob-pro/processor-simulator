@@ -1,5 +1,5 @@
 use crate::cpu_state::station::ReservationStation;
-use crate::cpu_state::{CpuState, DecodedInstruction};
+use crate::cpu_state::CpuState;
 use crate::instructions::{decode_instruction, Instruction, PollResult};
 use crate::CAPSTONE;
 use capstone::arch::arm::{ArmCC, ArmOperand};
@@ -7,12 +7,20 @@ use capstone::arch::ArchOperand;
 use capstone::{InsnDetail, RegId};
 use std::collections::HashSet;
 
-pub struct DecodeChanges {
+pub struct DecodedInstruction {
+    pub imp: Box<dyn Instruction>,
+    pub cc: ArmCC,
+    pub string: String,
+    pub length: u32,
+    pub address: u32,
+}
+
+pub struct DecodeResults {
     pub instr: DecodedInstruction,
 }
 
 impl CpuState {
-    pub fn decode(&self) -> Option<DecodeChanges> {
+    pub fn decode(&self) -> Option<DecodeResults> {
         // Only if we have space to decode into
         if !self.decoded_space() {
             return None;
@@ -69,7 +77,7 @@ impl CpuState {
                     }
                 })
             });
-        instr.map(|i| DecodeChanges { instr: i })
+        instr.map(|i| DecodeResults { instr: i })
     }
 }
 

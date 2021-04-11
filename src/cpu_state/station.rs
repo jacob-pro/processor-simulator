@@ -1,4 +1,4 @@
-use crate::decoded::DecodedInstruction;
+use crate::cpu_state::decode::DecodedInstruction;
 use crate::memory::Memory;
 use crate::registers::ids::{CPSR, PC};
 use crate::registers::{ConditionFlag, RegisterFile};

@@ -37,15 +37,15 @@ impl Simulator for PipelinedSimulator {
                 s.spawn(|_| decode = Some(state.decode()));
                 if state.reservation_stations.first().unwrap().ready() {
                     s.spawn(|_| {
-                        execute = Some(
-                            state
-                                .execute(&debug_level, state.reservation_stations.first().unwrap()),
-                        )
+                        execute = Some(state.execute_station(
+                            &debug_level,
+                            state.reservation_stations.first().unwrap(),
+                        ))
                     });
                 }
             });
 
-            let result = state.update(fetch.unwrap(), decode.unwrap(), vec![execute]);
+            let result = state.apply_stages(fetch.unwrap(), decode.unwrap(), vec![execute]);
             stats.update(&result);
 
             if result.pc_changed {
@@ -59,6 +59,6 @@ impl Simulator for PipelinedSimulator {
     }
 
     fn name(&self) -> &'static str {
-        "3 stage pipelined scalar simulator"
+        "Three stage pipelined in order simulator"
     }
 }
