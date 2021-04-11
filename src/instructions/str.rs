@@ -1,5 +1,4 @@
 use super::Instruction;
-use crate::cpu_state::CpuState;
 use crate::instructions::util::{arm_op_mem_regs, ArmOperandExt};
 use crate::instructions::PollResult;
 use crate::station::ReservationStation;

@@ -1,11 +1,12 @@
 use super::Instruction;
-use crate::cpu_state::execute::ExecuteChanges;
 use crate::cpu_state::CpuState;
 use crate::instructions::util::ArmOperandExt;
-use crate::instructions::NextInstructionState;
 use crate::registers::ids::{R0, R1};
 use capstone::arch::arm::ArmOperand;
 use std::io::Write;
+use crate::instructions::PollResult;
+use crate::station::ReservationStation;
+use capstone::RegId;
 
 #[derive(Clone)]
 pub struct SVC {
@@ -20,19 +21,19 @@ impl SVC {
 }
 
 impl Instruction for SVC {
-    fn poll(&self, state: &CpuState, changes: &mut ExecuteChanges) -> NextInstructionState {
+    fn poll(&self, station: &ReservationStation) -> PollResult {
         match self.id {
             1 => {
                 println!(
                     "\nProgram exited with code: {}\n",
-                    state.registers.read_by_id(R0) as i32
+                    station.read_by_id(R0) as i32
                 );
-                changes.should_terminate = true;
+                //changes.should_terminate = true;
             }
             2 => {
-                let buffer_addr = state.registers.read_by_id(R0);
-                let buffer_len = state.registers.read_by_id(R1);
-                let data = state
+                let buffer_addr = station.read_by_id(R0);
+                let buffer_len = station.read_by_id(R1);
+                let data = station
                     .memory
                     .read()
                     .unwrap()
@@ -41,9 +42,17 @@ impl Instruction for SVC {
             }
             _ => {
                 println!("\nUnknown SVC ID: {}", self.id);
-                changes.should_terminate = true;
+                //changes.should_terminate = true;
             }
         }
-        None
+        PollResult::Exception
+    }
+
+    fn source_registers(&self) -> Vec<RegId> {
+        vec![R0, R1]
+    }
+
+    fn dest_registers(&self) -> Vec<RegId> {
+        vec![]
     }
 }

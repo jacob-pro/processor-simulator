@@ -2,7 +2,6 @@ use crate::instructions::Instruction;
 use crate::registers::ids::CPSR;
 use capstone::arch::arm::ArmCC;
 use capstone::RegId;
-use std::collections::HashSet;
 
 pub struct DecodedInstruction {
     pub imp: Box<dyn Instruction>,
