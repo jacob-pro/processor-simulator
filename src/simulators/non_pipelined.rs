@@ -12,11 +12,11 @@ impl Simulator for NonPipelinedSimulator {
         loop {
             stats.total_cycles = stats.total_cycles + 1;
             let fetch = state.fetch();
-            state.update(fetch, None, vec![None]);
+            state.apply_stages(fetch, None, vec![None]);
 
             stats.total_cycles = stats.total_cycles + 1;
             let decode = state.decode();
-            state.update(None, decode, vec![None]);
+            state.apply_stages(None, decode, vec![None]);
 
             while state
                 .reservation_stations
@@ -26,9 +26,9 @@ impl Simulator for NonPipelinedSimulator {
                 .is_some()
             {
                 stats.total_cycles = stats.total_cycles + 1;
-                let execute =
-                    state.execute(&debug_level, state.reservation_stations.first().unwrap());
-                let result = state.update(None, None, vec![Some(execute)]);
+                let execute = state
+                    .execute_station(&debug_level, state.reservation_stations.first().unwrap());
+                let result = state.apply_stages(None, None, vec![Some(execute)]);
                 stats.update(&result);
             }
 

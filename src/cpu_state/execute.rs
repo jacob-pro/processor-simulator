@@ -1,11 +1,12 @@
 use crate::cpu_state::station::ReservationStation;
 use crate::cpu_state::CpuState;
 use crate::instructions::{Instruction, PollResult};
+use crate::registers::ids::PC;
 use crate::DebugLevel;
 use capstone::prelude::*;
 
 #[derive(Default)]
-pub struct StationChanges {
+pub struct StationResults {
     pub register_changes: Vec<(RegId, u32)>,
     pub should_terminate: bool,
     pub did_execute_instruction: bool,
@@ -15,34 +16,39 @@ pub struct StationChanges {
 }
 
 impl CpuState {
-    pub fn execute(
+    pub fn execute_station(
         &self,
         debug_level: &DebugLevel,
         station: &ReservationStation,
-    ) -> StationChanges {
+    ) -> StationResults {
         assert!(station.ready());
         let instr = station.instruction.as_ref().unwrap();
-        let mut changes = StationChanges::default();
-        let ex = station.evaluate_condition_code();
-        // changes.instruction_is_branch = instr.imp.is_branch();
-        if *debug_level >= DebugLevel::Minimal {
-            let mut output = String::new();
-            if ex {
-                output.push_str(&instr.string);
-            } else {
-                output.push_str(&format!("{} (omitted)", instr.string));
+        let mut changes = StationResults::default();
+        let should_execute = station.evaluate_condition_code();
+        changes.instruction_is_branch = instr.imp.dest_registers().contains(&PC);
+
+        let print_debug = || {
+            if *debug_level >= DebugLevel::Minimal {
+                let mut output = String::new();
+                if should_execute {
+                    output.push_str(&instr.string);
+                } else {
+                    output.push_str(&format!("{} (omitted)", instr.string));
+                }
+                if *debug_level >= DebugLevel::Full {
+                    let padding: String = vec![' '; 30 as usize - output.len()].iter().collect();
+                    output.push_str(&format!("{} [{}]", padding, self.registers.debug_string()));
+                }
+                println!("{}", output);
             }
-            if *debug_level >= DebugLevel::Full {
-                let padding: String = vec![' '; 30 as usize - output.len()].iter().collect();
-                output.push_str(&format!("{} [{}]", padding, self.registers.debug_string()));
-            }
-            println!("{}", output);
-        }
-        if ex {
+        };
+
+        if should_execute {
             match instr.imp.poll(&station) {
                 PollResult::Complete(c) => {
                     changes.register_changes = c;
                     changes.did_execute_instruction = true;
+                    print_debug();
                 }
                 PollResult::Again(s) => {
                     changes.next_state = Some(s);
@@ -50,11 +56,14 @@ impl CpuState {
                 PollResult::Exception => {
                     changes.should_terminate = true;
                     changes.did_execute_instruction = true;
+                    print_debug();
                 }
             }
         } else {
             changes.did_skip_instruction = true;
+            print_debug();
         }
+
         changes
     }
 }

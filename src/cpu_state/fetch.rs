@@ -1,12 +1,12 @@
 use crate::cpu_state::CpuState;
 
-pub struct FetchChanges {
+pub struct FetchResults {
     pub next_addr: u32,
     pub instruction: Vec<u8>,
 }
 
 impl CpuState {
-    pub fn fetch(&self) -> Option<FetchChanges> {
+    pub fn fetch(&self) -> Option<FetchResults> {
         // Only if we have space to fetch into
         if self.fetched_instruction.is_some() && !self.decoded_space() {
             return None;
@@ -31,7 +31,7 @@ impl CpuState {
             _ => 2,
         };
         assert!(instr_len == 2 || instr_len == 4);
-        Some(FetchChanges {
+        Some(FetchResults {
             next_addr: self.next_instr_addr + instr_len,
             instruction: code[0..instr_len as usize].to_vec(),
         })

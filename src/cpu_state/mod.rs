@@ -3,10 +3,9 @@ pub mod execute;
 pub mod fetch;
 pub mod station;
 
-use crate::cpu_state::decode::DecodeChanges;
-use crate::cpu_state::execute::StationChanges;
-use crate::cpu_state::fetch::FetchChanges;
-use crate::decoded::DecodedInstruction;
+use crate::cpu_state::decode::DecodeResults;
+use crate::cpu_state::execute::StationResults;
+use crate::cpu_state::fetch::FetchResults;
 use crate::memory::Memory;
 use crate::registers::ids::{CPSR, PC};
 use crate::registers::RegisterFile;
@@ -22,6 +21,20 @@ pub struct CpuState {
     pub fetched_instruction: Option<FetchedInstruction>, // Instruction waiting to be decoded
     pub reservation_stations: Vec<ReservationStation>,
     pub should_terminate: bool,
+}
+
+pub struct FetchedInstruction {
+    pub bytes: Vec<u8>,
+    pub address: u32,
+}
+
+#[derive(Default)]
+pub struct UpdateResult {
+    pub pc_changed: bool,
+    pub instructions_executed: u8,
+    pub instructions_skipped: u8,
+    pub branches_taken: u8,
+    pub branches_not_taken: u8,
 }
 
 impl CpuState {
@@ -58,11 +71,11 @@ impl CpuState {
     }
 
     // Transition the state to the new state
-    pub fn update(
+    pub fn apply_stages(
         &mut self,
-        fetch_results: Option<FetchChanges>,
-        decode_results: Option<DecodeChanges>,
-        mut station_results: Vec<Option<StationChanges>>,
+        fetch_results: Option<FetchResults>,
+        decode_results: Option<DecodeResults>,
+        mut station_results: Vec<Option<StationResults>>,
     ) -> UpdateResult {
         assert_eq!(station_results.len(), self.reservation_stations.len());
         let mut result = UpdateResult::default();
@@ -166,24 +179,10 @@ impl CpuState {
             }
         }
 
-        // if result.pc_changed {
-        //     assert!(result.branches_taken == 1);
-        // }
+        if result.pc_changed {
+            assert_eq!(result.branches_taken, 1);
+        }
 
         result
     }
-}
-
-pub struct FetchedInstruction {
-    pub bytes: Vec<u8>,
-    pub address: u32,
-}
-
-#[derive(Default)]
-pub struct UpdateResult {
-    pub pc_changed: bool,
-    pub instructions_executed: u8,
-    pub instructions_skipped: u8,
-    pub branches_taken: u8,
-    pub branches_not_taken: u8,
 }
