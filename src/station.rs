@@ -1,11 +1,11 @@
 use crate::decoded::DecodedInstruction;
 use crate::memory::Memory;
-use capstone::arch::arm::{ArmOperand, ArmOperandType, ArmShift, ArmCC};
+use crate::registers::ids::CPSR;
+use crate::registers::ConditionFlag;
+use capstone::arch::arm::{ArmCC, ArmOperand, ArmOperandType, ArmShift};
 use capstone::RegId;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, RwLock};
-use crate::registers::ids::CPSR;
-use crate::registers::ConditionFlag;
 
 pub enum Register {
     Ready(u32),
@@ -67,11 +67,11 @@ impl ReservationStation {
 
     pub fn ready(&self) -> bool {
         if self.instruction.is_none() {
-            return false
+            return false;
         }
         for (_, r) in &self.source_registers {
             if let Register::Pending(_, _) = r {
-                return false
+                return false;
             }
         }
         true
@@ -103,5 +103,15 @@ impl ReservationStation {
             ArmCC::ARM_CC_AL => true,
         };
     }
-    
+
+    pub fn receive_broadcast(&mut self, source_id: usize, changes: &Vec<(RegId, u32)>) {
+        for (_, reg) in &mut self.source_registers {
+            if let Register::Pending(station_id, id) = reg {
+                if *station_id == source_id {
+                    let val = changes.iter().find(|(a, b)| a == id).unwrap().1;
+                    *reg = Register::Ready(val);
+                }
+            }
+        }
+    }
 }

@@ -82,7 +82,7 @@ impl RegisterFile {
             sp: crate::_STACK,
             lr: 0,
             pc: 0,
-            cpsr: 0
+            cpsr: 0,
         }
     }
 
