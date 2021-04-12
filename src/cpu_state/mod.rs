@@ -5,7 +5,7 @@ pub mod station;
 
 use crate::cpu_state::decode::{DecodeResults, DecodedInstruction};
 use crate::cpu_state::execute::StationResults;
-use crate::cpu_state::fetch::FetchResults;
+use crate::cpu_state::fetch::{FetchResults, FetchedInstruction};
 use crate::memory::Memory;
 use crate::registers::ids::{CPSR, PC};
 use crate::registers::RegisterFile;
@@ -22,11 +22,6 @@ pub struct CpuState {
     pub decoded_instructions: VecDeque<DecodedInstruction>,
     pub reservation_stations: Vec<ReservationStation>,
     pub should_terminate: bool,
-}
-
-pub struct FetchedInstruction {
-    pub bytes: Vec<u8>,
-    pub address: u32,
 }
 
 #[derive(Default)]
@@ -111,10 +106,7 @@ impl CpuState {
 
         if let Some(fetch) = fetch_results {
             assert!(self.fetched_instruction.is_none());
-            self.fetched_instruction = Some(FetchedInstruction {
-                bytes: fetch.instruction,
-                address: self.next_instr_addr,
-            });
+            self.fetched_instruction = Some(fetch.instr);
             self.next_instr_addr = fetch.next_addr;
         }
 
