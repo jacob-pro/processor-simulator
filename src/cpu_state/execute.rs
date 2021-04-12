@@ -1,7 +1,8 @@
-use crate::cpu_state::station::ReservationStation;
+use crate::cpu_state::station::{Register, ReservationStation};
 use crate::cpu_state::CpuState;
 use crate::instructions::{Instruction, PollResult};
-use crate::registers::ids::PC;
+use crate::registers::ids::{CPSR, LR, PC, R0, R8, SP};
+use crate::registers::ConditionFlag;
 use crate::DebugLevel;
 use capstone::prelude::*;
 
@@ -39,7 +40,18 @@ impl CpuState {
                 }
                 if *debug_level >= DebugLevel::Full {
                     let padding: String = vec![' '; 30 as usize - output.len()].iter().collect();
-                    output.push_str(&format!("{} [{}]", padding, self.registers.debug_string()));
+                    output.push_str(&format!(
+                        "{} [{}]",
+                        padding,
+                        self.debug_string(|reg_id| {
+                            if let Some(r) = station.source_registers.get(&reg_id) {
+                                if let Register::Ready(val) = r {
+                                    return *val;
+                                }
+                            }
+                            self.registers.read_by_id(reg_id)
+                        })
+                    ));
                 }
                 println!("{}", output);
             }
@@ -67,5 +79,24 @@ impl CpuState {
         }
 
         Some(changes)
+    }
+
+    fn debug_string<F>(&self, f: F) -> String
+    where
+        F: Fn(RegId) -> u32,
+    {
+        let mut output = String::new();
+        let cpsr = f(CPSR);
+        for i in R0.0..R8.0 {
+            output.push_str(&format!("R{} {:08X} ", i - R0.0, f(RegId(i))));
+        }
+        output.push_str(&format!("LR {:08X} ", f(LR)));
+        output.push_str(&format!("PC {:08X} ", f(PC) & 0xFFFFFFFE));
+        output.push_str(&format!("SP {:08X} ", f(SP)));
+        output.push_str(&format!("N{}", ConditionFlag::N.read_flag(cpsr) as u8));
+        output.push_str(&format!("Z{}", ConditionFlag::Z.read_flag(cpsr) as u8));
+        output.push_str(&format!("C{}", ConditionFlag::C.read_flag(cpsr) as u8));
+        output.push_str(&format!("V{}", ConditionFlag::V.read_flag(cpsr) as u8));
+        output
     }
 }
