@@ -61,8 +61,4 @@ impl Instruction for STM {
         }
         hashset![]
     }
-
-    fn hazardous(&self) -> bool {
-        true
-    }
 }
