@@ -35,7 +35,7 @@ impl Instruction for LDM {
         let base_addr = station.read_by_id(self.base_register);
         for (idx, reg) in self.reg_list.iter().enumerate() {
             let adj_addr = base_addr + (idx as u32 * 4);
-            let val = station.memory.read().unwrap().read_u32(adj_addr);
+            let val = station.memory.read().unwrap().read_u32(adj_addr).unwrap();
             changes.push((*reg, val));
         }
         if self.writeback {

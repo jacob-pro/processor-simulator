@@ -30,7 +30,7 @@ impl Instruction for POP {
         let reg_list = RegisterFile::push_pop_register_asc(self.reg_list.clone());
         let mut sp = station.read_by_id(SP);
         for r in &reg_list {
-            let read_from_stack = station.memory.read().unwrap().read_u32(sp);
+            let read_from_stack = station.memory.read().unwrap().read_u32(sp).unwrap();
             changes.push((*r, read_from_stack));
             sp = sp + 4;
         }

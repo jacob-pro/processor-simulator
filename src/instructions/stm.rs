@@ -38,7 +38,8 @@ impl Instruction for STM {
                 .memory
                 .write()
                 .unwrap()
-                .write_bytes(adj_addr, &reg_val.to_le_bytes());
+                .write_bytes(adj_addr, &reg_val.to_le_bytes())
+                .unwrap();
         }
         let mut changes = vec![];
         if self.writeback {
