@@ -59,6 +59,6 @@ impl Simulator for PipelinedSimulator {
     }
 
     fn name(&self) -> &'static str {
-        "Three stage pipelined in order simulator"
+        "Pipelined in-order simulator"
     }
 }

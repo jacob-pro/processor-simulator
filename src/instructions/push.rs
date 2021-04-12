@@ -35,7 +35,8 @@ impl Instruction for PUSH {
                 .memory
                 .write()
                 .unwrap()
-                .write_bytes(sp, &register_value);
+                .write_bytes(sp, &register_value)
+                .unwrap();
         }
         PollResult::Complete(vec![(SP, sp)])
     }

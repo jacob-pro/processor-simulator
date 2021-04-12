@@ -49,17 +49,20 @@ impl Instruction for STR {
                 .memory
                 .write()
                 .unwrap()
-                .write_bytes(mem_addr, &reg_val.to_le_bytes()),
+                .write_bytes(mem_addr, &reg_val.to_le_bytes())
+                .unwrap(),
             Mode::HalfWord => station
                 .memory
                 .write()
                 .unwrap()
-                .write_bytes(mem_addr, &(reg_val as u16).to_le_bytes()),
+                .write_bytes(mem_addr, &(reg_val as u16).to_le_bytes())
+                .unwrap(),
             Mode::Byte => station
                 .memory
                 .write()
                 .unwrap()
-                .write_bytes(mem_addr, &(reg_val as u8).to_le_bytes()),
+                .write_bytes(mem_addr, &(reg_val as u8).to_le_bytes())
+                .unwrap(),
         };
         PollResult::Complete(vec![])
     }
