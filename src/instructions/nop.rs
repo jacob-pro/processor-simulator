@@ -4,7 +4,7 @@ use crate::instructions::PollResult;
 use capstone::RegId;
 use std::collections::HashSet;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct NOP {}
 
 impl NOP {

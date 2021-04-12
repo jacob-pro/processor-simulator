@@ -7,7 +7,7 @@ use capstone::prelude::*;
 use std::collections::HashSet;
 use std::iter::FromIterator;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LDM {
     base_register: RegId,
     reg_list: Vec<RegId>,

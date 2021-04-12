@@ -7,7 +7,7 @@ use capstone::arch::arm::{ArmOpMem, ArmOperand};
 use capstone::prelude::*;
 use std::collections::HashSet;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Mode {
     Word,
     HalfWord,
@@ -16,7 +16,7 @@ pub enum Mode {
     SignedByte,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LDR {
     reg: RegId,
     mem: ArmOpMem,

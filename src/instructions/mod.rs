@@ -24,6 +24,7 @@ use crate::registers::ids::PC;
 use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 use capstone::RegId;
 use std::collections::HashSet;
+use std::fmt::Debug;
 
 pub enum PollResult {
     Complete(Vec<(RegId, u32)>),
@@ -31,7 +32,7 @@ pub enum PollResult {
     Exception,
 }
 
-pub trait Instruction: Send + Sync {
+pub trait Instruction: Send + Sync + Debug {
     fn poll(&self, station: &ReservationStation) -> PollResult;
 
     fn source_registers(&self) -> HashSet<RegId>;

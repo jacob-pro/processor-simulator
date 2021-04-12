@@ -6,7 +6,7 @@ use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 use std::collections::HashSet;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Mode {
     SXTB,
     UXTB,
@@ -14,7 +14,7 @@ pub enum Mode {
     UXTH,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct EXTENDS {
     dest: RegId,
     src: RegId,

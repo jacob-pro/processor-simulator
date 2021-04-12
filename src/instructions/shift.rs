@@ -9,7 +9,7 @@ use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 use std::collections::HashSet;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Mode {
     ASR,
     LSL,
@@ -17,7 +17,7 @@ pub enum Mode {
     ROR,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SHIFT {
     mode: Mode,
     dest: RegId,

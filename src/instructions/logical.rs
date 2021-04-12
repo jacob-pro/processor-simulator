@@ -8,7 +8,7 @@ use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 use std::collections::HashSet;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Mode {
     AND,
     ORR,
@@ -16,7 +16,7 @@ pub enum Mode {
     BIC,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LOGICAL {
     dest: RegId,
     second: RegId,

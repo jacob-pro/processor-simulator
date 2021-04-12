@@ -7,7 +7,7 @@ use capstone::arch::arm::ArmOperand;
 use capstone::RegId;
 use std::collections::HashSet;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct B {
     jump: i32,
     with_link: bool,

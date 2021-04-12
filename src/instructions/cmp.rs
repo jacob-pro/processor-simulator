@@ -9,13 +9,13 @@ use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 use std::collections::HashSet;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Mode {
     CMP,
     CMN,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CMP {
     mode: Mode,
     first: RegId,

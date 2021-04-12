@@ -7,7 +7,7 @@ use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
 use std::collections::HashSet;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ADR {
     dest: RegId,
     pc_rel: i32,

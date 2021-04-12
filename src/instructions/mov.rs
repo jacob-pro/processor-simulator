@@ -8,12 +8,13 @@ use capstone::arch::arm::{ArmOperand, ArmOperandType};
 use capstone::prelude::*;
 use std::collections::HashSet;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum Mode {
     MOV,
     MVN,
 }
 
+#[derive(Debug)]
 pub struct MOV {
     update_flags: bool,
     mode: Mode,

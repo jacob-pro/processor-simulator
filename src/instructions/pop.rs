@@ -9,7 +9,7 @@ use capstone::prelude::*;
 use std::collections::HashSet;
 use std::iter::FromIterator;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct POP {
     reg_list: Vec<RegId>,
 }
