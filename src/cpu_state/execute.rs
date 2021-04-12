@@ -5,9 +5,9 @@ use crate::registers::ids::PC;
 use crate::DebugLevel;
 use capstone::prelude::*;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct StationResults {
-    pub register_changes: Vec<(RegId, u32)>,
+    pub register_changes: Option<Vec<(RegId, u32)>>,
     pub should_terminate: bool,
     pub did_execute_instruction: bool,
     pub did_skip_instruction: bool,
@@ -48,7 +48,7 @@ impl CpuState {
         if should_execute {
             match instr.imp.poll(&station) {
                 PollResult::Complete(c) => {
-                    changes.register_changes = c;
+                    changes.register_changes = Some(c);
                     changes.did_execute_instruction = true;
                     print_debug();
                 }

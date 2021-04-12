@@ -26,6 +26,7 @@ use capstone::RegId;
 use std::collections::HashSet;
 use std::fmt::Debug;
 
+#[derive(Debug)]
 pub enum PollResult {
     Complete(Vec<(RegId, u32)>),
     Again(Box<dyn Instruction>),
@@ -39,7 +40,7 @@ pub trait Instruction: Send + Sync + Debug {
 
     fn dest_registers(&self) -> HashSet<RegId>;
 
-    fn control_hazard(&self) -> bool {
+    fn hazardous(&self) -> bool {
         self.dest_registers().contains(&PC)
     }
 }

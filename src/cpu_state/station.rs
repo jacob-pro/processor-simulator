@@ -110,9 +110,9 @@ impl ReservationStation {
 
     pub fn receive_broadcast(&mut self, source_id: usize, changes: &Vec<(RegId, u32)>) {
         for (_, reg) in &mut self.source_registers {
-            if let Register::Pending(station_id, id) = reg {
+            if let Register::Pending(station_id, reg_id) = reg {
                 if *station_id == source_id {
-                    let val = changes.iter().find(|(a, _)| a == id).unwrap().1;
+                    let val = changes.iter().find(|(a, _)| a == reg_id).unwrap().1;
                     *reg = Register::Ready(val);
                 }
             }

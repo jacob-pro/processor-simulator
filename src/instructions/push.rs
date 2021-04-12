@@ -52,4 +52,8 @@ impl Instruction for PUSH {
     fn dest_registers(&self) -> HashSet<RegId> {
         hashset![SP]
     }
+
+    fn hazardous(&self) -> bool {
+        true
+    }
 }

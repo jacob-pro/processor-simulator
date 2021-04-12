@@ -57,7 +57,7 @@ impl Instruction for SVC {
         hashset![]
     }
 
-    fn control_hazard(&self) -> bool {
+    fn hazardous(&self) -> bool {
         match self.id {
             2 => false,
             _ => true,

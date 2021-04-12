@@ -76,4 +76,8 @@ impl Instruction for STR {
     fn dest_registers(&self) -> HashSet<RegId> {
         hashset![]
     }
+
+    fn hazardous(&self) -> bool {
+        true
+    }
 }
