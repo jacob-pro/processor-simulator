@@ -143,21 +143,6 @@ impl RegisterFile {
         reg_list
     }
 
-    pub fn debug_string(&self) -> String {
-        let mut output = String::new();
-        for i in 0..8 {
-            output.push_str(&format!("R{} {:08X} ", i, self.gprs[i]));
-        }
-        output.push_str(&format!("LR {:08X} ", self.lr));
-        output.push_str(&format!("PC {:08X} ", self.pc & 0xFFFFFFFE));
-        output.push_str(&format!("SP {:08X} ", self.sp));
-        output.push_str(&format!("N{}", ConditionFlag::N.read_flag(self.cpsr) as u8));
-        output.push_str(&format!("Z{}", ConditionFlag::Z.read_flag(self.cpsr) as u8));
-        output.push_str(&format!("C{}", ConditionFlag::C.read_flag(self.cpsr) as u8));
-        output.push_str(&format!("V{}", ConditionFlag::V.read_flag(self.cpsr) as u8));
-        output
-    }
-
     #[inline]
     pub fn reg_name(reg_id: RegId) -> String {
         CAPSTONE.with(|capstone| {

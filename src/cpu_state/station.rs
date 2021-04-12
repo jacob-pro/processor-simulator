@@ -15,7 +15,7 @@ pub enum Register {
 pub struct ReservationStation {
     pub id: usize,
     pub instruction: Option<DecodedInstruction>,
-    source_registers: HashMap<RegId, Register>,
+    pub source_registers: HashMap<RegId, Register>,
     pub memory: Arc<RwLock<Memory>>,
 }
 
