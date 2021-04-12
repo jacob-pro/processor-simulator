@@ -57,10 +57,11 @@ impl Instruction for SVC {
         hashset![]
     }
 
-    fn hazardous(&self) -> bool {
+    fn control_hazard(&self) -> bool {
+        // When calling exit don't allow speculating instructions to overtake
         match self.id {
-            2 => false,
-            _ => true,
+            1 => true,
+            _ => false,
         }
     }
 }
