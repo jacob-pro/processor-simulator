@@ -54,12 +54,10 @@ impl CpuState {
         }
     }
 
+    // Instructions that are already executing are allowed to continue
     pub fn flush_pipeline(&mut self) {
         self.fetched_instruction = None;
         self.decoded_instructions.clear();
-        for i in &mut self.reservation_stations {
-            i.clear();
-        }
     }
 
     // If there will be space for another decoded instruction
@@ -149,20 +147,22 @@ impl CpuState {
             }
         }
 
-        // Don't issue if we have control hazards pending
-        let no_control_hazards = self
+        let pending_control_hazards = self
             .reservation_stations
             .iter()
             .flat_map(|s| &s.instruction)
-            .find(|d| d.imp.hazardous())
-            .is_none();
+            .find(|d| d.imp.control_hazard())
+            .is_some();
+
         let available_station = self
             .reservation_stations
             .iter()
             .find(|r| r.instruction.is_none())
             .is_some();
 
-        if no_control_hazards && available_station {
+        // Don't do an issue this cycle if we have an instruction that could cause
+        // a change in control
+        if !pending_control_hazards && available_station && !result.pc_changed {
             // Issue an instruction
             if let Some(instr) = self.decoded_instructions.pop_front() {
                 let mut source_registers = HashMap::new();

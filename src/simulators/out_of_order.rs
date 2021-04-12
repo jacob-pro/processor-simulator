@@ -7,10 +7,11 @@ pub struct OutOfOrderSimulator {}
 
 impl Simulator for OutOfOrderSimulator {
     fn run(&self, memory: Memory, entry: u32, debug_level: &DebugLevel) -> SimulationStats {
-        let mut state = CpuState::new(memory, entry, 1);
+        let stations = 2;
+        let mut state = CpuState::new(memory, entry, stations);
         let mut stats = SimulationStats::default();
         let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(3)
+            .num_threads(2 + stations)
             .build()
             .unwrap();
 

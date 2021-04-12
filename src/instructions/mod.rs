@@ -40,7 +40,7 @@ pub trait Instruction: Send + Sync + Debug {
 
     fn dest_registers(&self) -> HashSet<RegId>;
 
-    fn hazardous(&self) -> bool {
+    fn control_hazard(&self) -> bool {
         self.dest_registers().contains(&PC)
     }
 }
