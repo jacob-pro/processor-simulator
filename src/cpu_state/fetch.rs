@@ -1,8 +1,14 @@
 use crate::cpu_state::CpuState;
+use crate::memory::MemoryAccessError;
+
+pub struct FetchedInstruction {
+    pub bytes: Result<Vec<u8>, MemoryAccessError>,
+    pub address: u32,
+}
 
 pub struct FetchResults {
     pub next_addr: u32,
-    pub instruction: Vec<u8>,
+    pub instr: FetchedInstruction,
 }
 
 impl CpuState {
@@ -35,12 +41,21 @@ impl CpuState {
                 assert!(instr_len == 2 || instr_len == 4);
                 Some(FetchResults {
                     next_addr: self.next_instr_addr + instr_len,
-                    instruction: code[0..instr_len as usize].to_vec(),
+                    instr: FetchedInstruction {
+                        bytes: Ok(code[0..instr_len as usize].to_vec()),
+                        address: self.next_instr_addr,
+                    },
                 })
             }
-            Err(_) => {
-                // Fetch may fail when reading ahead speculatively into an invalid address
-                return None;
+            Err(e) => {
+                // Fetch can fail when reading ahead speculatively into an invalid address
+                Some(FetchResults {
+                    next_addr: self.next_instr_addr,
+                    instr: FetchedInstruction {
+                        bytes: Err(e),
+                        address: self.next_instr_addr,
+                    },
+                })
             }
         }
     }
