@@ -11,7 +11,7 @@ use std::collections::HashSet;
 // Make the Multiply require extra cycles to complete
 const EXTRA_CYCLES: u8 = 7;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MUL {
     dest: RegId,
     val: RegId,

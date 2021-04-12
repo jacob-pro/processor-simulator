@@ -8,7 +8,7 @@ use capstone::RegId;
 use std::collections::HashSet;
 use std::io::Write;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SVC {
     id: i32,
 }

@@ -10,7 +10,7 @@ use capstone::prelude::*;
 use std::collections::HashSet;
 
 #[allow(unused)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Mode {
     ADC,
     ADD,
@@ -19,7 +19,7 @@ pub enum Mode {
     SUB,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ADD {
     update_flags: bool,
     mode: Mode,
