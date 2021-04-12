@@ -20,6 +20,7 @@ mod tst;
 mod util;
 
 use crate::cpu_state::station::ReservationStation;
+use crate::registers::ids::PC;
 use capstone::arch::arm::{ArmInsnDetail, ArmOperand};
 use capstone::RegId;
 use std::collections::HashSet;
@@ -36,6 +37,10 @@ pub trait Instruction: Send + Sync {
     fn source_registers(&self) -> HashSet<RegId>;
 
     fn dest_registers(&self) -> HashSet<RegId>;
+
+    fn control_hazard(&self) -> bool {
+        self.dest_registers().contains(&PC)
+    }
 }
 
 /*

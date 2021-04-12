@@ -56,4 +56,11 @@ impl Instruction for SVC {
     fn dest_registers(&self) -> HashSet<RegId> {
         hashset![]
     }
+
+    fn control_hazard(&self) -> bool {
+        match self.id {
+            2 => false,
+            _ => true,
+        }
+    }
 }

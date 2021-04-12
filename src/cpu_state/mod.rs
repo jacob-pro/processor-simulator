@@ -10,6 +10,7 @@ use crate::memory::Memory;
 use crate::registers::ids::{CPSR, PC};
 use crate::registers::RegisterFile;
 use capstone::arch::arm::ArmCC;
+use capstone::RegId;
 use station::{Register, ReservationStation};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, RwLock};
@@ -118,6 +119,7 @@ impl CpuState {
         for (i, execute) in station_results.iter().enumerate() {
             if let Some(execute) = execute {
                 for (reg_id, value) in &execute.register_changes {
+                    // Write results to architectural registers
                     self.registers.write_by_id(*reg_id, *value);
                     if *reg_id == PC {
                         // If the PC is changed we must ensure the next fetch uses the updated PC
@@ -125,6 +127,7 @@ impl CpuState {
                         result.pc_changed = true;
                     }
                 }
+                // Write results to waiting stations
                 for s in &mut self.reservation_stations {
                     s.receive_broadcast(i, &execute.register_changes);
                 }
@@ -144,12 +147,20 @@ impl CpuState {
             }
         }
 
-        // Find an empty reservation station
-        if let Some(available_station) = self
+        // Don't issue if we have control hazards pending
+        let no_control_hazards = self
             .reservation_stations
-            .iter_mut()
+            .iter()
+            .flat_map(|s| &s.instruction)
+            .find(|d| d.imp.control_hazard())
+            .is_none();
+        let available_station = self
+            .reservation_stations
+            .iter()
             .find(|r| r.instruction.is_none())
-        {
+            .is_some();
+
+        if no_control_hazards && available_station {
             // Issue an instruction
             if let Some(instr) = self.decoded_instructions.pop_front() {
                 let mut source_registers = HashMap::new();
@@ -163,10 +174,14 @@ impl CpuState {
                     if r == PC {
                         source_registers.insert(PC, Register::Ready(instr.address));
                     } else {
-                        source_registers.insert(r, Register::Ready(self.registers.read_by_id(r)));
+                        source_registers.insert(r, self.register_value(r));
                     }
                 }
-                available_station.issue(instr, source_registers);
+                self.reservation_stations
+                    .iter_mut()
+                    .find(|r| r.instruction.is_none())
+                    .unwrap()
+                    .issue(instr, source_registers);
             }
         }
 
@@ -175,5 +190,16 @@ impl CpuState {
         }
 
         result
+    }
+
+    fn register_value(&self, id: RegId) -> Register {
+        for s in &self.reservation_stations {
+            if let Some(instr) = &s.instruction {
+                if instr.imp.dest_registers().contains(&id) {
+                    return Register::Pending(s.id, id);
+                }
+            }
+        }
+        Register::Ready(self.registers.read_by_id(id))
     }
 }
