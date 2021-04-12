@@ -83,7 +83,7 @@ impl CpuState {
         assert_eq!(station_results.len(), self.reservation_stations.len());
         let mut result = UpdateResult::default();
 
-        // If we finished executing an instruction remove it from reservation station
+        // If we finished executing an instruction remove it from reservation
         for (i, s) in station_results.iter_mut().enumerate() {
             if let Some(s) = s {
                 let next_state = std::mem::take(&mut s.next_state);
@@ -112,24 +112,26 @@ impl CpuState {
         }
 
         if let Some(decode_results) = decode_results {
-            assert!(self.decoded_instructions.len() <= DECODED_QUEUE_CAPACITY);
+            // assert!(self.decoded_instructions.len() <= DECODED_QUEUE_CAPACITY);
             self.decoded_instructions.push_back(decode_results.instr);
         }
 
         for (i, execute) in station_results.iter().enumerate() {
             if let Some(execute) = execute {
-                for (reg_id, value) in &execute.register_changes {
+                if let Some(register_changes) = &execute.register_changes {
                     // Write results to architectural registers
-                    self.registers.write_by_id(*reg_id, *value);
-                    if *reg_id == PC {
-                        // If the PC is changed we must ensure the next fetch uses the updated PC
-                        self.next_instr_addr = *value;
-                        result.pc_changed = true;
+                    for (reg_id, value) in register_changes {
+                        self.registers.write_by_id(*reg_id, *value);
+                        if *reg_id == PC {
+                            // If the PC is changed we must ensure the next fetch uses the updated PC
+                            self.next_instr_addr = *value;
+                            result.pc_changed = true;
+                        }
                     }
-                }
-                // Write results to waiting stations
-                for s in &mut self.reservation_stations {
-                    s.receive_broadcast(i, &execute.register_changes);
+                    // Write results to waiting stations
+                    for s in &mut self.reservation_stations {
+                        s.receive_broadcast(i, &register_changes);
+                    }
                 }
                 self.should_terminate = execute.should_terminate;
                 if execute.did_execute_instruction {
@@ -152,7 +154,7 @@ impl CpuState {
             .reservation_stations
             .iter()
             .flat_map(|s| &s.instruction)
-            .find(|d| d.imp.control_hazard())
+            .find(|d| d.imp.hazardous())
             .is_none();
         let available_station = self
             .reservation_stations
@@ -192,14 +194,19 @@ impl CpuState {
         result
     }
 
-    fn register_value(&self, id: RegId) -> Register {
+    fn register_value(&self, reg_id: RegId) -> Register {
+        let mut station = None;
         for s in &self.reservation_stations {
             if let Some(instr) = &s.instruction {
-                if instr.imp.dest_registers().contains(&id) {
-                    return Register::Pending(s.id, id);
+                if instr.imp.dest_registers().contains(&reg_id) {
+                    assert!(station.is_none());
+                    station = Some(s.id);
                 }
             }
         }
-        Register::Ready(self.registers.read_by_id(id))
+        if let Some(station) = station {
+            return Register::Pending(station, reg_id);
+        }
+        Register::Ready(self.registers.read_by_id(reg_id))
     }
 }
