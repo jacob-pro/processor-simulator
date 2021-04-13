@@ -58,7 +58,7 @@ impl Simulator for PipelinedSimulator {
         stats
     }
 
-    fn name(&self) -> &'static str {
-        "Pipelined in-order simulator"
+    fn name(&self) -> String {
+        "Pipelined in-order simulator".to_owned()
     }
 }

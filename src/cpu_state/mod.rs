@@ -151,7 +151,15 @@ impl CpuState {
             .reservation_stations
             .iter()
             .flat_map(|s| &s.instruction)
-            .find(|d| d.imp.control_hazard())
+            .find(|d| {
+                let changes_pc = d.imp.control_hazard();
+                let conditional = if let ArmCC::ARM_CC_AL = d.cc {
+                    false
+                } else {
+                    true
+                };
+                changes_pc || conditional
+            })
             .is_some();
 
         let available_station = self
@@ -188,7 +196,7 @@ impl CpuState {
         }
 
         if result.pc_changed {
-            assert_eq!(result.branches_taken, 1);
+            assert_eq!(result.branches_taken, 1); // Should never be more than 1
         }
 
         result
