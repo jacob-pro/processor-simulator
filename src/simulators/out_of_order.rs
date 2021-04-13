@@ -2,6 +2,7 @@ use crate::cpu_state::CpuState;
 use crate::memory::Memory;
 use crate::simulators::{SimulationStats, Simulator};
 use crate::DebugLevel;
+use rayon::prelude::*;
 
 pub struct OutOfOrderSimulator {
     stations: usize,
@@ -33,10 +34,12 @@ impl Simulator for OutOfOrderSimulator {
             pool.scope(|s| {
                 s.spawn(|_| fetch = Some(state.fetch()));
                 s.spawn(|_| decode = Some(state.decode()));
+                executes = state
+                    .reservation_stations
+                    .par_iter()
+                    .map(|station| state.execute_station(&debug_level, station))
+                    .collect();
             });
-            for station in state.reservation_stations.iter() {
-                executes.push(state.execute_station(&debug_level, station));
-            }
 
             let result = state.apply_stages(fetch.unwrap(), decode.unwrap(), executes);
             stats.update(&result);
