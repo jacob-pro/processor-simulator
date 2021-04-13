@@ -29,19 +29,21 @@ impl Simulator for OutOfOrderSimulator {
 
             let mut fetch = None;
             let mut decode = None;
-            let mut executes = Vec::new();
+            let mut executes = None;
 
             pool.scope(|s| {
                 s.spawn(|_| fetch = Some(state.fetch()));
                 s.spawn(|_| decode = Some(state.decode()));
-                executes = state
-                    .reservation_stations
-                    .par_iter()
-                    .map(|station| state.execute_station(&debug_level, station))
-                    .collect();
+                executes = Some(
+                    state
+                        .reservation_stations
+                        .par_iter()
+                        .map(|station| state.execute_station(&debug_level, station))
+                        .collect(),
+                );
             });
 
-            let result = state.apply_stages(fetch.unwrap(), decode.unwrap(), executes);
+            let result = state.apply_stages(fetch.unwrap(), decode.unwrap(), executes.unwrap());
             stats.update(&result);
 
             if result.pc_changed {
