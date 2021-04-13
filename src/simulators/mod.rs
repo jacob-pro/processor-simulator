@@ -42,7 +42,7 @@ impl Display for SimulationStats {
         writeln!(f, "Number of cycles: {}", self.total_cycles)?;
         writeln!(
             f,
-            "Number of instructions per cycle: {}",
+            "Number of instructions per cycle: {:.3}",
             self.instructions_executed as f64 / self.total_cycles as f64
         )?;
         writeln!(f, "Number of branches taken: {}", self.branches_taken)?;
