@@ -123,7 +123,7 @@ fn main() -> anyhow::Result<()> {
     let sim: Box<dyn Simulator> = match matches.sim.unwrap_or(SimulatorType::OutOfOrder) {
         SimulatorType::Scalar => Box::new(NonPipelinedSimulator {}),
         SimulatorType::Pipelined => Box::new(PipelinedSimulator {}),
-        SimulatorType::OutOfOrder => Box::new(OutOfOrderSimulator {}),
+        SimulatorType::OutOfOrder => Box::new(OutOfOrderSimulator::new(2)),
     };
 
     println!("Using: {}\n", sim.name());

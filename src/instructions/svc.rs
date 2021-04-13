@@ -42,8 +42,7 @@ impl Instruction for SVC {
                 std::io::stdout().write_all(&data).expect("Failed to write");
             }
             _ => {
-                println!("\nUnknown SVC ID: {}", self.id);
-                return PollResult::Exception;
+                panic!("\nUnknown SVC ID: {}", self.id);
             }
         }
         PollResult::Complete(vec![])
@@ -58,10 +57,6 @@ impl Instruction for SVC {
     }
 
     fn control_hazard(&self) -> bool {
-        // When calling exit don't allow speculating instructions to overtake
-        match self.id {
-            1 => true,
-            _ => false,
-        }
+        true
     }
 }

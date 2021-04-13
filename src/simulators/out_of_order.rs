@@ -3,15 +3,23 @@ use crate::memory::Memory;
 use crate::simulators::{SimulationStats, Simulator};
 use crate::DebugLevel;
 
-pub struct OutOfOrderSimulator {}
+pub struct OutOfOrderSimulator {
+    stations: usize,
+}
+
+impl OutOfOrderSimulator {
+    pub fn new(stations: usize) -> Self {
+        assert!(stations > 0);
+        Self { stations }
+    }
+}
 
 impl Simulator for OutOfOrderSimulator {
     fn run(&self, memory: Memory, entry: u32, debug_level: &DebugLevel) -> SimulationStats {
-        let stations = 2;
-        let mut state = CpuState::new(memory, entry, stations);
+        let mut state = CpuState::new(memory, entry, self.stations);
         let mut stats = SimulationStats::default();
         let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(2 + stations)
+            .num_threads(2 + self.stations)
             .build()
             .unwrap();
 
@@ -43,7 +51,10 @@ impl Simulator for OutOfOrderSimulator {
         stats
     }
 
-    fn name(&self) -> &'static str {
-        "Pipelined out-of-order superscalar simulator"
+    fn name(&self) -> String {
+        format!(
+            "Pipelined out-of-order superscalar simulator ({} stations / execution units)",
+            self.stations
+        )
     }
 }

@@ -39,7 +39,7 @@ impl Simulator for NonPipelinedSimulator {
         stats
     }
 
-    fn name(&self) -> &'static str {
-        "Non pipelined scalar simulator"
+    fn name(&self) -> String {
+        "Non pipelined scalar simulator".to_owned()
     }
 }

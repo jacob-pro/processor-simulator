@@ -9,7 +9,7 @@ use std::fmt::{Display, Formatter};
 
 pub trait Simulator {
     fn run(&self, memory: Memory, entry: u32, debug_level: &DebugLevel) -> SimulationStats;
-    fn name(&self) -> &'static str;
+    fn name(&self) -> String;
 }
 
 #[derive(Default, Debug)]
