@@ -7,7 +7,7 @@ if ! command -v rustup &>/dev/null; then
   source $HOME/.cargo/env
 fi
 
-for sim in scalar pipelined
+for sim in scalar pipelined outoforder
 do
   cargo run --release -- -s ${sim} programs/test1.elf
   cargo run --release -- -s ${sim} programs/test2.elf
