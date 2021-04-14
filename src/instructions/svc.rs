@@ -38,7 +38,7 @@ impl Instruction for SVC {
                     .read()
                     .unwrap()
                     .read_bytes(buffer_addr, buffer_len)
-                    .unwrap();
+                    .expect("SVC Tried to read from invalid memory address");
                 std::io::stdout().write_all(&data).expect("Failed to write");
             }
             _ => {
