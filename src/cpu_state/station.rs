@@ -52,7 +52,9 @@ impl ReservationStation {
         let k = self.source_registers.get(&id).expect(gen_msg().as_str());
         match k {
             Register::Ready(value) => *value,
-            Register::Pending(_, _) => panic!(),
+            Register::Pending(_, _) => {
+                panic!("This register is still pending, this station cannot be executed yet")
+            }
         }
     }
 

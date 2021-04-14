@@ -1,5 +1,7 @@
+use crate::registers::ids::*;
 use crate::CAPSTONE;
 use capstone::prelude::*;
+use std::collections::HashMap;
 
 #[allow(unused)]
 pub mod ids {
@@ -65,60 +67,33 @@ pub struct ConditionFlags {
 
 #[derive(Debug, Clone)]
 pub struct RegisterFile {
-    gprs: [u32; 13],
-    sp: u32,
-    lr: u32,
-    pc: u32,
-    cpsr: u32,
+    vals: HashMap<RegId, u32>,
 }
 
 impl RegisterFile {
     pub fn new() -> Self {
-        Self {
-            gprs: Default::default(),
-            sp: crate::_STACK,
-            lr: 0,
-            pc: 0,
-            cpsr: 0,
+        let mut vals = HashMap::new();
+        vals.insert(SP, crate::_STACK);
+        vals.insert(LR, 0);
+        vals.insert(PC, 0);
+        vals.insert(CPSR, 0);
+        for r in R0.0..IP.0 + 1 {
+            vals.insert(RegId(r), 0);
         }
+        Self { vals }
     }
 
     pub fn read_by_id(&self, id: RegId) -> u32 {
-        let name = Self::reg_name(id);
-        if name.starts_with("R") {
-            let number = name[1..].parse::<usize>().expect("Invalid register");
-            return self.gprs[number];
-        }
-        return match name.as_str() {
-            "SB" => self.gprs[9],  // Synonym
-            "SL" => self.gprs[10], // Synonym
-            "FP" => self.gprs[11], // Synonym
-            "IP" => self.gprs[12], // Synonym
-            "SP" => self.sp,
-            "LR" => self.lr,
-            "CPSR" => self.cpsr,
-            _ => panic!("Unknown register {}", name),
-        };
+        *self
+            .vals
+            .get(&id)
+            .expect(format!("{} not supported", RegisterFile::reg_name(id)).as_str())
     }
 
     pub fn write_by_id(&mut self, id: RegId, value: u32) {
-        let name = Self::reg_name(id);
-        if name.starts_with("R") {
-            let number = name[1..].parse::<usize>().expect("Invalid register");
-            self.gprs[number] = value;
-            return;
-        }
-        match name.as_str() {
-            "SB" => self.gprs[9] = value,  // Synonym
-            "SL" => self.gprs[10] = value, // Synonym
-            "FP" => self.gprs[11] = value, // Synonym
-            "IP" => self.gprs[12] = value, // Synonym
-            "SP" => self.sp = value,
-            "LR" => self.lr = value,
-            "PC" => self.pc = value,
-            "CPSR" => self.cpsr = value,
-            _ => panic!("Unknown register {}", name),
-        }
+        self.vals
+            .insert(id, value)
+            .expect(format!("{} not supported", RegisterFile::reg_name(id)).as_str());
     }
 
     /*
@@ -156,7 +131,6 @@ impl RegisterFile {
 
 #[cfg(test)]
 mod tests {
-    use super::ids::*;
     use super::*;
     #[test]
     fn reg_names() {
