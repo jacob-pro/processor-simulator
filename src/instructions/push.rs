@@ -65,6 +65,6 @@ impl Instruction for PUSH {
     }
 
     fn hazardous(&self) -> bool {
-        true
+        true // Not quite sure why push causes issues with svc?
     }
 }

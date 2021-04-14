@@ -8,12 +8,12 @@ use capstone::prelude::*;
 
 #[derive(Default, Debug)]
 pub struct StationResults {
-    pub register_changes: Option<Vec<(RegId, u32)>>,
+    pub register_changes: Option<Vec<(RegId, u32)>>, // None means instruction has not finished yet
     pub should_terminate: bool,
     pub did_execute_instruction: bool,
     pub did_skip_instruction: bool,
     pub instruction_is_branch: bool,
-    pub next_state: Option<Box<dyn Instruction>>,
+    pub next_state: Option<Box<dyn Instruction>>, // None means instruction is complete
 }
 
 impl CpuState {
