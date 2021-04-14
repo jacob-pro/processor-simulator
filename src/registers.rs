@@ -100,7 +100,7 @@ impl RegisterFile {
      *  reglist must use only R0-R7. The exception is LR for a PUSH and PC for a POP.
      * lowest numbered register using the lowest memory address
      */
-    pub fn push_pop_register_asc(mut reg_list: Vec<RegId>) -> Vec<RegId> {
+    pub fn push_pop_register_asc(reg_list: &mut Vec<RegId>) {
         reg_list.sort_by_key(|r| {
             let name = Self::reg_name(*r);
             if name.starts_with("R") {
@@ -115,7 +115,6 @@ impl RegisterFile {
                 _ => panic!("Unknown register {}", name),
             };
         });
-        reg_list
     }
 
     #[inline]

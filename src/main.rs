@@ -75,7 +75,12 @@ struct Opts {
     debug: u32,
     #[clap(short, long, about = "Choose which simulator type")]
     sim: Option<SimulatorType>,
-    #[clap(short, long, about = "Specify how many stations / execution units", default_value = "4")]
+    #[clap(
+        short,
+        long,
+        about = "Specify how many stations / execution units",
+        default_value = "4"
+    )]
     units: usize,
 }
 
