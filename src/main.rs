@@ -75,6 +75,8 @@ struct Opts {
     debug: u32,
     #[clap(short, long, about = "Choose which simulator type")]
     sim: Option<SimulatorType>,
+    #[clap(short, long, about = "Specify how many stations / execution units", default_value = "4")]
+    units: usize,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -123,7 +125,7 @@ fn main() -> anyhow::Result<()> {
     let sim: Box<dyn Simulator> = match matches.sim.unwrap_or(SimulatorType::OutOfOrder) {
         SimulatorType::Scalar => Box::new(NonPipelinedSimulator {}),
         SimulatorType::Pipelined => Box::new(PipelinedSimulator {}),
-        SimulatorType::OutOfOrder => Box::new(OutOfOrderSimulator::new(4)),
+        SimulatorType::OutOfOrder => Box::new(OutOfOrderSimulator::new(matches.units)),
     };
 
     println!("Using: {}\n", sim.name());
