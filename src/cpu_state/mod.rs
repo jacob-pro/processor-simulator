@@ -154,13 +154,14 @@ impl CpuState {
         }
 
         // If any stations hold an instruction that may either branch
+        // Or write to memory
         // Or has conditional execution (may not actually produce its output values)
         let pending_control_hazards = self
             .reservation_stations
             .iter()
             .flat_map(|s| &s.instruction)
             .find(|d| {
-                let changes_pc = d.imp.control_hazard();
+                let changes_pc = d.imp.hazardous();
                 let conditional = if let ArmCC::ARM_CC_AL = d.cc {
                     false
                 } else {

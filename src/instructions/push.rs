@@ -11,6 +11,7 @@ use std::collections::{HashSet, VecDeque};
 #[derive(Clone, Debug)]
 pub struct PUSH {
     reg_list: VecDeque<RegId>,
+    sp: Option<u32>,
 }
 
 impl PUSH {
@@ -23,24 +24,32 @@ impl PUSH {
         reg_list.reverse();
         Self {
             reg_list: VecDeque::from(reg_list),
+            sp: None,
         }
     }
 }
 
 impl Instruction for PUSH {
     fn poll(&self, station: &ReservationStation) -> PollResult {
-        let mut sp = station.read_by_id(SP);
-        for r in &self.reg_list {
-            sp = sp - 4;
-            let register_value = station.read_by_id(*r).to_le_bytes();
+        let mut clone = self.clone();
+        if let None = clone.sp {
+            clone.sp = Some(station.read_by_id(SP));
+        }
+        if let Some(r) = clone.reg_list.pop_front() {
+            clone.sp = Some(clone.sp.unwrap() - 4);
+            let register_value = station.read_by_id(r).to_le_bytes();
             station
                 .memory
                 .write()
                 .unwrap()
-                .write_bytes(sp, &register_value)
+                .write_bytes(clone.sp.unwrap(), &register_value)
                 .unwrap();
         }
-        PollResult::Complete(vec![(SP, sp)])
+        if clone.reg_list.is_empty() {
+            PollResult::Complete(vec![(SP, clone.sp.unwrap())])
+        } else {
+            PollResult::Again(Box::new(clone))
+        }
     }
 
     fn source_registers(&self) -> HashSet<RegId> {
@@ -53,5 +62,9 @@ impl Instruction for PUSH {
 
     fn dest_registers(&self) -> HashSet<RegId> {
         hashset![SP]
+    }
+
+    fn hazardous(&self) -> bool {
+        true
     }
 }

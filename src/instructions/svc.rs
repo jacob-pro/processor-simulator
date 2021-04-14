@@ -56,7 +56,7 @@ impl Instruction for SVC {
         hashset![]
     }
 
-    fn control_hazard(&self) -> bool {
+    fn hazardous(&self) -> bool {
         true
     }
 }

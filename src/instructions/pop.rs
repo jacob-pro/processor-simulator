@@ -12,6 +12,8 @@ use std::iter::FromIterator;
 #[derive(Clone, Debug)]
 pub struct POP {
     reg_list: VecDeque<RegId>,
+    sp: Option<u32>,
+    changes: Vec<(RegId, u32)>,
 }
 
 impl POP {
@@ -23,21 +25,34 @@ impl POP {
         RegisterFile::push_pop_register_asc(&mut reg_list);
         Self {
             reg_list: VecDeque::from(reg_list),
+            sp: None,
+            changes: vec![],
         }
     }
 }
 
 impl Instruction for POP {
     fn poll(&self, station: &ReservationStation) -> PollResult {
-        let mut changes = vec![];
-        let mut sp = station.read_by_id(SP);
-        for r in &self.reg_list {
-            let read_from_stack = station.memory.read().unwrap().read_u32(sp).unwrap();
-            changes.push((*r, read_from_stack));
-            sp = sp + 4;
+        let mut clone = self.clone();
+        if let None = clone.sp {
+            clone.sp = Some(station.read_by_id(SP));
         }
-        changes.push((SP, sp));
-        PollResult::Complete(changes)
+        if let Some(r) = clone.reg_list.pop_front() {
+            let read_from_stack = station
+                .memory
+                .read()
+                .unwrap()
+                .read_u32(clone.sp.unwrap())
+                .unwrap();
+            clone.changes.push((r, read_from_stack));
+            clone.sp = Some(clone.sp.unwrap() + 4);
+        }
+        if clone.reg_list.is_empty() {
+            clone.changes.push((SP, clone.sp.unwrap()));
+            PollResult::Complete(clone.changes)
+        } else {
+            PollResult::Again(Box::new(clone))
+        }
     }
 
     fn source_registers(&self) -> HashSet<RegId> {
