@@ -7,20 +7,22 @@ use capstone::RegId;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
+pub type StationId = usize;
+
 pub enum Register {
     Ready(u32),
     Pending(usize, RegId),
 }
 
 pub struct ReservationStation {
-    pub id: usize,
+    pub id: StationId,
     pub instruction: Option<DecodedInstruction>,
     pub source_registers: HashMap<RegId, Register>,
     pub memory: Arc<RwLock<Memory>>,
 }
 
 impl ReservationStation {
-    pub fn new(id: usize, memory: Arc<RwLock<Memory>>) -> Self {
+    pub fn new(id: StationId, memory: Arc<RwLock<Memory>>) -> Self {
         Self {
             id,
             instruction: None,
@@ -108,7 +110,7 @@ impl ReservationStation {
         };
     }
 
-    pub fn receive_broadcast(&mut self, source_id: usize, changes: &Vec<(RegId, u32)>) {
+    pub fn receive_broadcast(&mut self, source_id: StationId, changes: &Vec<(RegId, u32)>) {
         for (_, reg) in &mut self.source_registers {
             if let Register::Pending(station_id, reg_id) = reg {
                 if *station_id == source_id {
