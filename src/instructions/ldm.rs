@@ -4,14 +4,16 @@ use crate::instructions::util::ArmOperandExt;
 use crate::instructions::PollResult;
 use capstone::arch::arm::ArmOperand;
 use capstone::prelude::*;
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 use std::iter::FromIterator;
 
 #[derive(Clone, Debug)]
 pub struct LDM {
     base_register: RegId,
-    reg_list: Vec<RegId>,
+    reg_list: VecDeque<RegId>,
     writeback: bool,
+    address: Option<u32>,
+    changes: Vec<(RegId, u32)>,
 }
 
 impl LDM {
@@ -22,8 +24,10 @@ impl LDM {
             .collect();
         Self {
             base_register: reg_list[0],
-            reg_list: reg_list[1..].to_vec(),
+            reg_list: reg_list[1..].to_vec().into(),
             writeback,
+            address: None,
+            changes: vec![],
         }
     }
 }
@@ -31,18 +35,32 @@ impl LDM {
 impl Instruction for LDM {
     // https://keleshev.com/ldm-my-favorite-arm-instruction/
     fn poll(&self, station: &ReservationStation) -> PollResult {
-        let mut changes = vec![];
-        let base_addr = station.read_by_id(self.base_register);
-        for (idx, reg) in self.reg_list.iter().enumerate() {
-            let adj_addr = base_addr + (idx as u32 * 4);
-            let val = station.memory.read().unwrap().read_u32(adj_addr).unwrap();
-            changes.push((*reg, val));
+        let mut clone = self.clone();
+        if let None = clone.address {
+            clone.address = Some(station.read_by_id(self.base_register));
         }
-        if self.writeback {
-            let final_address = base_addr + (self.reg_list.len() as u32 * 4);
-            changes.push((self.base_register, final_address));
+
+        if let Some(reg) = clone.reg_list.pop_front() {
+            let val = station
+                .memory
+                .read()
+                .unwrap()
+                .read_u32(clone.address.unwrap())
+                .unwrap();
+            clone.changes.push((reg, val));
+            clone.address = Some(clone.address.unwrap() + 4);
+            return PollResult::Again(Box::new(clone));
         }
-        PollResult::Complete(changes)
+
+        if clone.writeback {
+            clone
+                .changes
+                .push((self.base_register, self.address.unwrap()));
+            clone.writeback = false;
+            return PollResult::Again(Box::new(clone));
+        }
+
+        PollResult::Complete(clone.changes)
     }
 
     fn source_registers(&self) -> HashSet<RegId> {
