@@ -110,7 +110,7 @@ impl CpuState {
         }
 
         if let Some(decode_results) = decode_results {
-            // assert!(self.decoded_instructions.len() <= DECODED_QUEUE_CAPACITY);
+            assert!(self.decoded_instructions.len() <= DECODED_QUEUE_CAPACITY);
             self.decoded_instructions.push_back(decode_results.instr);
         }
 
