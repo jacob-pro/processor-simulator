@@ -6,6 +6,7 @@ pub mod station;
 use crate::cpu_state::decode::{DecodeResults, DecodedInstruction};
 use crate::cpu_state::execute::StationResults;
 use crate::cpu_state::fetch::{FetchResults, FetchedInstruction};
+use crate::cpu_state::station::StationId;
 use crate::memory::Memory;
 use crate::registers::ids::{CPSR, PC};
 use crate::registers::RegisterFile;
@@ -20,9 +21,10 @@ pub struct CpuState {
     pub registers: RegisterFile,
     pub next_instr_addr: u32, // Address of instruction waiting to be fetched
     pub fetched_instruction: Option<FetchedInstruction>, // Instruction waiting to be decoded
-    pub decoded_instructions: VecDeque<DecodedInstruction>,
+    pub decoded_instructions: VecDeque<DecodedInstruction>, // Instructions waiting to be executed
     pub reservation_stations: Vec<ReservationStation>,
     pub should_terminate: bool,
+    pub pending_registers: HashMap<RegId, StationId>, // Stations that will produce a register value
 }
 
 #[derive(Default)]
@@ -34,7 +36,7 @@ pub struct UpdateResult {
     pub branches_not_taken: u8,
 }
 
-const DECODED_QUEUE_CAPACITY: usize = 4;
+const DECODED_QUEUE_CAPACITY: usize = 6;
 
 impl CpuState {
     pub fn new(memory: Memory, entry: u32, stations: usize) -> Self {
@@ -51,6 +53,7 @@ impl CpuState {
             next_instr_addr: entry,
             reservation_stations: stations,
             decoded_instructions: Default::default(),
+            pending_registers: Default::default(),
         }
     }
 
@@ -62,13 +65,7 @@ impl CpuState {
 
     // If there will be space for another decoded instruction
     pub fn decoded_space(&self) -> bool {
-        if self.decoded_instructions.len() < DECODED_QUEUE_CAPACITY {
-            return true;
-        }
-        self.reservation_stations
-            .iter()
-            .find(|r| r.instruction.is_none())
-            .is_some()
+        self.decoded_instructions.len() < DECODED_QUEUE_CAPACITY
     }
 
     // Transition the state to the new state
@@ -78,10 +75,10 @@ impl CpuState {
         decode_results: Option<DecodeResults>,
         mut station_results: Vec<Option<StationResults>>,
     ) -> UpdateResult {
-        assert_eq!(station_results.len(), self.reservation_stations.len());
         let mut result = UpdateResult::default();
 
-        // If we finished executing an instruction remove it from reservation
+        // If we finished executing an instruction remove it from reservation stations
+        assert_eq!(station_results.len(), self.reservation_stations.len());
         for (i, s) in station_results.iter_mut().enumerate() {
             if let Some(s) = s {
                 let next_state = std::mem::take(&mut s.next_state);
@@ -103,17 +100,20 @@ impl CpuState {
             self.fetched_instruction = None;
         }
 
+        // Store the fetched instruction
         if let Some(fetch) = fetch_results {
             assert!(self.fetched_instruction.is_none());
             self.fetched_instruction = Some(fetch.instr);
             self.next_instr_addr = fetch.next_addr;
         }
 
+        // Store the decoded instruction
         if let Some(decode_results) = decode_results {
-            assert!(self.decoded_instructions.len() <= DECODED_QUEUE_CAPACITY);
+            assert!(self.decoded_instructions.len() < DECODED_QUEUE_CAPACITY);
             self.decoded_instructions.push_back(decode_results.instr);
         }
 
+        // Deal with completed instructions
         for (i, execute) in station_results.iter().enumerate() {
             if let Some(execute) = execute {
                 if let Some(register_changes) = &execute.register_changes {
@@ -124,6 +124,12 @@ impl CpuState {
                             // If the PC is changed we must ensure the next fetch uses the updated PC
                             self.next_instr_addr = *value;
                             result.pc_changed = true;
+                        }
+                        // Indicate that we are no longer waiting on this register to compute
+                        if let Some(station_id) = self.pending_registers.get(reg_id) {
+                            if *station_id == i {
+                                self.pending_registers.remove(reg_id);
+                            }
                         }
                     }
                     // Write results to waiting stations
@@ -147,6 +153,8 @@ impl CpuState {
             }
         }
 
+        // If any stations hold an instruction that may either branch
+        // Or has conditional execution (may not actually produce its output values)
         let pending_control_hazards = self
             .reservation_stations
             .iter()
@@ -168,8 +176,6 @@ impl CpuState {
             .find(|r| r.instruction.is_none())
             .is_some();
 
-        // Don't do an issue this cycle if we have an instruction that could cause
-        // a change in control
         if !pending_control_hazards && available_station && !result.pc_changed {
             // Issue an instruction
             if let Some(instr) = self.decoded_instructions.pop_front() {
@@ -178,6 +184,7 @@ impl CpuState {
                 required_registers.insert(PC);
                 if let ArmCC::ARM_CC_AL = instr.cc {
                 } else {
+                    // A condition code means that we will need to read CPSR
                     required_registers.insert(CPSR);
                 }
                 for r in required_registers {
@@ -187,11 +194,15 @@ impl CpuState {
                         source_registers.insert(r, self.register_value(r));
                     }
                 }
-                self.reservation_stations
+                let station = self
+                    .reservation_stations
                     .iter_mut()
                     .find(|r| r.instruction.is_none())
-                    .unwrap()
-                    .issue(instr, source_registers);
+                    .unwrap();
+                for r in instr.imp.dest_registers() {
+                    self.pending_registers.insert(r, station.id);
+                }
+                station.issue(instr, source_registers);
             }
         }
 
@@ -203,17 +214,8 @@ impl CpuState {
     }
 
     fn register_value(&self, reg_id: RegId) -> Register {
-        let mut station = None;
-        for s in &self.reservation_stations {
-            if let Some(instr) = &s.instruction {
-                if instr.imp.dest_registers().contains(&reg_id) {
-                    assert!(station.is_none());
-                    station = Some(s.id);
-                }
-            }
-        }
-        if let Some(station) = station {
-            return Register::Pending(station, reg_id);
+        if let Some(station_id) = self.pending_registers.get(&reg_id) {
+            return Register::Pending(*station_id, reg_id);
         }
         Register::Ready(self.registers.read_by_id(reg_id))
     }

@@ -11,7 +11,7 @@ pub type StationId = usize;
 
 pub enum Register {
     Ready(u32),
-    Pending(usize, RegId),
+    Pending(StationId, RegId),
 }
 
 pub struct ReservationStation {
