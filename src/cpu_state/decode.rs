@@ -1,6 +1,6 @@
 use crate::cpu_state::station::ReservationStation;
 use crate::cpu_state::CpuState;
-use crate::instructions::{decode_instruction, Instruction, PollResult};
+use crate::instructions::{decode_instruction, DecodeError, Instruction, PollResult};
 use crate::memory::MemoryAccessError;
 use crate::CAPSTONE;
 use capstone::arch::arm::{ArmCC, ArmOperand};
@@ -66,8 +66,15 @@ impl CpuState {
                                         .with(|capstone| capstone.insn_name(instr.id()).unwrap());
                                     let arm_detail = arch_detail.arm().unwrap();
 
-                                    let decoded =
-                                        decode_instruction(&ins_name, &arm_detail, operands);
+                                    let decoded = match decode_instruction(
+                                        &ins_name,
+                                        &arm_detail,
+                                        operands,
+                                    ) {
+                                        Ok(decoded) => decoded,
+                                        Err(e) => Box::new(InvalidInstruction::FailedDecode(e)),
+                                    };
+
                                     DecodedInstruction {
                                         imp: decoded.into(),
                                         cc: arm_detail.cc(),
@@ -100,6 +107,7 @@ impl CpuState {
 enum InvalidInstruction {
     BadAddress(MemoryAccessError),
     BadData,
+    FailedDecode(DecodeError),
 }
 
 impl Instruction for InvalidInstruction {

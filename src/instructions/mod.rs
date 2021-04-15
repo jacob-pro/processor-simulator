@@ -45,6 +45,12 @@ pub trait Instruction: Send + Sync + Debug {
     }
 }
 
+#[derive(Debug, Clone)]
+pub enum DecodeError {
+    Unimplemented(String),
+    UnsupportedInCortexM0(String),
+}
+
 /*
 https://en.wikipedia.org/wiki/ARM_Cortex-M#Instruction_sets
 https://developer.arm.com/documentation/dui0497/a/the-cortex-m0-instruction-set/instruction-set-summary?lang=en
@@ -53,10 +59,10 @@ pub fn decode_instruction(
     name: &str,
     detail: &ArmInsnDetail,
     operands: Vec<ArmOperand>,
-) -> Box<dyn Instruction> {
+) -> Result<Box<dyn Instruction>, DecodeError> {
     let update_flags = detail.update_flags();
     let writeback = detail.writeback();
-    return match name.to_ascii_uppercase().as_str() {
+    return Ok(match name.to_ascii_uppercase().as_str() {
         "ADC" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADC)),
         "ADD" => Box::new(add::ADD::new(operands, update_flags, add::Mode::ADD)),
         "ADR" => Box::new(adr::ADR::new(operands)),
@@ -64,17 +70,17 @@ pub fn decode_instruction(
         "ASR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ASR)),
         "B" => Box::new(b::B::new(operands, false)),
         "BIC" => Box::new(logical::LOGICAL::new(operands, logical::Mode::BIC)),
-        "BKPT" => panic!("{} not yet implemented", name),
+        "BKPT" => return Err(DecodeError::Unimplemented(name.to_owned())),
         "BL" => Box::new(b::B::new(operands, true)),
         "BLX" => Box::new(bx::BX::new(operands, true)),
         "BX" => Box::new(bx::BX::new(operands, false)),
         "CMN" => Box::new(cmp::CMP::new(operands, cmp::Mode::CMN)),
         "CMP" => Box::new(cmp::CMP::new(operands, cmp::Mode::CMP)),
-        "CPS" => panic!("{} not yet implemented", name),
-        "DMB" => panic!("{} not yet implemented", name),
-        "DSB" => panic!("{} not yet implemented", name),
+        "CPS" => return Err(DecodeError::Unimplemented(name.to_owned())),
+        "DMB" => return Err(DecodeError::Unimplemented(name.to_owned())),
+        "DSB" => return Err(DecodeError::Unimplemented(name.to_owned())),
         "EOR" => Box::new(logical::LOGICAL::new(operands, logical::Mode::EOR)),
-        "ISB" => panic!("{} not yet implemented", name),
+        "ISB" => return Err(DecodeError::Unimplemented(name.to_owned())),
         "LDM" => Box::new(ldm::LDM::new(operands, writeback)),
         "LDR" => Box::new(ldr::LDR::new(operands, ldr::Mode::Word)),
         "LDRB" => Box::new(ldr::LDR::new(operands, ldr::Mode::Byte)),
@@ -84,21 +90,21 @@ pub fn decode_instruction(
         "LSL" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSL)),
         "LSR" => Box::new(shift::SHIFT::new(operands, shift::Mode::LSR)),
         "MOV" => Box::new(mov::MOV::new(operands, mov::Mode::MOV, update_flags)),
-        "MRS" => panic!("{} not yet implemented", name),
-        "MSR" => panic!("{} not yet implemented", name),
+        "MRS" => return Err(DecodeError::Unimplemented(name.to_owned())),
+        "MSR" => return Err(DecodeError::Unimplemented(name.to_owned())),
         "MUL" => Box::new(mul::MUL::new(operands)),
         "MVN" => Box::new(mov::MOV::new(operands, mov::Mode::MVN, update_flags)),
         "NOP" => Box::new(nop::NOP::new()),
         "ORR" => Box::new(logical::LOGICAL::new(operands, logical::Mode::ORR)),
         "POP" => Box::new(pop::POP::new(operands)),
         "PUSH" => Box::new(push::PUSH::new(operands)),
-        "REV" => panic!("{} not yet implemented", name),
-        "REV16" => panic!("{} not yet implemented", name),
-        "REVSH" => panic!("{} not yet implemented", name),
+        "REV" => return Err(DecodeError::Unimplemented(name.to_owned())),
+        "REV16" => return Err(DecodeError::Unimplemented(name.to_owned())),
+        "REVSH" => return Err(DecodeError::Unimplemented(name.to_owned())),
         "ROR" => Box::new(shift::SHIFT::new(operands, shift::Mode::ROR)),
         "RSB" => Box::new(add::ADD::new(operands, update_flags, add::Mode::RSB)),
         "SBC" => Box::new(add::ADD::new(operands, update_flags, add::Mode::SBC)),
-        "SEV" => panic!("{} not yet implemented", name),
+        "SEV" => return Err(DecodeError::Unimplemented(name.to_owned())),
         "STM" => Box::new(stm::STM::new(operands, writeback)),
         "STR" => Box::new(str::STR::new(operands, str::Mode::Word)),
         "STRB" => Box::new(str::STR::new(operands, str::Mode::Byte)),
@@ -110,9 +116,9 @@ pub fn decode_instruction(
         "TST" => Box::new(tst::TST::new(operands)),
         "UXTB" => Box::new(extends::EXTENDS::new(operands, extends::Mode::UXTB)),
         "UXTH" => Box::new(extends::EXTENDS::new(operands, extends::Mode::UXTH)),
-        "WFE" => panic!("{} not yet implemented", name),
-        "WFI" => panic!("{} not yet implemented", name),
-        "YIELD" => panic!("{} not yet implemented", name),
-        _ => panic!("Unrecognised Cortex-M0 instruction: {}", name),
-    };
+        "WFE" => return Err(DecodeError::Unimplemented(name.to_owned())),
+        "WFI" => return Err(DecodeError::Unimplemented(name.to_owned())),
+        "YIELD" => return Err(DecodeError::Unimplemented(name.to_owned())),
+        _ => return Err(DecodeError::UnsupportedInCortexM0(name.to_owned())),
+    });
 }
