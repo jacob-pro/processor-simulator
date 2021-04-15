@@ -62,8 +62,7 @@ impl CpuState {
                                         })
                                         .collect();
 
-                                    let ins_name = CAPSTONE
-                                        .with(|capstone| capstone.insn_name(instr.id()).unwrap());
+                                    let ins_name = capstone.insn_name(instr.id()).unwrap();
                                     let arm_detail = arch_detail.arm().unwrap();
 
                                     let decoded = match decode_instruction(
@@ -103,6 +102,8 @@ impl CpuState {
     }
 }
 
+// When we are speculating we may encounter an invalid instruction
+// Do not panic now, wait to see if it actually gets executed or not
 #[derive(Clone, Debug)]
 enum InvalidInstruction {
     BadAddress(MemoryAccessError),
