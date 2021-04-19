@@ -2,8 +2,6 @@
 
 Bristol COMS30046 - Advanced Computer Architecture
 
-- Superscalar Processor: Friday 12 noon in Week 22 = Friday, April 30th 2021
-
 ## About
 
 This is a partial simulator of the Cortex-M0 CPU - using the ARM Thumb instruction set.
@@ -16,7 +14,7 @@ to disassemble the ARM instructions.
 
 ## Usage
 
-Run `./mvb.sh` to compile and run all the example programs.
+Run `./mvb.sh` to compile and run all the example programs with each simulator type.
 
 ```
 USAGE:
