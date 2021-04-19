@@ -1,7 +1,7 @@
 COMPILE = arm-none-eabi-gcc -mthumb -mcpu=cortex-m0 -ffreestanding sim.c
 DUMP = arm-none-eabi-objdump -m cortex-m0 -d
 
-all : test1 test2 fibonacci factorial
+all : test1 test2 fibonacci factorial bitcount bitcount_unrolled
 
 test1 : test1.c sim.c
 	${COMPILE} test1.c  -nostdlib -DNOSTDLIB --entry=start -o test1.elf
@@ -18,6 +18,14 @@ fibonacci : fibonacci.c sim.c
 factorial : factorial.c sim.c
 	${COMPILE} factorial.c -o factorial.elf
 	${DUMP} factorial.elf > factorial.dump
+
+bitcount : bitcount.c sim.c
+	${COMPILE} bitcount.c -nostdlib -DNOSTDLIB --entry=start -o bitcount.elf
+	${DUMP} bitcount.elf > bitcount.dump
+
+bitcount_unrolled : bitcount.c sim.c
+	${COMPILE} bitcount.c -nostdlib -DNOSTDLIB -DUNROLLED --entry=start -o bitcount_unrolled.elf
+	${DUMP} bitcount_unrolled.elf > bitcount_unrolled.dump
 
 clean :
 	rm -f *.elf
