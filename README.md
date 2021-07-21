@@ -1,6 +1,10 @@
 # Processor Simulator
 
+[![Build status](https://github.com/jacob-pro/processor-simulator/actions/workflows/rust.yml/badge.svg)](https://github.com/jacob-pro/processor-simulator/actions)
+
 Bristol COMS30046 - Advanced Computer Architecture
+
+Confirmed mark: 75
 
 ## About
 
